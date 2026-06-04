@@ -306,6 +306,17 @@
       border: 1px solid var(--line);
     }
 
+    .history-thumb {
+      width: 58px;
+      height: 58px;
+      border-radius: 16px;
+      object-fit: cover;
+      display: block;
+      background: var(--seafoam-soft);
+      border: 1px solid var(--line);
+      flex: 0 0 auto;
+    }
+
     .photo-tile.has-photo .photo-thumb {
       display: block;
     }
@@ -321,13 +332,36 @@
 
     .test-row {
       display: grid;
-      grid-template-columns: 1fr 94px;
+      grid-template-columns: 1fr 98px;
       gap: 8px;
       align-items: end;
       padding: 12px;
       border: 1px solid var(--line);
       border-radius: 18px;
       background: var(--white);
+    }
+
+    .step-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+      color: var(--seafoam-dark);
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .step-label span {
+      width: 26px;
+      height: 26px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      color: var(--charcoal);
+      background: var(--seafoam);
+      letter-spacing: 0;
     }
 
     .target-range {
@@ -402,6 +436,42 @@
     .history-list {
       display: grid;
       gap: 10px;
+    }
+
+    .card-photo-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .card-photo {
+      min-height: 84px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      overflow: hidden;
+      background: var(--seafoam-soft);
+      position: relative;
+    }
+
+    .card-photo img {
+      width: 100%;
+      height: 100%;
+      min-height: 84px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .card-photo span {
+      position: absolute;
+      left: 7px;
+      bottom: 7px;
+      border-radius: 999px;
+      padding: 5px 7px;
+      color: var(--white);
+      background: rgba(23, 36, 42, 0.82);
+      font-size: 10px;
+      font-weight: 850;
     }
 
     .history-item {
@@ -566,6 +636,7 @@
           </section>
 
           <section class="card">
+            <div class="step-label"><span>1</span> Photos</div>
             <h3>Photos</h3>
             <p class="muted">These photos become the record for this check.</p>
             <div class="photo-grid" style="margin-top: 14px;">
@@ -591,6 +662,7 @@
           </section>
 
           <section class="card">
+            <div class="step-label"><span>2</span> Pool Info</div>
             <h3>Pool Info</h3>
             <div class="form-grid" style="margin-top: 14px;">
               <label>Pool Name <input data-field="poolName" placeholder="ex: Maple Ridge Pool" /></label>
@@ -626,8 +698,9 @@
           </section>
 
           <section class="card">
+            <div class="step-label"><span>3</span> Confirm Values</div>
             <h3>Confirmed Test Values</h3>
-            <p class="muted">Enter what the test shows. AI should not invent these values.</p>
+            <p class="muted">Enter what the test shows. Leave blank for Unknown / Not Tested.</p>
             <div class="test-grid" style="margin-top: 14px;">
               <div class="test-row" data-test-row="free_chlorine">
                 <label>Free Chlorine <input data-test-current="free_chlorine" inputmode="decimal" placeholder="ex: 1.0" /></label>
@@ -649,8 +722,17 @@
                 <label>Calcium Hardness <input data-test-current="calcium" inputmode="decimal" placeholder="ex: 250" /></label>
                 <div class="target-range">Target<br>200-400 ppm</div>
               </div>
-              <label>Notes Optional <textarea data-field="notes" placeholder="Product context, weather, dye color match, customer note"></textarea></label>
+              <div class="test-row" data-test-row="salt">
+                <label>Salt Optional <input data-test-current="salt" inputmode="decimal" placeholder="if saltwater" /></label>
+                <div class="target-range">Typical<br>2700-3400 ppm</div>
+              </div>
             </div>
+          </section>
+
+          <section class="card">
+            <div class="step-label"><span>4</span> Notes</div>
+            <h3>Notes Optional</h3>
+            <label style="margin-top: 12px;">Notes <textarea data-field="notes" placeholder="Product context, weather, dye color match, customer note"></textarea></label>
           </section>
 
           <button class="btn primary full" data-create-card>Get Next Step Card</button>
@@ -677,6 +759,12 @@
               </div>
               <span class="status">Retest needed</span>
             </div>
+          </section>
+
+          <section class="card">
+            <h3>Photos & Notes</h3>
+            <div class="card-photo-grid" data-card-photos></div>
+            <p class="muted" data-card-notes style="margin-top: 12px;">No notes added.</p>
           </section>
 
           <section class="card">
@@ -770,7 +858,8 @@
       ph: { label: "pH", min: 7.2, max: 7.8, unit: "", low: "pH increaser", high: "pH decreaser" },
       alkalinity: { label: "Alkalinity", min: 80, max: 120, unit: "ppm", low: "Alkalinity increaser", high: "Pro review or pH/alkalinity adjustment" },
       cya: { label: "CYA / Stabilizer", min: 30, max: 50, unit: "ppm", low: "Stabilizer", high: "Dilution / pro review" },
-      calcium: { label: "Calcium Hardness", min: 200, max: 400, unit: "ppm", low: "Calcium increaser", high: "Pro review" }
+      calcium: { label: "Calcium Hardness", min: 200, max: 400, unit: "ppm", low: "Calcium increaser", high: "Pro review" },
+      salt: { label: "Salt", min: 2700, max: 3400, unit: "ppm", low: "Salt system review", high: "Salt system review" }
     };
 
     function showScreen(name) {
@@ -840,7 +929,7 @@
       const values = Object.entries(tests).map(([key, meta]) => {
         const raw = document.querySelector(`[data-test-current="${key}"]`)?.value.trim() || "";
         const value = Number(raw);
-        let status = "not entered";
+        let status = "Unknown / Not Tested";
         let product = "Retest / confirm value";
         if (raw && Number.isFinite(value)) {
           if (value < meta.min) {
@@ -879,15 +968,22 @@
     }
 
     function buildNextStep(values, issue) {
+      const entered = values.filter((item) => item.current);
       const outside = values.filter((item) => item.status === "low" || item.status === "high");
+      if (!entered.length) {
+        return "Confirm test values before adding chemicals.";
+      }
+      if (issue === "Cloudy Water") {
+        return "Check filtration and circulation. Retest before adding more.";
+      }
+      if (issue === "Green Water") {
+        return "Confirm sanitizer and pH levels. Do not add multiple chemicals at once.";
+      }
       if (!outside.length) {
         return "Confirmed values appear within target ranges. Circulate water and retest before swimming.";
       }
       const first = outside[0];
-      if (issue === "Cloudy Water") {
-        return `Confirm ${first.label}, check filtration, circulate water, and retest before adding more products.`;
-      }
-      return `Focus on ${first.label}. Use the matching product category only after confirming the value and reading the label.`;
+      return `Some confirmed values appear outside target range. Focus on ${first.label}, follow product labels, and retest before adding more.`;
     }
 
     function renderCard(check) {
@@ -895,23 +991,33 @@
       document.querySelector("[data-card-title]").textContent = check.mainIssue;
       document.querySelector("[data-card-issue]").textContent = check.mainIssue;
       document.querySelector("[data-next-step]").textContent = check.nextStep;
+      const cardPhotos = document.querySelector("[data-card-photos]");
+      const photoItems = [
+        ["Pool", check.photos?.pool],
+        ["Test", check.photos?.test],
+        ["Product", check.photos?.product]
+      ].filter((item) => item[1]);
+      cardPhotos.innerHTML = photoItems.length
+        ? photoItems.map(([label, src]) => `<div class="card-photo"><img alt="${label} photo" src="${src}"><span>${label}</span></div>`).join("")
+        : '<div class="empty" style="grid-column: 1 / -1;">No photos saved for this check.</div>';
+      document.querySelector("[data-card-notes]").textContent = check.notes || "No notes added.";
 
       const summary = document.querySelector("[data-values-summary]");
       summary.innerHTML = check.values.map((item) => `
         <div class="summary-item">
           <span>${item.label}</span>
-          <strong>${item.current || "Not entered"} / ${item.target}</strong>
+          <strong>${item.current || "Unknown / Not Tested"} / ${item.target}</strong>
         </div>
       `).join("");
 
       const outsideItems = check.values.filter((item) => item.status === "low" || item.status === "high");
       document.querySelector("[data-outside-summary]").innerHTML = outsideItems.length
-        ? outsideItems.map((item) => `
+        ? `<div class="empty">Some confirmed values appear outside target range.</div>${outsideItems.map((item) => `
           <div class="summary-item">
             <span>${item.label} is ${item.status}</span>
             <strong>${item.product}</strong>
           </div>
-        `).join("")
+        `).join("")}`
         : '<div class="empty">No entered values appear outside the target ranges. Retest before swimming.</div>';
 
       const products = outsideItems.map((item) => item.product).filter(Boolean);
@@ -925,6 +1031,11 @@
       const existing = records().filter((item) => item.id !== check.id);
       saveRecords([check, ...existing]);
       showScreen("history");
+    }
+
+    function autoSaveCheck(check) {
+      const existing = records().filter((item) => item.id !== check.id);
+      saveRecords([check, ...existing]);
     }
 
     function renderHome() {
@@ -951,37 +1062,54 @@
       container.innerHTML = items.map((item) => `
         <button class="history-item" data-open-check="${item.id}">
           <div class="row">
+            ${item.photos?.pool ? `<img class="history-thumb" alt="Pool thumbnail" src="${item.photos.pool}">` : '<div class="history-thumb"></div>'}
             <div>
               <strong>${item.poolName}</strong>
-              <p class="muted">${item.mainIssue} Â· ${new Date(item.createdAt).toLocaleString()}</p>
+              <p class="muted">${new Date(item.createdAt).toLocaleString()}</p>
+              <p class="muted">${item.mainIssue} Â· ${item.poolType}</p>
             </div>
-            <span class="status">Open</span>
+            <span class="status">Saved</span>
           </div>
         </button>
       `).join("");
     }
 
-    function shareSummary() {
+    async function copyText(text) {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+        return;
+      }
+      const area = document.createElement("textarea");
+      area.value = text;
+      document.body.appendChild(area);
+      area.select();
+      document.execCommand("copy");
+      area.remove();
+    }
+
+    async function shareSummary() {
       const check = activeCheck || readDraft();
       const outside = check.values.filter((item) => item.status === "low" || item.status === "high");
       const body = [
-        "ClearWay Pool AI Pool Check",
+        "ClearWay Pool Check",
         "",
-        `Pool: ${check.poolName}`,
-        `Issue: ${check.mainIssue}`,
-        `Test type: ${check.testType}`,
+        "Issue:",
+        check.mainIssue,
         "",
         "Confirmed values:",
-        ...check.values.map((item) => `- ${item.label}: ${item.current || "Not entered"} (target ${item.target})`),
+        ...check.values.map((item) => `${item.label}: ${item.current || "Unknown / Not Tested"} (target ${item.target})`),
         "",
-        "Outside target range:",
-        outside.length ? outside.map((item) => `- ${item.label}: ${item.status}; consider ${item.product}`).join("\n") : "None from entered values",
+        "Next step:",
+        check.nextStep,
         "",
-        `Next step: ${check.nextStep}`,
+        "Do not:",
+        "Do not mix chemicals directly. Do not add random chemicals without confirming values.",
         "",
-        "Safety: No exact dosing. Follow product labels. Do not mix chemicals directly. Retest before swimming."
+        "Reminder:",
+        "Retest before swimming or adding more."
       ].join("\n");
-      window.location.href = `mailto:?subject=${encodeURIComponent("ClearWay Pool Check Summary")}&body=${encodeURIComponent(body)}`;
+      await copyText(body);
+      alert("ClearWay summary copied to clipboard.");
     }
 
     function exportHistory() {
@@ -1015,6 +1143,7 @@
       if (event.target.closest("[data-create-card]")) {
         const check = readDraft();
         renderCard(check);
+        autoSaveCheck(check);
         showScreen("card");
         return;
       }
