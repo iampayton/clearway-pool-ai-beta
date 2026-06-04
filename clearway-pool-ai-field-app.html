@@ -194,6 +194,26 @@
       box-shadow: 0 12px 24px rgba(26, 169, 152, 0.28);
     }
 
+    .start-cta {
+      min-height: 104px;
+      border-radius: 28px;
+      display: grid;
+      align-content: center;
+      gap: 7px;
+      text-align: left;
+      padding: 22px;
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    .start-cta span {
+      display: block;
+      color: rgba(23, 36, 42, 0.7);
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1.35;
+    }
+
     .btn.dark {
       color: var(--white);
       background: var(--charcoal);
@@ -598,7 +618,10 @@
             <p class="hero-copy">Take photos, confirm values, get a clean next-step card, and save the check to history.</p>
           </section>
 
-          <button class="btn primary full" data-start-check>Start Pool Check</button>
+          <button class="btn primary full start-cta" data-start-check>
+            Start Pool Check
+            <span>Tap here first. Add photos, confirm values, get the next step.</span>
+          </button>
 
           <section class="stats">
             <div class="stat"><strong data-total-checks>0</strong><span>Saved Checks</span></div>
