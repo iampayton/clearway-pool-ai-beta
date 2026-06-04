@@ -7,15 +7,15 @@
   <style>
     :root {
       --seafoam: #63d7c6;
-      --seafoam-dark: #1aa998;
-      --seafoam-soft: #e6fbf7;
-      --charcoal: #18242a;
-      --charcoal-soft: #2b3b42;
+      --seafoam-dark: #159b8c;
+      --seafoam-soft: #e7fbf8;
+      --charcoal: #17242a;
+      --charcoal-soft: #2a3a41;
       --mist: #f5fbfa;
       --line: #dcecea;
       --white: #ffffff;
-      --muted: #6b7b82;
-      --warn: #f7b955;
+      --muted: #6d7e85;
+      --warn: #fff4d8;
       --shadow: 0 24px 60px rgba(18, 42, 46, 0.16);
       --radius: 24px;
     }
@@ -30,8 +30,8 @@
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       color: var(--charcoal);
       background:
-        radial-gradient(circle at 15% 5%, rgba(99, 215, 198, 0.42), transparent 30%),
-        linear-gradient(135deg, #f8fffd 0%, #e9f8f6 48%, #f9fbfa 100%);
+        radial-gradient(circle at 12% 8%, rgba(99, 215, 198, 0.42), transparent 30%),
+        linear-gradient(135deg, #f9fffd 0%, #e8f8f5 52%, #f8fbfa 100%);
     }
 
     button,
@@ -42,11 +42,11 @@
     }
 
     .shell {
-      width: min(1180px, calc(100% - 32px));
+      width: min(1120px, calc(100% - 32px));
       margin: 0 auto;
       padding: 34px 0;
       display: grid;
-      grid-template-columns: minmax(300px, 390px) 1fr;
+      grid-template-columns: minmax(300px, 400px) 1fr;
       gap: 32px;
       align-items: start;
     }
@@ -81,6 +81,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 12px;
     }
 
     .brand {
@@ -95,7 +96,8 @@
       border-radius: 999px;
       padding: 7px 11px;
       font-size: 12px;
-      font-weight: 800;
+      font-weight: 850;
+      white-space: nowrap;
     }
 
     .content {
@@ -110,8 +112,8 @@
       padding: 24px;
       color: var(--white);
       background:
-        linear-gradient(150deg, rgba(24, 36, 42, 0.96), rgba(24, 36, 42, 0.82)),
-        radial-gradient(circle at 80% 0%, rgba(99, 215, 198, 0.9), transparent 42%);
+        radial-gradient(circle at 84% 0%, rgba(99, 215, 198, 0.72), transparent 38%),
+        linear-gradient(150deg, rgba(23, 36, 42, 0.98), rgba(23, 36, 42, 0.84));
       box-shadow: 0 18px 38px rgba(24, 36, 42, 0.24);
     }
 
@@ -119,7 +121,7 @@
       margin: 0 0 9px;
       color: rgba(255, 255, 255, 0.72);
       font-size: 12px;
-      font-weight: 800;
+      font-weight: 850;
       text-transform: uppercase;
       letter-spacing: 0.08em;
     }
@@ -138,7 +140,7 @@
     }
 
     h2 {
-      font-size: 27px;
+      font-size: 28px;
       line-height: 1;
       letter-spacing: 0;
     }
@@ -155,47 +157,12 @@
       line-height: 1.45;
     }
 
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
-    }
-
-    .stat,
     .card {
       border: 1px solid var(--line);
       border-radius: var(--radius);
-      background: rgba(255, 255, 255, 0.92);
+      background: rgba(255, 255, 255, 0.94);
       box-shadow: 0 12px 28px rgba(29, 67, 72, 0.08);
-    }
-
-    .stat {
-      padding: 16px;
-    }
-
-    .stat strong {
-      display: block;
-      font-size: 25px;
-      line-height: 1;
-    }
-
-    .stat span {
-      display: block;
-      margin-top: 7px;
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 760;
-    }
-
-    .card {
       padding: 18px;
-    }
-
-    .row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
     }
 
     .muted {
@@ -204,10 +171,11 @@
       line-height: 1.42;
     }
 
-    .button-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
     }
 
     .btn {
@@ -236,318 +204,43 @@
       width: 100%;
     }
 
-    .preview-card {
-      background:
-        linear-gradient(135deg, rgba(99, 215, 198, 0.2), rgba(255, 255, 255, 0.94)),
-        var(--white);
-    }
-
-    .pool-card {
+    .button-row {
       display: grid;
-      gap: 12px;
-    }
-
-    .pool-title {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
+      grid-template-columns: 1fr 1fr;
       gap: 10px;
     }
 
-    .status {
-      flex: 0 0 auto;
-      border-radius: 999px;
-      padding: 7px 10px;
-      font-size: 11px;
-      font-weight: 850;
-      background: #fff3d8;
-      color: #9a6507;
-    }
-
-    .issue {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 14px;
-      border-radius: 20px;
-      background: var(--seafoam-soft);
-    }
-
-    .icon-dot {
-      width: 36px;
-      height: 36px;
-      border-radius: 14px;
+    .stats {
       display: grid;
-      place-items: center;
-      background: var(--seafoam);
-      font-weight: 900;
-    }
-
-    .steps {
-      display: grid;
+      grid-template-columns: repeat(2, 1fr);
       gap: 10px;
     }
 
-    .step {
-      display: grid;
-      grid-template-columns: 36px 1fr;
-      gap: 12px;
-      align-items: start;
-      padding: 14px;
+    .stat {
       border: 1px solid var(--line);
-      border-radius: 20px;
+      border-radius: var(--radius);
+      padding: 16px;
       background: var(--white);
+      box-shadow: 0 12px 28px rgba(29, 67, 72, 0.08);
     }
 
-    .num {
-      width: 32px;
-      height: 32px;
-      border-radius: 12px;
-      display: grid;
-      place-items: center;
-      color: var(--white);
-      background: var(--charcoal);
-      font-weight: 900;
-      font-size: 13px;
-    }
-
-    .timer {
-      color: var(--white);
-      background:
-        radial-gradient(circle at 86% 22%, rgba(99, 215, 198, 0.55), transparent 28%),
-        var(--charcoal);
-      border-color: transparent;
-    }
-
-    .timer-time {
-      font-size: 42px;
-      font-weight: 900;
+    .stat strong {
+      display: block;
+      font-size: 25px;
       line-height: 1;
-      margin: 10px 0 16px;
     }
 
-    .timer .muted {
-      color: rgba(255, 255, 255, 0.72);
-    }
-
-    .warning {
-      border-color: rgba(247, 185, 85, 0.5);
-      background: #fff8e9;
-    }
-
-    .warning ul {
-      margin: 12px 0 0;
-      padding-left: 18px;
-      color: var(--charcoal-soft);
-      line-height: 1.5;
-      font-size: 13px;
-    }
-
-    .timeline {
-      display: grid;
-      gap: 9px;
-    }
-
-    .timeline-item {
-      display: grid;
-      grid-template-columns: 12px 1fr;
-      gap: 10px;
-      align-items: start;
-      padding: 12px;
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      background: var(--white);
-    }
-
-    .timeline-dot {
-      width: 10px;
-      height: 10px;
-      margin-top: 4px;
-      border-radius: 50%;
-      background: var(--seafoam-dark);
+    .stat span {
+      display: block;
+      margin-top: 7px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 760;
     }
 
     .form-grid {
       display: grid;
-      gap: 10px;
-    }
-
-    .photo-grid {
-      display: grid;
-      gap: 10px;
-      margin-top: 14px;
-    }
-
-    .photo-tile {
-      display: grid;
-      grid-template-columns: 46px 1fr;
-      gap: 12px;
-      align-items: center;
-      border: 1px dashed rgba(26, 169, 152, 0.48);
-      border-radius: 20px;
-      padding: 14px;
-      background: linear-gradient(135deg, rgba(230, 251, 247, 0.85), rgba(255, 255, 255, 0.92));
-    }
-
-    .photo-icon {
-      width: 46px;
-      height: 46px;
-      border-radius: 16px;
-      display: grid;
-      place-items: center;
-      color: var(--charcoal);
-      background: var(--seafoam);
-      font-size: 22px;
-      font-weight: 900;
-    }
-
-    .photo-tile strong {
-      display: block;
-      margin-bottom: 4px;
-    }
-
-    .capture-stage {
-      display: grid;
-      gap: 14px;
-    }
-
-    .capture-card {
-      text-align: center;
-      background:
-        radial-gradient(circle at 50% 18%, rgba(99, 215, 198, 0.34), transparent 34%),
-        var(--white);
-    }
-
-    .tag-row {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-    }
-
-    .tag-chip {
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      padding: 10px 8px;
-      color: var(--charcoal);
-      background: var(--white);
-      font-size: 12px;
-      font-weight: 850;
-      cursor: pointer;
-    }
-
-    .tag-chip.active {
-      border-color: rgba(26, 169, 152, 0.5);
-      background: var(--seafoam);
-    }
-
-    .pixel-pool {
-      width: 154px;
-      height: 154px;
-      margin: 10px auto 8px;
-      border: 0;
-      border-radius: 34px;
-      display: grid;
-      place-items: center;
-      background: #dffaf6;
-      box-shadow: 0 16px 32px rgba(26, 169, 152, 0.2), inset 0 0 0 5px #ffffff;
-      cursor: pointer;
-    }
-
-    .pixel-art {
-      width: 92px;
-      height: 92px;
-      image-rendering: pixelated;
-      background:
-        linear-gradient(#1aa998 0 0) 23px 14px / 46px 8px no-repeat,
-        linear-gradient(#1aa998 0 0) 14px 23px / 64px 8px no-repeat,
-        linear-gradient(#63d7c6 0 0) 7px 32px / 78px 39px no-repeat,
-        linear-gradient(#ffffff 0 0) 18px 40px / 15px 7px no-repeat,
-        linear-gradient(#ffffff 0 0) 45px 50px / 21px 7px no-repeat,
-        linear-gradient(#1aa998 0 0) 14px 72px / 64px 8px no-repeat;
-    }
-
-    .photo-count {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 34px;
-      height: 26px;
-      border-radius: 999px;
-      margin-left: 6px;
-      color: var(--white);
-      background: var(--charcoal);
-      font-size: 12px;
-      font-weight: 900;
-    }
-
-    .photo-preview-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      min-height: 82px;
-    }
-
-    .photo-preview {
-      position: relative;
-      overflow: hidden;
-      min-height: 82px;
-      border-radius: 18px;
-      background: var(--seafoam-soft);
-      border: 1px solid var(--line);
-    }
-
-    .photo-preview img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-
-    .photo-preview span {
-      position: absolute;
-      left: 7px;
-      bottom: 7px;
-      border-radius: 999px;
-      padding: 5px 7px;
-      color: var(--white);
-      background: rgba(24, 36, 42, 0.82);
-      font-size: 10px;
-      font-weight: 850;
-    }
-
-    .capture-next {
-      position: sticky;
-      bottom: 0;
-      padding-top: 8px;
-      background: linear-gradient(rgba(245, 251, 250, 0), var(--mist) 34%);
-      z-index: 2;
-    }
-
-    .hidden-file {
-      display: none;
-    }
-
-    .quick-intake {
-      display: none;
-    }
-
-    .quick-intake.active {
-      display: grid;
-      gap: 14px;
-    }
-
-    .save-note {
-      display: none;
-      padding: 12px;
-      border-radius: 16px;
-      color: var(--seafoam-dark);
-      background: var(--seafoam-soft);
-      font-size: 12px;
-      font-weight: 800;
-    }
-
-    .save-note.active {
-      display: block;
+      gap: 11px;
     }
 
     label {
@@ -555,7 +248,7 @@
       gap: 7px;
       color: var(--muted);
       font-size: 12px;
-      font-weight: 800;
+      font-weight: 850;
     }
 
     input,
@@ -571,16 +264,163 @@
     }
 
     textarea {
-      min-height: 82px;
+      min-height: 84px;
       resize: vertical;
     }
 
-    .footer-note {
-      padding: 16px;
+    .photo-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .photo-tile {
+      display: grid;
+      grid-template-columns: 46px 1fr auto;
+      gap: 12px;
+      align-items: center;
+      border: 1px dashed rgba(26, 169, 152, 0.5);
       border-radius: 20px;
-      color: var(--muted);
-      background: rgba(255, 255, 255, 0.68);
+      padding: 14px;
+      background: linear-gradient(135deg, rgba(230, 251, 247, 0.85), rgba(255, 255, 255, 0.92));
+      cursor: pointer;
+    }
+
+    .photo-icon {
+      width: 46px;
+      height: 46px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      color: var(--charcoal);
+      background: var(--seafoam);
+      font-size: 22px;
+      font-weight: 900;
+    }
+
+    .photo-thumb {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      object-fit: cover;
+      display: none;
+      border: 1px solid var(--line);
+    }
+
+    .photo-tile.has-photo .photo-thumb {
+      display: block;
+    }
+
+    .hidden-file {
+      display: none;
+    }
+
+    .test-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .test-row {
+      display: grid;
+      grid-template-columns: 1fr 94px;
+      gap: 8px;
+      align-items: end;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--white);
+    }
+
+    .target-range {
+      padding: 12px;
+      border-radius: 16px;
+      color: var(--seafoam-dark);
+      background: var(--seafoam-soft);
       font-size: 12px;
+      font-weight: 850;
+      line-height: 1.35;
+    }
+
+    .summary-list {
+      display: grid;
+      gap: 9px;
+      margin-top: 12px;
+    }
+
+    .summary-item {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px;
+      border-radius: 16px;
+      background: var(--white);
+      border: 1px solid var(--line);
+      font-size: 13px;
+    }
+
+    .status {
+      flex: 0 0 auto;
+      border-radius: 999px;
+      padding: 7px 10px;
+      font-size: 11px;
+      font-weight: 850;
+      background: #fff3d8;
+      color: #9a6507;
+    }
+
+    .step-card {
+      color: var(--white);
+      background:
+        radial-gradient(circle at 86% 20%, rgba(99, 215, 198, 0.55), transparent 28%),
+        var(--charcoal);
+      border-color: transparent;
+    }
+
+    .step-card .muted {
+      color: rgba(255, 255, 255, 0.72);
+    }
+
+    .big-step {
+      margin-top: 12px;
+      font-size: 28px;
+      line-height: 1.05;
+      font-weight: 900;
+    }
+
+    .warning {
+      border-color: rgba(247, 185, 85, 0.5);
+      background: var(--warn);
+    }
+
+    .warning ul {
+      margin: 12px 0 0;
+      padding-left: 18px;
+      color: var(--charcoal-soft);
+      line-height: 1.5;
+      font-size: 13px;
+    }
+
+    .history-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .history-item {
+      width: 100%;
+      text-align: left;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 14px;
+      background: var(--white);
+      cursor: pointer;
+    }
+
+    .empty {
+      padding: 16px;
+      border: 1px dashed rgba(26, 169, 152, 0.4);
+      border-radius: 20px;
+      background: var(--seafoam-soft);
+      color: var(--muted);
+      font-size: 13px;
       line-height: 1.45;
     }
 
@@ -679,241 +519,201 @@
       <div class="screen active" data-screen="home">
         <div class="app-top">
           <div class="brand">ClearWay Pool AI</div>
-          <div class="pill">Field Beta</div>
+          <div class="pill">Pool Check V1</div>
         </div>
         <div class="content">
           <section class="hero">
-            <p class="eyebrow">Home</p>
-            <h1>Today's Pool Checks</h1>
-            <p class="hero-copy">Field mode for pool pros: capture the pool, save the visit, and show a clean customer-ready preview.</p>
+            <p class="eyebrow">Simple Pool Check</p>
+            <h1>Start with the pool. End with the next step.</h1>
+            <p class="hero-copy">Take photos, confirm values, get a clean next-step card, and save the check to history.</p>
           </section>
 
-          <section class="stats" aria-label="Daily stats">
-            <div class="stat"><strong>42</strong><span>Total Pools</span></div>
-            <div class="stat"><strong>8</strong><span>Today</span></div>
-            <div class="stat"><strong>5</strong><span>Follow-Ups</span></div>
-            <div class="stat"><strong>12</strong><span>Beta Candidates</span></div>
-          </section>
+          <button class="btn primary full" data-start-check>Start Pool Check</button>
 
-          <div class="button-row">
-            <button class="btn primary" data-go="quick-add">Add New Pool</button>
-            <button class="btn" data-go="history">View Pool History</button>
-          </div>
-
-          <section class="card preview-card">
-            <div class="row">
-              <div>
-                <h3>Customer View Preview</h3>
-                <p class="muted">Homeowner-facing output the pro can show or send after the visit.</p>
-              </div>
-              <button class="btn dark" data-go="customer-preview">Open Preview</button>
-            </div>
+          <section class="stats">
+            <div class="stat"><strong data-total-checks>0</strong><span>Saved Checks</span></div>
+            <div class="stat"><strong data-pool-count>0</strong><span>Saved Pools</span></div>
           </section>
 
           <section class="card">
-            <h3>Pool Pro Beta</h3>
-            <p class="muted">Capture pool photos, test-strip photos, product photos, notes, and follow-ups. No exact dosing in this MVP.</p>
+            <div class="row">
+              <div>
+                <h3>Recent Checks</h3>
+                <p class="muted">Latest pool checks saved on this device.</p>
+              </div>
+              <button class="btn" data-go="history">View All</button>
+            </div>
+            <div class="history-list" data-recent-list style="margin-top: 12px;"></div>
           </section>
 
-          <section class="card pool-card">
-            <div class="pool-title">
-              <div>
-                <h3>Maple Ridge Pool</h3>
-                <p class="muted">Last checked 10:30 AM</p>
-              </div>
-              <span class="status">Needs retest</span>
-            </div>
-            <div class="issue">
-              <div class="icon-dot">~</div>
-              <div>
-                <strong>Cloudy Water</strong>
-                <p class="muted">Treatment preview ready for review.</p>
-              </div>
-            </div>
-            <button class="btn full" data-go="pool-detail">Open Pool Detail</button>
+          <section class="card">
+            <h3>Saved Pools</h3>
+            <p class="muted" data-saved-pools>Start a pool check to save your first pool.</p>
           </section>
         </div>
       </div>
 
-      <div class="screen" data-screen="pool-detail">
+      <div class="screen" data-screen="start">
         <div class="app-top">
           <div class="brand">ClearWay Pool AI</div>
           <button class="btn" data-go="home">Home</button>
         </div>
         <div class="content">
           <section class="hero">
-            <p class="eyebrow">Pool Detail</p>
-            <h1>Maple Ridge Pool</h1>
-            <p class="hero-copy">Photos, field notes, visit history, and next-action status in one calm route-ready view.</p>
+            <p class="eyebrow">Start Pool Check</p>
+            <h1>Photos first. Values second.</h1>
+            <p class="hero-copy">Capture the pool, the test result, and products if available. Then confirm the values before the card is created.</p>
           </section>
 
           <section class="card">
-            <div class="pool-title">
-              <div>
-                <h3>Current status</h3>
-                <p class="muted">Cloudy water reported after first visit.</p>
-              </div>
-              <span class="status">Follow-up needed</span>
+            <h3>Photos</h3>
+            <p class="muted">These photos become the record for this check.</p>
+            <div class="photo-grid" style="margin-top: 14px;">
+              <label class="photo-tile" data-photo-tile="pool">
+                <span class="photo-icon">+</span>
+                <span><strong>Pool Photo</strong><span class="muted">Water clarity and overall condition.</span></span>
+                <img class="photo-thumb" data-photo-thumb="pool" alt="Pool preview" />
+                <input class="hidden-file" data-photo-input="pool" type="file" accept="image/*" capture="environment" />
+              </label>
+              <label class="photo-tile" data-photo-tile="test">
+                <span class="photo-icon">+</span>
+                <span><strong>Test Result Photo</strong><span class="muted">Strip, dye kit, or pool-store result.</span></span>
+                <img class="photo-thumb" data-photo-thumb="test" alt="Test result preview" />
+                <input class="hidden-file" data-photo-input="test" type="file" accept="image/*" capture="environment" />
+              </label>
+              <label class="photo-tile" data-photo-tile="product">
+                <span class="photo-icon">+</span>
+                <span><strong>Product Photo Optional</strong><span class="muted">What is used or available nearby.</span></span>
+                <img class="photo-thumb" data-photo-thumb="product" alt="Product preview" />
+                <input class="hidden-file" data-photo-input="product" type="file" accept="image/*" capture="environment" />
+              </label>
             </div>
           </section>
 
           <section class="card">
-            <h3>Submitted Test Info</h3>
-            <p class="muted">Strip values pending confirmation. Photos and notes are attached for review.</p>
+            <h3>Pool Info</h3>
+            <div class="form-grid" style="margin-top: 14px;">
+              <label>Pool Name <input data-field="poolName" placeholder="ex: Maple Ridge Pool" /></label>
+              <label>Pool Type
+                <select data-field="poolType">
+                  <option>Chlorine pool</option>
+                  <option>Salt pool</option>
+                  <option>Above-ground pool</option>
+                  <option>Spa / hot tub</option>
+                  <option>Not sure</option>
+                </select>
+              </label>
+              <label>Main Issue
+                <select data-field="mainIssue">
+                  <option>Cloudy Water</option>
+                  <option>Green Water</option>
+                  <option>Low Chlorine</option>
+                  <option>High Chlorine</option>
+                  <option>pH Concern</option>
+                  <option>Routine Check</option>
+                </select>
+              </label>
+              <label>Test Type
+                <select data-field="testType">
+                  <option>Strip</option>
+                  <option>Dye kit</option>
+                  <option>Pool-store report</option>
+                  <option>Digital reader</option>
+                  <option>Not sure</option>
+                </select>
+              </label>
+            </div>
           </section>
 
-          <button class="btn primary full" data-go="customer-preview">View Customer Preview</button>
-          <button class="btn full" data-go="quick-add">Rescan Strip</button>
-          <button class="btn full" data-go="customer-preview">Add Follow-Up Visit</button>
-          <button class="btn full" data-go="home">Back to Dashboard</button>
+          <section class="card">
+            <h3>Confirmed Test Values</h3>
+            <p class="muted">Enter what the test shows. AI should not invent these values.</p>
+            <div class="test-grid" style="margin-top: 14px;">
+              <div class="test-row" data-test-row="free_chlorine">
+                <label>Free Chlorine <input data-test-current="free_chlorine" inputmode="decimal" placeholder="ex: 1.0" /></label>
+                <div class="target-range">Target<br>1-4 ppm</div>
+              </div>
+              <div class="test-row" data-test-row="ph">
+                <label>pH <input data-test-current="ph" inputmode="decimal" placeholder="ex: 7.0" /></label>
+                <div class="target-range">Target<br>7.2-7.8</div>
+              </div>
+              <div class="test-row" data-test-row="alkalinity">
+                <label>Alkalinity <input data-test-current="alkalinity" inputmode="decimal" placeholder="ex: 80" /></label>
+                <div class="target-range">Target<br>80-120 ppm</div>
+              </div>
+              <div class="test-row" data-test-row="cya">
+                <label>CYA / Stabilizer <input data-test-current="cya" inputmode="decimal" placeholder="ex: 40" /></label>
+                <div class="target-range">Target<br>30-50 ppm</div>
+              </div>
+              <div class="test-row" data-test-row="calcium">
+                <label>Calcium Hardness <input data-test-current="calcium" inputmode="decimal" placeholder="ex: 250" /></label>
+                <div class="target-range">Target<br>200-400 ppm</div>
+              </div>
+              <label>Notes Optional <textarea data-field="notes" placeholder="Product context, weather, dye color match, customer note"></textarea></label>
+            </div>
+          </section>
+
+          <button class="btn primary full" data-create-card>Get Next Step Card</button>
         </div>
       </div>
 
-      <div class="screen" data-screen="customer-preview">
+      <div class="screen" data-screen="card">
         <div class="app-top">
           <div class="brand">ClearWay Pool AI</div>
-          <span class="pill">Customer Preview</span>
+          <button class="btn" data-go="home">Home</button>
         </div>
         <div class="content">
           <section class="hero">
-            <p class="eyebrow">Based on submitted test info</p>
-            <h1>Your Treatment Plan</h1>
-            <p class="hero-copy">A simple homeowner path the pool pro can show or send: follow the steps, wait, retest, and keep history saved.</p>
+            <p class="eyebrow">Next Step Card</p>
+            <h1 data-card-title>Cloudy Water</h1>
+            <p class="hero-copy">A simple next step based on confirmed values and photos. No exact chemical dosing in V1.</p>
           </section>
 
           <section class="card">
-            <div class="pool-title">
+            <div class="row">
               <div>
                 <p class="muted">Main issue</p>
-                <h2>Cloudy Water</h2>
+                <h2 data-card-issue>Cloudy Water</h2>
               </div>
-              <span class="status">Needs retest</span>
+              <span class="status">Retest needed</span>
             </div>
           </section>
 
           <section class="card">
-            <h3>Treatment Plan</h3>
-            <div class="steps" style="margin-top: 14px;">
-              <div class="step">
-                <div class="num">1</div>
-                <div><strong>Test First</strong><p class="muted">Confirm strip values before adding anything.</p></div>
-              </div>
-              <div class="step">
-                <div class="num">2</div>
-                <div><strong>Check Filter</strong><p class="muted">Clean or backwash if needed.</p></div>
-              </div>
-              <div class="step">
-                <div class="num">3</div>
-                <div><strong>Circulate Water</strong><p class="muted">Run pump long enough to move water through the system.</p></div>
-              </div>
-              <div class="step">
-                <div class="num">4</div>
-                <div><strong>Retest</strong><p class="muted">Retest before adding more chemicals.</p></div>
-              </div>
-            </div>
+            <h3>Confirmed Values Summary</h3>
+            <div class="summary-list" data-values-summary></div>
           </section>
 
-          <section class="card timer">
-            <p class="muted">Retest Timer</p>
-            <div class="timer-time">2 hours</div>
-            <button class="btn primary full">Start Timer</button>
+          <section class="card">
+            <h3>Outside Target Range</h3>
+            <div class="summary-list" data-outside-summary></div>
+          </section>
+
+          <section class="card step-card">
+            <p class="muted">Simple next step</p>
+            <div class="big-step" data-next-step>Test first, confirm values, circulate, and retest.</div>
+            <p class="muted" style="margin-top: 12px;" data-product-guidance>Use the product category indicated by the confirmed values. Follow product labels.</p>
           </section>
 
           <section class="card warning">
-            <h3>Do Not Add</h3>
+            <h3>What Not To Do</h3>
             <ul>
-              <li>Don't add random chemicals today.</li>
+              <li>Do not add random chemicals today.</li>
               <li>Do not mix chemicals directly.</li>
-              <li>Follow product labels.</li>
+              <li>Do not assume the pool is ready for swimming.</li>
+              <li>Follow product labels and ask a pool pro when unsure.</li>
             </ul>
           </section>
 
-          <div class="button-row">
-            <button class="btn primary">Add Follow-Up Visit</button>
-            <button class="btn">Mark Retest Needed</button>
-          </div>
-          <button class="btn dark full">Send Customer Preview</button>
-          <button class="btn full" data-go="pool-detail">Back to Pool Detail</button>
-
           <section class="card">
-            <h3>History</h3>
-            <div class="timeline" style="margin-top: 12px;">
-              <div class="timeline-item"><span class="timeline-dot"></span><div><strong>First visit</strong><p class="muted">Pool submitted and reviewed.</p></div></div>
-              <div class="timeline-item"><span class="timeline-dot"></span><div><strong>Retest</strong><p class="muted">Timer created for homeowner.</p></div></div>
-              <div class="timeline-item"><span class="timeline-dot"></span><div><strong>Follow-up</strong><p class="muted">Field team can add a follow-up visit.</p></div></div>
-              <div class="timeline-item"><span class="timeline-dot"></span><div><strong>Treatment preview sent</strong><p class="muted">Customer-facing plan saved.</p></div></div>
-            </div>
+            <h3>Retest Reminder</h3>
+            <p class="muted">Retest before swimming or before adding more chemicals.</p>
+            <button class="btn primary full" data-start-timer style="margin-top: 12px;">Start Retest Timer</button>
           </section>
 
-          <p class="footer-note">ClearWay Pool AI is a decision assistant. Always follow product labels, add chemicals separately, and retest before swimming.</p>
-        </div>
-      </div>
-
-      <div class="screen" data-screen="quick-add">
-        <div class="app-top">
-          <div class="brand">ClearWay Pool AI</div>
-          <button class="btn" data-go="home">Home</button>
-        </div>
-        <div class="content">
-          <section class="hero">
-            <p class="eyebrow">Quick Add</p>
-            <h1>Add New Pool</h1>
-            <p class="hero-copy">Tech field mode: capture photos first, then finish the intake in under 30 seconds.</p>
-          </section>
-
-          <div class="capture-stage" data-capture-stage>
-            <section class="card capture-card">
-              <h3>Capture Photo Data</h3>
-              <p class="muted">Pick the tag, press the pool icon, take the photo. Repeat as needed.</p>
-              <div class="tag-row" aria-label="Photo tag">
-                <button class="tag-chip active" data-photo-tag="pool_photo">Pool</button>
-                <button class="tag-chip" data-photo-tag="test_photo">Test</button>
-                <button class="tag-chip" data-photo-tag="product_photo">Product</button>
-              </div>
-              <button class="pixel-pool" data-open-camera aria-label="Open camera">
-                <span class="pixel-art" aria-hidden="true"></span>
-              </button>
-              <p class="muted">Photos saved this visit <span class="photo-count" data-photo-count>0</span></p>
-              <input class="hidden-file" data-camera-input type="file" accept="image/*" capture="environment" />
-            </section>
-
-            <section class="card">
-              <div class="row">
-                <div>
-                  <h3>Captured Photos</h3>
-                  <p class="muted">Tagged locally for this pool visit.</p>
-                </div>
-                <button class="btn" data-clear-photos>Clear</button>
-              </div>
-              <div class="photo-preview-grid" data-photo-previews></div>
-            </section>
-
-            <div class="capture-next">
-              <button class="btn primary full" data-next-intake>Next: Quick Intake</button>
-            </div>
-          </div>
-
-          <div class="quick-intake" data-intake-stage>
-            <section class="card">
-              <h3>Quick Intake</h3>
-              <p class="muted">Keep it short. The photos do most of the work.</p>
-              <div class="form-grid" style="margin-top: 14px;">
-                <label>Customer Name <input data-field="customerName" placeholder="Customer name" /></label>
-                <label>Pool Concern
-                  <select data-field="concern">
-                    <option>Cloudy water</option>
-                    <option>Green tint</option>
-                    <option>Needs routine check</option>
-                    <option>Other</option>
-                  </select>
-                </label>
-                <label>Field Notes <textarea data-field="notes" placeholder="Optional quick note"></textarea></label>
-              </div>
-            </section>
-
-            <p class="save-note" data-save-note>Saved on this device with tagged photo data.</p>
-            <button class="btn primary full" data-save-pool>Save Pool Check</button>
-            <button class="btn full" data-back-photos>Back to Photos</button>
+          <div class="button-row">
+            <button class="btn primary" data-save-check>Save Check</button>
+            <button class="btn" data-share-summary>Share Summary</button>
           </div>
         </div>
       </div>
@@ -926,38 +726,33 @@
         <div class="content">
           <section class="hero">
             <p class="eyebrow">History</p>
-            <h1>Pool History</h1>
-            <p class="hero-copy">Clean visit records without turning the app into a spreadsheet.</p>
+            <h1>Saved Pool Checks</h1>
+            <p class="hero-copy">Open a saved check to see photos, values, notes, and the next-step card.</p>
           </section>
 
           <section class="card">
-            <div class="row" style="margin-bottom: 12px;">
+            <div class="row">
               <div>
-                <h3>Saved Beta Data</h3>
-                <p class="muted"><span data-record-count>0</span> real pool checks saved on this device.</p>
+                <h3>Saved Checks</h3>
+                <p class="muted"><span data-history-count>0</span> checks saved on this device.</p>
               </div>
-              <button class="btn primary" data-export-records>Export</button>
+              <button class="btn" data-export-history>Export</button>
             </div>
-            <button class="btn full" data-email-summary style="margin-bottom: 12px;">Email Summary</button>
-            <div class="timeline">
-              <div class="timeline-item"><span class="timeline-dot"></span><div><strong>Maple Ridge Pool</strong><p class="muted">Needs retest Â· Customer preview sent</p></div></div>
-              <div class="timeline-item"><span class="timeline-dot"></span><div><strong>Oak Terrace Pool</strong><p class="muted">Follow-up scheduled</p></div></div>
-              <div class="timeline-item"><span class="timeline-dot"></span><div><strong>Harbor Lane Pool</strong><p class="muted">First visit complete</p></div></div>
-            </div>
+            <div class="history-list" data-history-list style="margin-top: 12px;"></div>
           </section>
         </div>
       </div>
     </section>
 
     <aside class="desktop-panel">
-      <div class="pill" style="display: inline-flex;">Premium visual direction</div>
-      <h2>ClearWay Pool AI Field App</h2>
-      <p>This prototype shows a B2B-first field app with homeowner-visible output: pool pros capture visit data, then show a clean customer preview with retest and follow-up guidance.</p>
+      <div class="pill" style="display: inline-flex;">Pool Check V1</div>
+      <h2>ClearWay Pool AI</h2>
+      <p>The product is the treatment card: photos, confirmed test values, target-range awareness, a simple next step, retest reminder, and saved history.</p>
       <div class="screen-picker" aria-label="Screen picker">
-        <button class="picker-button active" data-go="home"><strong>Home</strong><span class="muted">Todayâ€™s Pool Checks dashboard</span></button>
-        <button class="picker-button" data-go="pool-detail"><strong>Pool Detail</strong><span class="muted">Includes View Customer Preview</span></button>
-        <button class="picker-button" data-go="customer-preview"><strong>Customer Preview</strong><span class="muted">Treatment-card centered experience</span></button>
-        <button class="picker-button" data-go="quick-add"><strong>Quick Add</strong><span class="muted">Fast Trinity field intake</span></button>
+        <button class="picker-button active" data-go="home"><strong>Home</strong><span class="muted">Start Pool Check</span></button>
+        <button class="picker-button" data-go="start"><strong>Start Pool Check</strong><span class="muted">Photos and confirmed values</span></button>
+        <button class="picker-button" data-go="card"><strong>Next Step Card</strong><span class="muted">The core product</span></button>
+        <button class="picker-button" data-go="history"><strong>History</strong><span class="muted">Saved checks</span></button>
       </div>
     </aside>
   </main>
@@ -965,21 +760,17 @@
   <script>
     const screens = [...document.querySelectorAll(".screen")];
     const pickers = [...document.querySelectorAll(".picker-button")];
-    const captureStage = document.querySelector("[data-capture-stage]");
-    const intakeStage = document.querySelector("[data-intake-stage]");
-    const cameraInput = document.querySelector("[data-camera-input]");
-    const photoCount = document.querySelector("[data-photo-count]");
-    const photoPreviews = document.querySelector("[data-photo-previews]");
-    const saveNote = document.querySelector("[data-save-note]");
-    const recordCount = document.querySelector("[data-record-count]");
-    let activePhotoTag = "pool_photo";
-    let pendingPhotos = [];
+    const storageKey = "clearwayPoolChecksV1";
+    const photos = {};
+    let draft = {};
+    let activeCheck = null;
 
-    const storageKey = "clearwayPoolBetaRecords";
-    const tagLabels = {
-      pool_photo: "Pool",
-      test_photo: "Test",
-      product_photo: "Product"
+    const tests = {
+      free_chlorine: { label: "Free Chlorine", min: 1, max: 4, unit: "ppm", low: "Sanitizer / chlorine product", high: "Retest and let level drift down" },
+      ph: { label: "pH", min: 7.2, max: 7.8, unit: "", low: "pH increaser", high: "pH decreaser" },
+      alkalinity: { label: "Alkalinity", min: 80, max: 120, unit: "ppm", low: "Alkalinity increaser", high: "Pro review or pH/alkalinity adjustment" },
+      cya: { label: "CYA / Stabilizer", min: 30, max: 50, unit: "ppm", low: "Stabilizer", high: "Dilution / pro review" },
+      calcium: { label: "Calcium Hardness", min: 200, max: 400, unit: "ppm", low: "Calcium increaser", high: "Pro review" }
     };
 
     function showScreen(name) {
@@ -988,51 +779,9 @@
         screen.classList.toggle("active", isActive);
         if (isActive) screen.scrollTo({ top: 0, behavior: "instant" });
       });
-      pickers.forEach((button) => {
-        button.classList.toggle("active", button.dataset.go === name);
-      });
-      updateRecordCount();
-    }
-
-    function showCaptureStage() {
-      captureStage.classList.remove("quick-intake");
-      captureStage.style.display = "grid";
-      intakeStage.classList.remove("active");
-      saveNote.classList.remove("active");
-    }
-
-    function showIntakeStage() {
-      captureStage.style.display = "none";
-      intakeStage.classList.add("active");
-      saveNote.classList.remove("active");
-    }
-
-    function resetQuickAdd() {
-      pendingPhotos = [];
-      document.querySelectorAll("[data-field]").forEach((field) => {
-        if (field.tagName === "SELECT") field.selectedIndex = 0;
-        else field.value = "";
-      });
-      document.querySelectorAll("[data-photo-tag]").forEach((button) => {
-        button.classList.toggle("active", button.dataset.photoTag === "pool_photo");
-      });
-      activePhotoTag = "pool_photo";
-      renderPhotos();
-      showCaptureStage();
-    }
-
-    function renderPhotos() {
-      photoCount.textContent = pendingPhotos.length;
-      photoPreviews.innerHTML = "";
-      pendingPhotos.slice(-6).forEach((photo) => {
-        const preview = document.createElement("div");
-        preview.className = "photo-preview";
-        preview.innerHTML = `<img alt="${tagLabels[photo.tag]} photo" src="${photo.dataUrl}"><span>${tagLabels[photo.tag]}</span>`;
-        photoPreviews.appendChild(preview);
-      });
-      if (!pendingPhotos.length) {
-        photoPreviews.innerHTML = '<p class="muted" style="grid-column: 1 / -1; align-self: center;">No photos yet. Tap the pixel pool icon to open the camera.</p>';
-      }
+      pickers.forEach((button) => button.classList.toggle("active", button.dataset.go === name));
+      renderHome();
+      if (name === "history") renderHistory();
     }
 
     function records() {
@@ -1045,11 +794,8 @@
 
     function saveRecords(nextRecords) {
       localStorage.setItem(storageKey, JSON.stringify(nextRecords));
-      updateRecordCount();
-    }
-
-    function updateRecordCount() {
-      if (recordCount) recordCount.textContent = records().length;
+      renderHome();
+      renderHistory();
     }
 
     function compressImage(file) {
@@ -1060,15 +806,12 @@
           const image = new Image();
           image.onerror = reject;
           image.onload = () => {
-            const maxSide = 1280;
+            const maxSide = 1100;
             const scale = Math.min(1, maxSide / Math.max(image.width, image.height));
-            const width = Math.round(image.width * scale);
-            const height = Math.round(image.height * scale);
             const canvas = document.createElement("canvas");
-            canvas.width = width;
-            canvas.height = height;
-            const context = canvas.getContext("2d");
-            context.drawImage(image, 0, 0, width, height);
+            canvas.width = Math.round(image.width * scale);
+            canvas.height = Math.round(image.height * scale);
+            canvas.getContext("2d").drawImage(image, 0, 0, canvas.width, canvas.height);
             resolve(canvas.toDataURL("image/jpeg", 0.72));
           };
           image.src = reader.result;
@@ -1077,156 +820,241 @@
       });
     }
 
-    async function addPhoto(file) {
-      if (!file) return;
-      const dataUrl = await compressImage(file);
-      pendingPhotos.push({
-        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
-        tag: activePhotoTag,
-        capturedAt: new Date().toISOString(),
-        dataUrl
+    function resetDraft() {
+      Object.keys(photos).forEach((key) => delete photos[key]);
+      draft = {};
+      activeCheck = null;
+      document.querySelectorAll("[data-field], [data-test-current]").forEach((field) => {
+        if (field.tagName === "SELECT") field.selectedIndex = 0;
+        else field.value = "";
       });
-      renderPhotos();
+      document.querySelectorAll("[data-photo-tile]").forEach((tile) => tile.classList.remove("has-photo"));
+      document.querySelectorAll("[data-photo-thumb]").forEach((thumb) => {
+        thumb.removeAttribute("src");
+      });
+      showScreen("start");
     }
 
-    function savePoolCheck() {
+    function readDraft() {
       const getField = (name) => document.querySelector(`[data-field="${name}"]`)?.value.trim() || "";
-      const record = {
-        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
-        createdAt: new Date().toISOString(),
-        customerName: getField("customerName") || "Unnamed Pool",
-        concern: getField("concern") || "Cloudy water",
+      const values = Object.entries(tests).map(([key, meta]) => {
+        const raw = document.querySelector(`[data-test-current="${key}"]`)?.value.trim() || "";
+        const value = Number(raw);
+        let status = "not entered";
+        let product = "Retest / confirm value";
+        if (raw && Number.isFinite(value)) {
+          if (value < meta.min) {
+            status = "low";
+            product = meta.low;
+          } else if (value > meta.max) {
+            status = "high";
+            product = meta.high;
+          } else {
+            status = "in range";
+            product = "No product category flagged";
+          }
+        }
+        return {
+          key,
+          label: meta.label,
+          current: raw,
+          target: `${meta.min}-${meta.max}${meta.unit ? " " + meta.unit : ""}`,
+          status,
+          product
+        };
+      });
+
+      return {
+        id: activeCheck?.id || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())),
+        createdAt: activeCheck?.createdAt || new Date().toISOString(),
+        poolName: getField("poolName") || "Unnamed Pool",
+        poolType: getField("poolType") || "Chlorine pool",
+        mainIssue: getField("mainIssue") || "Cloudy Water",
+        testType: getField("testType") || "Strip",
         notes: getField("notes"),
-        photos: pendingPhotos,
-        photoSummary: pendingPhotos.reduce((summary, photo) => {
-          summary[photo.tag] = (summary[photo.tag] || 0) + 1;
-          return summary;
-        }, {})
+        photos: { ...photos },
+        values,
+        nextStep: buildNextStep(values, getField("mainIssue") || "Cloudy Water")
       };
-      saveRecords([record, ...records()]);
-      saveNote.classList.add("active");
-      setTimeout(() => showScreen("history"), 650);
     }
 
-    function exportRecords() {
-      const data = {
-        exportedAt: new Date().toISOString(),
-        app: "ClearWay Pool AI Field MVP",
-        records: records()
-      };
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    function buildNextStep(values, issue) {
+      const outside = values.filter((item) => item.status === "low" || item.status === "high");
+      if (!outside.length) {
+        return "Confirmed values appear within target ranges. Circulate water and retest before swimming.";
+      }
+      const first = outside[0];
+      if (issue === "Cloudy Water") {
+        return `Confirm ${first.label}, check filtration, circulate water, and retest before adding more products.`;
+      }
+      return `Focus on ${first.label}. Use the matching product category only after confirming the value and reading the label.`;
+    }
+
+    function renderCard(check) {
+      activeCheck = check;
+      document.querySelector("[data-card-title]").textContent = check.mainIssue;
+      document.querySelector("[data-card-issue]").textContent = check.mainIssue;
+      document.querySelector("[data-next-step]").textContent = check.nextStep;
+
+      const summary = document.querySelector("[data-values-summary]");
+      summary.innerHTML = check.values.map((item) => `
+        <div class="summary-item">
+          <span>${item.label}</span>
+          <strong>${item.current || "Not entered"} / ${item.target}</strong>
+        </div>
+      `).join("");
+
+      const outsideItems = check.values.filter((item) => item.status === "low" || item.status === "high");
+      document.querySelector("[data-outside-summary]").innerHTML = outsideItems.length
+        ? outsideItems.map((item) => `
+          <div class="summary-item">
+            <span>${item.label} is ${item.status}</span>
+            <strong>${item.product}</strong>
+          </div>
+        `).join("")
+        : '<div class="empty">No entered values appear outside the target ranges. Retest before swimming.</div>';
+
+      const products = outsideItems.map((item) => item.product).filter(Boolean);
+      document.querySelector("[data-product-guidance]").textContent = products.length
+        ? `Product category to consider: ${products.join(", ")}. Follow product labels. No exact dosing is provided.`
+        : "No product category is flagged from entered values. Continue to monitor and retest.";
+    }
+
+    function saveCheck() {
+      const check = activeCheck || readDraft();
+      const existing = records().filter((item) => item.id !== check.id);
+      saveRecords([check, ...existing]);
+      showScreen("history");
+    }
+
+    function renderHome() {
+      const saved = records();
+      document.querySelector("[data-total-checks]").textContent = saved.length;
+      document.querySelector("[data-pool-count]").textContent = new Set(saved.map((item) => item.poolName)).size;
+      document.querySelector("[data-saved-pools]").textContent = saved.length
+        ? [...new Set(saved.map((item) => item.poolName))].slice(0, 5).join(", ")
+        : "Start a pool check to save your first pool.";
+      renderList(document.querySelector("[data-recent-list]"), saved.slice(0, 3));
+    }
+
+    function renderHistory() {
+      const saved = records();
+      document.querySelector("[data-history-count]").textContent = saved.length;
+      renderList(document.querySelector("[data-history-list]"), saved);
+    }
+
+    function renderList(container, items) {
+      if (!items.length) {
+        container.innerHTML = '<div class="empty">No saved checks yet. Tap Start Pool Check.</div>';
+        return;
+      }
+      container.innerHTML = items.map((item) => `
+        <button class="history-item" data-open-check="${item.id}">
+          <div class="row">
+            <div>
+              <strong>${item.poolName}</strong>
+              <p class="muted">${item.mainIssue} Â· ${new Date(item.createdAt).toLocaleString()}</p>
+            </div>
+            <span class="status">Open</span>
+          </div>
+        </button>
+      `).join("");
+    }
+
+    function shareSummary() {
+      const check = activeCheck || readDraft();
+      const outside = check.values.filter((item) => item.status === "low" || item.status === "high");
+      const body = [
+        "ClearWay Pool AI Pool Check",
+        "",
+        `Pool: ${check.poolName}`,
+        `Issue: ${check.mainIssue}`,
+        `Test type: ${check.testType}`,
+        "",
+        "Confirmed values:",
+        ...check.values.map((item) => `- ${item.label}: ${item.current || "Not entered"} (target ${item.target})`),
+        "",
+        "Outside target range:",
+        outside.length ? outside.map((item) => `- ${item.label}: ${item.status}; consider ${item.product}`).join("\n") : "None from entered values",
+        "",
+        `Next step: ${check.nextStep}`,
+        "",
+        "Safety: No exact dosing. Follow product labels. Do not mix chemicals directly. Retest before swimming."
+      ].join("\n");
+      window.location.href = `mailto:?subject=${encodeURIComponent("ClearWay Pool Check Summary")}&body=${encodeURIComponent(body)}`;
+    }
+
+    function exportHistory() {
+      const blob = new Blob([JSON.stringify({ exportedAt: new Date().toISOString(), checks: records() }, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `clearway-pool-beta-${new Date().toISOString().slice(0, 10)}.json`;
+      link.download = `clearway-pool-checks-${new Date().toISOString().slice(0, 10)}.json`;
       link.click();
       URL.revokeObjectURL(url);
     }
 
-    function emailSummary() {
-      const savedRecords = records();
-      if (!savedRecords.length) {
-        alert("No saved pool checks yet.");
-        return;
-      }
-
-      const email = localStorage.getItem("clearwayOwnerEmail") || prompt("Send summary to which email?");
-      if (!email) return;
-      localStorage.setItem("clearwayOwnerEmail", email);
-
-      const lines = [
-        "ClearWay Pool AI beta summary",
-        "",
-        `Records: ${savedRecords.length}`,
-        `Generated: ${new Date().toLocaleString()}`,
-        "",
-        ...savedRecords.map((record, index) => {
-          const photoCounts = Object.entries(record.photoSummary || {})
-            .map(([tag, count]) => `${tagLabels[tag] || tag}: ${count}`)
-            .join(", ") || "No photos";
-          return [
-            `${index + 1}. ${record.customerName}`,
-            `Concern: ${record.concern}`,
-            `Time: ${new Date(record.createdAt).toLocaleString()}`,
-            `Photos: ${photoCounts}`,
-            `Notes: ${record.notes || "None"}`
-          ].join("\n");
-        }),
-        "",
-        "Full photo data is stored in the Export JSON file from the app."
-      ];
-
-      let body = lines.join("\n\n");
-      if (body.length > 6500) {
-        body = `${body.slice(0, 6500)}\n\nSummary trimmed for email. Use Export for the full data.`;
-      }
-
-      const subject = encodeURIComponent("ClearWay Pool AI beta data");
-      const encodedBody = encodeURIComponent(body);
-      window.location.href = `mailto:${encodeURIComponent(email)}?subject=${subject}&body=${encodedBody}`;
-    }
+    document.addEventListener("change", async (event) => {
+      const input = event.target.closest("[data-photo-input]");
+      if (!input || !input.files[0]) return;
+      const key = input.dataset.photoInput;
+      photos[key] = await compressImage(input.files[0]);
+      const thumb = document.querySelector(`[data-photo-thumb="${key}"]`);
+      const tile = document.querySelector(`[data-photo-tile="${key}"]`);
+      thumb.src = photos[key];
+      tile.classList.add("has-photo");
+      input.value = "";
+    });
 
     document.addEventListener("click", (event) => {
-      const tag = event.target.closest("[data-photo-tag]");
-      if (tag) {
-        activePhotoTag = tag.dataset.photoTag;
-        document.querySelectorAll("[data-photo-tag]").forEach((button) => {
-          button.classList.toggle("active", button === tag);
-        });
+      if (event.target.closest("[data-start-check]")) {
+        resetDraft();
         return;
       }
 
-      if (event.target.closest("[data-open-camera]")) {
-        cameraInput.click();
+      if (event.target.closest("[data-create-card]")) {
+        const check = readDraft();
+        renderCard(check);
+        showScreen("card");
         return;
       }
 
-      if (event.target.closest("[data-clear-photos]")) {
-        pendingPhotos = [];
-        renderPhotos();
+      if (event.target.closest("[data-save-check]")) {
+        saveCheck();
         return;
       }
 
-      if (event.target.closest("[data-next-intake]")) {
-        showIntakeStage();
+      if (event.target.closest("[data-share-summary]")) {
+        shareSummary();
         return;
       }
 
-      if (event.target.closest("[data-back-photos]")) {
-        showCaptureStage();
+      if (event.target.closest("[data-start-timer]")) {
+        alert("Retest timer started. V1 visual reminder: retest before swimming.");
         return;
       }
 
-      if (event.target.closest("[data-save-pool]")) {
-        savePoolCheck();
+      if (event.target.closest("[data-export-history]")) {
+        exportHistory();
         return;
       }
 
-      if (event.target.closest("[data-export-records]")) {
-        exportRecords();
-        return;
-      }
-
-      if (event.target.closest("[data-email-summary]")) {
-        emailSummary();
+      const open = event.target.closest("[data-open-check]");
+      if (open) {
+        const check = records().find((item) => item.id === open.dataset.openCheck);
+        if (check) {
+          renderCard(check);
+          showScreen("card");
+        }
         return;
       }
 
       const trigger = event.target.closest("[data-go]");
       if (!trigger) return;
-      if (trigger.dataset.go === "quick-add" && trigger.textContent.includes("Add New Pool")) {
-        resetQuickAdd();
-      }
       showScreen(trigger.dataset.go);
     });
 
-    cameraInput.addEventListener("change", async () => {
-      await addPhoto(cameraInput.files[0]);
-      cameraInput.value = "";
-    });
-
-    renderPhotos();
-    updateRecordCount();
+    renderHome();
   </script>
 </body>
 </html>
