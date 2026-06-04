@@ -845,13 +845,20 @@
     </aside>
   </main>
 
-  <script>
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
     const screens = [...document.querySelectorAll(".screen")];
     const pickers = [...document.querySelectorAll(".picker-button")];
     const storageKey = "clearwayPoolChecksV1";
+    const supabaseUrl = "https://wwhbwhgnwmmlpvrjkjek.supabase.co";
+    const supabaseAnonKey = "sb_publishable_CN_Z7T4c3zN66C7xKVuJ8g_rQe9FJNX";
+    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    const photoBucket = "pool-check-photos";
     const photos = {};
     let draft = {};
     let activeCheck = null;
+    let usingFallback = false;
 
     const tests = {
       free_chlorine: { label: "Free Chlorine", min: 1, max: 4, unit: "ppm", low: "Sanitizer / chlorine product", high: "Retest and let level drift down" },
@@ -862,18 +869,18 @@
       salt: { label: "Salt", min: 2700, max: 3400, unit: "ppm", low: "Salt system review", high: "Salt system review" }
     };
 
-    function showScreen(name) {
+    async function showScreen(name) {
       screens.forEach((screen) => {
         const isActive = screen.dataset.screen === name;
         screen.classList.toggle("active", isActive);
         if (isActive) screen.scrollTo({ top: 0, behavior: "instant" });
       });
       pickers.forEach((button) => button.classList.toggle("active", button.dataset.go === name));
-      renderHome();
-      if (name === "history") renderHistory();
+      await renderHome();
+      if (name === "history") await renderHistory();
     }
 
-    function records() {
+    function localRecords() {
       try {
         return JSON.parse(localStorage.getItem(storageKey) || "[]");
       } catch {
@@ -881,10 +888,69 @@
       }
     }
 
-    function saveRecords(nextRecords) {
+    function saveLocalRecords(nextRecords) {
       localStorage.setItem(storageKey, JSON.stringify(nextRecords));
-      renderHome();
-      renderHistory();
+    }
+
+    function fromDb(row) {
+      return {
+        id: row.id,
+        createdAt: row.created_at,
+        poolName: row.pool_name,
+        poolType: row.pool_type,
+        mainIssue: row.main_issue,
+        testType: row.test_type,
+        notes: row.notes || "",
+        photos: row.photos || {},
+        values: row.confirmed_values || [],
+        nextStep: row.next_step || ""
+      };
+    }
+
+    function toDb(check) {
+      return {
+        id: check.id,
+        created_at: check.createdAt,
+        pool_name: check.poolName,
+        pool_type: check.poolType,
+        main_issue: check.mainIssue,
+        test_type: check.testType,
+        notes: check.notes || "",
+        photos: check.photos || {},
+        confirmed_values: check.values || [],
+        next_step: check.nextStep || ""
+      };
+    }
+
+    async function records() {
+      try {
+        const { data, error } = await supabase
+          .from("pool_checks")
+          .select("*")
+          .order("created_at", { ascending: false });
+        if (error) throw error;
+        usingFallback = false;
+        const shared = (data || []).map(fromDb);
+        saveLocalRecords(shared);
+        return shared;
+      } catch (error) {
+        console.warn("Using local fallback history", error);
+        usingFallback = true;
+        return localRecords();
+      }
+    }
+
+    async function saveSharedCheck(check) {
+      try {
+        const { error } = await supabase.from("pool_checks").upsert(toDb(check), { onConflict: "id" });
+        if (error) throw error;
+        usingFallback = false;
+      } catch (error) {
+        console.warn("Saving to local fallback only", error);
+        usingFallback = true;
+      }
+      const existing = localRecords().filter((item) => item.id !== check.id);
+      saveLocalRecords([check, ...existing]);
     }
 
     function compressImage(file) {
@@ -909,7 +975,7 @@
       });
     }
 
-    function resetDraft() {
+    async function resetDraft() {
       Object.keys(photos).forEach((key) => delete photos[key]);
       draft = {};
       activeCheck = null;
@@ -921,10 +987,36 @@
       document.querySelectorAll("[data-photo-thumb]").forEach((thumb) => {
         thumb.removeAttribute("src");
       });
-      showScreen("start");
+      await showScreen("start");
     }
 
-    function readDraft() {
+    function dataUrlToFile(dataUrl, fileName) {
+      const [meta, base64] = dataUrl.split(",");
+      const mime = meta.match(/data:(.*);base64/)?.[1] || "image/jpeg";
+      const binary = atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+      return new File([bytes], fileName, { type: mime });
+    }
+
+    async function uploadPhotos(checkId) {
+      const uploaded = { ...photos };
+      for (const [key, dataUrl] of Object.entries(photos)) {
+        if (!dataUrl || dataUrl.startsWith("http")) continue;
+        const file = dataUrlToFile(dataUrl, `${key}.jpg`);
+        const path = `${checkId}/${key}-${Date.now()}.jpg`;
+        const { error } = await supabase.storage.from(photoBucket).upload(path, file, {
+          contentType: "image/jpeg",
+          upsert: true
+        });
+        if (error) throw error;
+        const { data } = supabase.storage.from(photoBucket).getPublicUrl(path);
+        uploaded[key] = data.publicUrl;
+      }
+      return uploaded;
+    }
+
+    async function readDraft() {
       const getField = (name) => document.querySelector(`[data-field="${name}"]`)?.value.trim() || "";
       const values = Object.entries(tests).map(([key, meta]) => {
         const raw = document.querySelector(`[data-test-current="${key}"]`)?.value.trim() || "";
@@ -953,15 +1045,24 @@
         };
       });
 
+      const checkId = activeCheck?.id || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
+      let sharedPhotos = { ...photos };
+      try {
+        sharedPhotos = await uploadPhotos(checkId);
+      } catch (error) {
+        console.warn("Photo upload failed, using local photo fallback", error);
+        usingFallback = true;
+      }
+
       return {
-        id: activeCheck?.id || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())),
+        id: checkId,
         createdAt: activeCheck?.createdAt || new Date().toISOString(),
         poolName: getField("poolName") || "Unnamed Pool",
         poolType: getField("poolType") || "Chlorine pool",
         mainIssue: getField("mainIssue") || "Cloudy Water",
         testType: getField("testType") || "Strip",
         notes: getField("notes"),
-        photos: { ...photos },
+        photos: sharedPhotos,
         values,
         nextStep: buildNextStep(values, getField("mainIssue") || "Cloudy Water")
       };
@@ -1026,20 +1127,18 @@
         : "No product category is flagged from entered values. Continue to monitor and retest.";
     }
 
-    function saveCheck() {
-      const check = activeCheck || readDraft();
-      const existing = records().filter((item) => item.id !== check.id);
-      saveRecords([check, ...existing]);
-      showScreen("history");
+    async function saveCheck() {
+      const check = activeCheck || await readDraft();
+      await saveSharedCheck(check);
+      await showScreen("history");
     }
 
-    function autoSaveCheck(check) {
-      const existing = records().filter((item) => item.id !== check.id);
-      saveRecords([check, ...existing]);
+    async function autoSaveCheck(check) {
+      await saveSharedCheck(check);
     }
 
-    function renderHome() {
-      const saved = records();
+    async function renderHome() {
+      const saved = await records();
       document.querySelector("[data-total-checks]").textContent = saved.length;
       document.querySelector("[data-pool-count]").textContent = new Set(saved.map((item) => item.poolName)).size;
       document.querySelector("[data-saved-pools]").textContent = saved.length
@@ -1048,8 +1147,8 @@
       renderList(document.querySelector("[data-recent-list]"), saved.slice(0, 3));
     }
 
-    function renderHistory() {
-      const saved = records();
+    async function renderHistory() {
+      const saved = await records();
       document.querySelector("[data-history-count]").textContent = saved.length;
       renderList(document.querySelector("[data-history-list]"), saved);
     }
@@ -1088,7 +1187,7 @@
     }
 
     async function shareSummary() {
-      const check = activeCheck || readDraft();
+      const check = activeCheck || await readDraft();
       const outside = check.values.filter((item) => item.status === "low" || item.status === "high");
       const body = [
         "ClearWay Pool Check",
@@ -1112,8 +1211,8 @@
       alert("ClearWay summary copied to clipboard.");
     }
 
-    function exportHistory() {
-      const blob = new Blob([JSON.stringify({ exportedAt: new Date().toISOString(), checks: records() }, null, 2)], { type: "application/json" });
+    async function exportHistory() {
+      const blob = new Blob([JSON.stringify({ exportedAt: new Date().toISOString(), checks: await records() }, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -1136,25 +1235,30 @@
 
     document.addEventListener("click", (event) => {
       if (event.target.closest("[data-start-check]")) {
-        resetDraft();
+        await resetDraft();
         return;
       }
 
       if (event.target.closest("[data-create-card]")) {
-        const check = readDraft();
+        const button = event.target.closest("[data-create-card]");
+        button.textContent = "Saving...";
+        button.disabled = true;
+        const check = await readDraft();
         renderCard(check);
-        autoSaveCheck(check);
-        showScreen("card");
+        await autoSaveCheck(check);
+        await showScreen("card");
+        button.textContent = "Get Next Step Card";
+        button.disabled = false;
         return;
       }
 
       if (event.target.closest("[data-save-check]")) {
-        saveCheck();
+        await saveCheck();
         return;
       }
 
       if (event.target.closest("[data-share-summary]")) {
-        shareSummary();
+        await shareSummary();
         return;
       }
 
@@ -1164,26 +1268,26 @@
       }
 
       if (event.target.closest("[data-export-history]")) {
-        exportHistory();
+        await exportHistory();
         return;
       }
 
       const open = event.target.closest("[data-open-check]");
       if (open) {
-        const check = records().find((item) => item.id === open.dataset.openCheck);
+        const check = (await records()).find((item) => item.id === open.dataset.openCheck);
         if (check) {
           renderCard(check);
-          showScreen("card");
+          await showScreen("card");
         }
         return;
       }
 
       const trigger = event.target.closest("[data-go]");
       if (!trigger) return;
-      showScreen(trigger.dataset.go);
+      await showScreen(trigger.dataset.go);
     });
 
-    renderHome();
+    await renderHome();
   </script>
 </body>
 </html>
