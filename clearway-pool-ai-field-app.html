@@ -1,0 +1,1225 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ClearWay Pool AI Field App</title>
+  <style>
+    :root {
+      --seafoam: #63d7c6;
+      --seafoam-dark: #1aa998;
+      --seafoam-soft: #e6fbf7;
+      --charcoal: #18242a;
+      --charcoal-soft: #2b3b42;
+      --mist: #f5fbfa;
+      --line: #dcecea;
+      --white: #ffffff;
+      --muted: #6b7b82;
+      --warn: #f7b955;
+      --shadow: 0 24px 60px rgba(18, 42, 46, 0.16);
+      --radius: 24px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--charcoal);
+      background:
+        radial-gradient(circle at 15% 5%, rgba(99, 215, 198, 0.42), transparent 30%),
+        linear-gradient(135deg, #f8fffd 0%, #e9f8f6 48%, #f9fbfa 100%);
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    .shell {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 34px 0;
+      display: grid;
+      grid-template-columns: minmax(300px, 390px) 1fr;
+      gap: 32px;
+      align-items: start;
+    }
+
+    .phone {
+      min-height: 820px;
+      border-radius: 44px;
+      padding: 14px;
+      background: #101b20;
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 24px;
+    }
+
+    .screen {
+      height: 792px;
+      border-radius: 34px;
+      overflow-y: auto;
+      background: var(--mist);
+      display: none;
+      flex-direction: column;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(26, 169, 152, 0.42) transparent;
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    .app-top {
+      padding: 22px 22px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      font-weight: 850;
+      letter-spacing: 0;
+    }
+
+    .pill {
+      border: 1px solid rgba(26, 169, 152, 0.24);
+      color: var(--seafoam-dark);
+      background: var(--seafoam-soft);
+      border-radius: 999px;
+      padding: 7px 11px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .content {
+      padding: 10px 18px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .hero {
+      border-radius: 30px;
+      padding: 24px;
+      color: var(--white);
+      background:
+        linear-gradient(150deg, rgba(24, 36, 42, 0.96), rgba(24, 36, 42, 0.82)),
+        radial-gradient(circle at 80% 0%, rgba(99, 215, 198, 0.9), transparent 42%);
+      box-shadow: 0 18px 38px rgba(24, 36, 42, 0.24);
+    }
+
+    .eyebrow {
+      margin: 0 0 9px;
+      color: rgba(255, 255, 255, 0.72);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: 34px;
+      line-height: 0.98;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      font-size: 27px;
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    h3 {
+      font-size: 16px;
+      line-height: 1.2;
+    }
+
+    .hero-copy {
+      margin-top: 14px;
+      color: rgba(255, 255, 255, 0.76);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .stat,
+    .card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: 0 12px 28px rgba(29, 67, 72, 0.08);
+    }
+
+    .stat {
+      padding: 16px;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 25px;
+      line-height: 1;
+    }
+
+    .stat span {
+      display: block;
+      margin-top: 7px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 760;
+    }
+
+    .card {
+      padding: 18px;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.42;
+    }
+
+    .button-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 17px;
+      padding: 14px 15px;
+      font-weight: 850;
+      cursor: pointer;
+      color: var(--charcoal);
+      background: var(--white);
+      box-shadow: inset 0 0 0 1px var(--line);
+    }
+
+    .btn.primary {
+      background: var(--seafoam);
+      box-shadow: 0 12px 24px rgba(26, 169, 152, 0.28);
+    }
+
+    .btn.dark {
+      color: var(--white);
+      background: var(--charcoal);
+      box-shadow: none;
+    }
+
+    .btn.full {
+      width: 100%;
+    }
+
+    .preview-card {
+      background:
+        linear-gradient(135deg, rgba(99, 215, 198, 0.2), rgba(255, 255, 255, 0.94)),
+        var(--white);
+    }
+
+    .pool-card {
+      display: grid;
+      gap: 12px;
+    }
+
+    .pool-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .status {
+      flex: 0 0 auto;
+      border-radius: 999px;
+      padding: 7px 10px;
+      font-size: 11px;
+      font-weight: 850;
+      background: #fff3d8;
+      color: #9a6507;
+    }
+
+    .issue {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px;
+      border-radius: 20px;
+      background: var(--seafoam-soft);
+    }
+
+    .icon-dot {
+      width: 36px;
+      height: 36px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background: var(--seafoam);
+      font-weight: 900;
+    }
+
+    .steps {
+      display: grid;
+      gap: 10px;
+    }
+
+    .step {
+      display: grid;
+      grid-template-columns: 36px 1fr;
+      gap: 12px;
+      align-items: start;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: var(--white);
+    }
+
+    .num {
+      width: 32px;
+      height: 32px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      color: var(--white);
+      background: var(--charcoal);
+      font-weight: 900;
+      font-size: 13px;
+    }
+
+    .timer {
+      color: var(--white);
+      background:
+        radial-gradient(circle at 86% 22%, rgba(99, 215, 198, 0.55), transparent 28%),
+        var(--charcoal);
+      border-color: transparent;
+    }
+
+    .timer-time {
+      font-size: 42px;
+      font-weight: 900;
+      line-height: 1;
+      margin: 10px 0 16px;
+    }
+
+    .timer .muted {
+      color: rgba(255, 255, 255, 0.72);
+    }
+
+    .warning {
+      border-color: rgba(247, 185, 85, 0.5);
+      background: #fff8e9;
+    }
+
+    .warning ul {
+      margin: 12px 0 0;
+      padding-left: 18px;
+      color: var(--charcoal-soft);
+      line-height: 1.5;
+      font-size: 13px;
+    }
+
+    .timeline {
+      display: grid;
+      gap: 9px;
+    }
+
+    .timeline-item {
+      display: grid;
+      grid-template-columns: 12px 1fr;
+      gap: 10px;
+      align-items: start;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--white);
+    }
+
+    .timeline-dot {
+      width: 10px;
+      height: 10px;
+      margin-top: 4px;
+      border-radius: 50%;
+      background: var(--seafoam-dark);
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .photo-grid {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .photo-tile {
+      display: grid;
+      grid-template-columns: 46px 1fr;
+      gap: 12px;
+      align-items: center;
+      border: 1px dashed rgba(26, 169, 152, 0.48);
+      border-radius: 20px;
+      padding: 14px;
+      background: linear-gradient(135deg, rgba(230, 251, 247, 0.85), rgba(255, 255, 255, 0.92));
+    }
+
+    .photo-icon {
+      width: 46px;
+      height: 46px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      color: var(--charcoal);
+      background: var(--seafoam);
+      font-size: 22px;
+      font-weight: 900;
+    }
+
+    .photo-tile strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .capture-stage {
+      display: grid;
+      gap: 14px;
+    }
+
+    .capture-card {
+      text-align: center;
+      background:
+        radial-gradient(circle at 50% 18%, rgba(99, 215, 198, 0.34), transparent 34%),
+        var(--white);
+    }
+
+    .tag-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .tag-chip {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 10px 8px;
+      color: var(--charcoal);
+      background: var(--white);
+      font-size: 12px;
+      font-weight: 850;
+      cursor: pointer;
+    }
+
+    .tag-chip.active {
+      border-color: rgba(26, 169, 152, 0.5);
+      background: var(--seafoam);
+    }
+
+    .pixel-pool {
+      width: 154px;
+      height: 154px;
+      margin: 10px auto 8px;
+      border: 0;
+      border-radius: 34px;
+      display: grid;
+      place-items: center;
+      background: #dffaf6;
+      box-shadow: 0 16px 32px rgba(26, 169, 152, 0.2), inset 0 0 0 5px #ffffff;
+      cursor: pointer;
+    }
+
+    .pixel-art {
+      width: 92px;
+      height: 92px;
+      image-rendering: pixelated;
+      background:
+        linear-gradient(#1aa998 0 0) 23px 14px / 46px 8px no-repeat,
+        linear-gradient(#1aa998 0 0) 14px 23px / 64px 8px no-repeat,
+        linear-gradient(#63d7c6 0 0) 7px 32px / 78px 39px no-repeat,
+        linear-gradient(#ffffff 0 0) 18px 40px / 15px 7px no-repeat,
+        linear-gradient(#ffffff 0 0) 45px 50px / 21px 7px no-repeat,
+        linear-gradient(#1aa998 0 0) 14px 72px / 64px 8px no-repeat;
+    }
+
+    .photo-count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 34px;
+      height: 26px;
+      border-radius: 999px;
+      margin-left: 6px;
+      color: var(--white);
+      background: var(--charcoal);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .photo-preview-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      min-height: 82px;
+    }
+
+    .photo-preview {
+      position: relative;
+      overflow: hidden;
+      min-height: 82px;
+      border-radius: 18px;
+      background: var(--seafoam-soft);
+      border: 1px solid var(--line);
+    }
+
+    .photo-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .photo-preview span {
+      position: absolute;
+      left: 7px;
+      bottom: 7px;
+      border-radius: 999px;
+      padding: 5px 7px;
+      color: var(--white);
+      background: rgba(24, 36, 42, 0.82);
+      font-size: 10px;
+      font-weight: 850;
+    }
+
+    .capture-next {
+      position: sticky;
+      bottom: 0;
+      padding-top: 8px;
+      background: linear-gradient(rgba(245, 251, 250, 0), var(--mist) 34%);
+      z-index: 2;
+    }
+
+    .hidden-file {
+      display: none;
+    }
+
+    .quick-intake {
+      display: none;
+    }
+
+    .quick-intake.active {
+      display: grid;
+      gap: 14px;
+    }
+
+    .save-note {
+      display: none;
+      padding: 12px;
+      border-radius: 16px;
+      color: var(--seafoam-dark);
+      background: var(--seafoam-soft);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .save-note.active {
+      display: block;
+    }
+
+    label {
+      display: grid;
+      gap: 7px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 13px;
+      color: var(--charcoal);
+      background: var(--white);
+      outline: 0;
+    }
+
+    textarea {
+      min-height: 82px;
+      resize: vertical;
+    }
+
+    .footer-note {
+      padding: 16px;
+      border-radius: 20px;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.68);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .desktop-panel {
+      padding: 18px 0;
+    }
+
+    .desktop-panel h2 {
+      font-size: 44px;
+      max-width: 660px;
+    }
+
+    .desktop-panel p {
+      max-width: 640px;
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.55;
+    }
+
+    .screen-picker {
+      margin-top: 28px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      max-width: 620px;
+    }
+
+    .picker-button {
+      text-align: left;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 18px;
+      background: rgba(255, 255, 255, 0.78);
+      cursor: pointer;
+      box-shadow: 0 12px 30px rgba(29, 67, 72, 0.08);
+    }
+
+    .picker-button.active {
+      border-color: rgba(26, 169, 152, 0.48);
+      background: var(--seafoam-soft);
+    }
+
+    .picker-button strong {
+      display: block;
+      font-size: 16px;
+      margin-bottom: 7px;
+    }
+
+    @media (max-width: 900px) {
+      .shell {
+        grid-template-columns: 1fr;
+      }
+
+      .phone {
+        position: static;
+        width: min(420px, 100%);
+        margin: 0 auto;
+      }
+
+      .desktop-panel {
+        order: -1;
+      }
+
+      .desktop-panel h2 {
+        font-size: 32px;
+      }
+    }
+
+    @media (max-width: 460px) {
+      .shell {
+        width: 100%;
+        padding: 0;
+      }
+
+      .phone {
+        min-height: 100vh;
+        border-radius: 0;
+        padding: 0;
+      }
+
+      .screen {
+        height: 100vh;
+        border-radius: 0;
+      }
+
+      .desktop-panel {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="phone" aria-label="ClearWay Pool AI app preview">
+      <div class="screen active" data-screen="home">
+        <div class="app-top">
+          <div class="brand">ClearWay Pool AI</div>
+          <div class="pill">Field Beta</div>
+        </div>
+        <div class="content">
+          <section class="hero">
+            <p class="eyebrow">Home</p>
+            <h1>Today's Pool Checks</h1>
+            <p class="hero-copy">A clean daily view for Trinity: fast pool intake, follow-ups, and a customer-ready preview.</p>
+          </section>
+
+          <section class="stats" aria-label="Daily stats">
+            <div class="stat"><strong>42</strong><span>Total Pools</span></div>
+            <div class="stat"><strong>8</strong><span>Today</span></div>
+            <div class="stat"><strong>5</strong><span>Follow-Ups</span></div>
+            <div class="stat"><strong>12</strong><span>Beta Candidates</span></div>
+          </section>
+
+          <div class="button-row">
+            <button class="btn primary" data-go="quick-add">Add New Pool</button>
+            <button class="btn" data-go="history">View Pool History</button>
+          </div>
+
+          <section class="card preview-card">
+            <div class="row">
+              <div>
+                <h3>Customer View Preview</h3>
+                <p class="muted">Show the homeowner-facing treatment card experience.</p>
+              </div>
+              <button class="btn dark" data-go="customer-preview">Open Preview</button>
+            </div>
+          </section>
+
+          <section class="card pool-card">
+            <div class="pool-title">
+              <div>
+                <h3>Maple Ridge Pool</h3>
+                <p class="muted">Last checked 10:30 AM</p>
+              </div>
+              <span class="status">Needs retest</span>
+            </div>
+            <div class="issue">
+              <div class="icon-dot">~</div>
+              <div>
+                <strong>Cloudy Water</strong>
+                <p class="muted">Treatment preview ready for review.</p>
+              </div>
+            </div>
+            <button class="btn full" data-go="pool-detail">Open Pool Detail</button>
+          </section>
+        </div>
+      </div>
+
+      <div class="screen" data-screen="pool-detail">
+        <div class="app-top">
+          <div class="brand">ClearWay Pool AI</div>
+          <button class="btn" data-go="home">Home</button>
+        </div>
+        <div class="content">
+          <section class="hero">
+            <p class="eyebrow">Pool Detail</p>
+            <h1>Maple Ridge Pool</h1>
+            <p class="hero-copy">Submitted strip info, field notes, and next-action status in one calm view.</p>
+          </section>
+
+          <section class="card">
+            <div class="pool-title">
+              <div>
+                <h3>Current status</h3>
+                <p class="muted">Cloudy water reported after first visit.</p>
+              </div>
+              <span class="status">Follow-up needed</span>
+            </div>
+          </section>
+
+          <section class="card">
+            <h3>Submitted Test Info</h3>
+            <p class="muted">Strip values pending confirmation. Photos and notes are attached for review.</p>
+          </section>
+
+          <button class="btn primary full" data-go="customer-preview">View Customer Preview</button>
+          <button class="btn full" data-go="quick-add">Rescan Strip</button>
+          <button class="btn full" data-go="home">Back to Dashboard</button>
+        </div>
+      </div>
+
+      <div class="screen" data-screen="customer-preview">
+        <div class="app-top">
+          <div class="brand">ClearWay Pool AI</div>
+          <span class="pill">Customer Preview</span>
+        </div>
+        <div class="content">
+          <section class="hero">
+            <p class="eyebrow">Based on submitted test info</p>
+            <h1>Your Treatment Plan</h1>
+            <p class="hero-copy">A simple homeowner path: follow the steps, wait, retest, and keep history saved.</p>
+          </section>
+
+          <section class="card">
+            <div class="pool-title">
+              <div>
+                <p class="muted">Main issue</p>
+                <h2>Cloudy Water</h2>
+              </div>
+              <span class="status">Needs retest</span>
+            </div>
+          </section>
+
+          <section class="card">
+            <h3>Treatment Plan</h3>
+            <div class="steps" style="margin-top: 14px;">
+              <div class="step">
+                <div class="num">1</div>
+                <div><strong>Test First</strong><p class="muted">Confirm strip values before adding anything.</p></div>
+              </div>
+              <div class="step">
+                <div class="num">2</div>
+                <div><strong>Check Filter</strong><p class="muted">Clean or backwash if needed.</p></div>
+              </div>
+              <div class="step">
+                <div class="num">3</div>
+                <div><strong>Circulate Water</strong><p class="muted">Run pump long enough to move water through the system.</p></div>
+              </div>
+              <div class="step">
+                <div class="num">4</div>
+                <div><strong>Retest</strong><p class="muted">Retest before adding more chemicals.</p></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="card timer">
+            <p class="muted">Retest Timer</p>
+            <div class="timer-time">2 hours</div>
+            <button class="btn primary full">Start Timer</button>
+          </section>
+
+          <section class="card warning">
+            <h3>Do Not Add</h3>
+            <ul>
+              <li>Don't add random chemicals today.</li>
+              <li>Do not mix chemicals directly.</li>
+              <li>Follow product labels.</li>
+            </ul>
+          </section>
+
+          <div class="button-row">
+            <button class="btn primary">Add Follow-Up Visit</button>
+            <button class="btn">Mark Retest Needed</button>
+          </div>
+          <button class="btn full" data-go="pool-detail">Back to Pool Detail</button>
+
+          <section class="card">
+            <h3>History</h3>
+            <div class="timeline" style="margin-top: 12px;">
+              <div class="timeline-item"><span class="timeline-dot"></span><div><strong>First visit</strong><p class="muted">Pool submitted and reviewed.</p></div></div>
+              <div class="timeline-item"><span class="timeline-dot"></span><div><strong>Retest</strong><p class="muted">Timer created for homeowner.</p></div></div>
+              <div class="timeline-item"><span class="timeline-dot"></span><div><strong>Follow-up</strong><p class="muted">Field team can add a follow-up visit.</p></div></div>
+              <div class="timeline-item"><span class="timeline-dot"></span><div><strong>Treatment preview sent</strong><p class="muted">Customer-facing plan saved.</p></div></div>
+            </div>
+          </section>
+
+          <p class="footer-note">ClearWay Pool AI is a decision assistant. Always follow product labels, add chemicals separately, and retest before swimming.</p>
+        </div>
+      </div>
+
+      <div class="screen" data-screen="quick-add">
+        <div class="app-top">
+          <div class="brand">ClearWay Pool AI</div>
+          <button class="btn" data-go="home">Home</button>
+        </div>
+        <div class="content">
+          <section class="hero">
+            <p class="eyebrow">Quick Add</p>
+            <h1>Add New Pool</h1>
+            <p class="hero-copy">Photo-first capture, then a fast intake that should take less than 30 seconds.</p>
+          </section>
+
+          <div class="capture-stage" data-capture-stage>
+            <section class="card capture-card">
+              <h3>Capture Photo Data</h3>
+              <p class="muted">Pick the tag, press the pool icon, take the photo. Repeat as needed.</p>
+              <div class="tag-row" aria-label="Photo tag">
+                <button class="tag-chip active" data-photo-tag="pool_photo">Pool</button>
+                <button class="tag-chip" data-photo-tag="test_photo">Test</button>
+                <button class="tag-chip" data-photo-tag="product_photo">Product</button>
+              </div>
+              <button class="pixel-pool" data-open-camera aria-label="Open camera">
+                <span class="pixel-art" aria-hidden="true"></span>
+              </button>
+              <p class="muted">Photos saved this visit <span class="photo-count" data-photo-count>0</span></p>
+              <input class="hidden-file" data-camera-input type="file" accept="image/*" capture="environment" />
+            </section>
+
+            <section class="card">
+              <div class="row">
+                <div>
+                  <h3>Captured Photos</h3>
+                  <p class="muted">Tagged locally for this pool visit.</p>
+                </div>
+                <button class="btn" data-clear-photos>Clear</button>
+              </div>
+              <div class="photo-preview-grid" data-photo-previews></div>
+            </section>
+
+            <div class="capture-next">
+              <button class="btn primary full" data-next-intake>Next: Quick Intake</button>
+            </div>
+          </div>
+
+          <div class="quick-intake" data-intake-stage>
+            <section class="card">
+              <h3>Quick Intake</h3>
+              <p class="muted">Keep it short. The photos do most of the work.</p>
+              <div class="form-grid" style="margin-top: 14px;">
+                <label>Customer Name <input data-field="customerName" placeholder="Customer name" /></label>
+                <label>Pool Concern
+                  <select data-field="concern">
+                    <option>Cloudy water</option>
+                    <option>Green tint</option>
+                    <option>Needs routine check</option>
+                    <option>Other</option>
+                  </select>
+                </label>
+                <label>Field Notes <textarea data-field="notes" placeholder="Optional quick note"></textarea></label>
+              </div>
+            </section>
+
+            <p class="save-note" data-save-note>Saved on this device with tagged photo data.</p>
+            <button class="btn primary full" data-save-pool>Save Pool Check</button>
+            <button class="btn full" data-back-photos>Back to Photos</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="screen" data-screen="history">
+        <div class="app-top">
+          <div class="brand">ClearWay Pool AI</div>
+          <button class="btn" data-go="home">Home</button>
+        </div>
+        <div class="content">
+          <section class="hero">
+            <p class="eyebrow">History</p>
+            <h1>Pool History</h1>
+            <p class="hero-copy">Clean visit records without turning the app into a spreadsheet.</p>
+          </section>
+
+          <section class="card">
+            <div class="row" style="margin-bottom: 12px;">
+              <div>
+                <h3>Saved Beta Data</h3>
+                <p class="muted"><span data-record-count>0</span> real pool checks saved on this device.</p>
+              </div>
+              <button class="btn primary" data-export-records>Export</button>
+            </div>
+            <button class="btn full" data-email-summary style="margin-bottom: 12px;">Email Summary</button>
+            <div class="timeline">
+              <div class="timeline-item"><span class="timeline-dot"></span><div><strong>Maple Ridge Pool</strong><p class="muted">Needs retest · Customer preview sent</p></div></div>
+              <div class="timeline-item"><span class="timeline-dot"></span><div><strong>Oak Terrace Pool</strong><p class="muted">Follow-up scheduled</p></div></div>
+              <div class="timeline-item"><span class="timeline-dot"></span><div><strong>Harbor Lane Pool</strong><p class="muted">First visit complete</p></div></div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <aside class="desktop-panel">
+      <div class="pill" style="display: inline-flex;">Premium visual direction</div>
+      <h2>ClearWay Pool AI Field App</h2>
+      <p>This prototype shows the approved modern pool-app feel: seafoam, charcoal, white, centered treatment cards, a timer/retest module, and a clear homeowner-facing Customer Preview.</p>
+      <div class="screen-picker" aria-label="Screen picker">
+        <button class="picker-button active" data-go="home"><strong>Home</strong><span class="muted">Today’s Pool Checks dashboard</span></button>
+        <button class="picker-button" data-go="pool-detail"><strong>Pool Detail</strong><span class="muted">Includes View Customer Preview</span></button>
+        <button class="picker-button" data-go="customer-preview"><strong>Customer Preview</strong><span class="muted">Treatment-card centered experience</span></button>
+        <button class="picker-button" data-go="quick-add"><strong>Quick Add</strong><span class="muted">Fast Trinity field intake</span></button>
+      </div>
+    </aside>
+  </main>
+
+  <script>
+    const screens = [...document.querySelectorAll(".screen")];
+    const pickers = [...document.querySelectorAll(".picker-button")];
+    const captureStage = document.querySelector("[data-capture-stage]");
+    const intakeStage = document.querySelector("[data-intake-stage]");
+    const cameraInput = document.querySelector("[data-camera-input]");
+    const photoCount = document.querySelector("[data-photo-count]");
+    const photoPreviews = document.querySelector("[data-photo-previews]");
+    const saveNote = document.querySelector("[data-save-note]");
+    const recordCount = document.querySelector("[data-record-count]");
+    let activePhotoTag = "pool_photo";
+    let pendingPhotos = [];
+
+    const storageKey = "clearwayPoolBetaRecords";
+    const tagLabels = {
+      pool_photo: "Pool",
+      test_photo: "Test",
+      product_photo: "Product"
+    };
+
+    function showScreen(name) {
+      screens.forEach((screen) => {
+        const isActive = screen.dataset.screen === name;
+        screen.classList.toggle("active", isActive);
+        if (isActive) screen.scrollTo({ top: 0, behavior: "instant" });
+      });
+      pickers.forEach((button) => {
+        button.classList.toggle("active", button.dataset.go === name);
+      });
+      updateRecordCount();
+    }
+
+    function showCaptureStage() {
+      captureStage.classList.remove("quick-intake");
+      captureStage.style.display = "grid";
+      intakeStage.classList.remove("active");
+      saveNote.classList.remove("active");
+    }
+
+    function showIntakeStage() {
+      captureStage.style.display = "none";
+      intakeStage.classList.add("active");
+      saveNote.classList.remove("active");
+    }
+
+    function resetQuickAdd() {
+      pendingPhotos = [];
+      document.querySelectorAll("[data-field]").forEach((field) => {
+        if (field.tagName === "SELECT") field.selectedIndex = 0;
+        else field.value = "";
+      });
+      document.querySelectorAll("[data-photo-tag]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.photoTag === "pool_photo");
+      });
+      activePhotoTag = "pool_photo";
+      renderPhotos();
+      showCaptureStage();
+    }
+
+    function renderPhotos() {
+      photoCount.textContent = pendingPhotos.length;
+      photoPreviews.innerHTML = "";
+      pendingPhotos.slice(-6).forEach((photo) => {
+        const preview = document.createElement("div");
+        preview.className = "photo-preview";
+        preview.innerHTML = `<img alt="${tagLabels[photo.tag]} photo" src="${photo.dataUrl}"><span>${tagLabels[photo.tag]}</span>`;
+        photoPreviews.appendChild(preview);
+      });
+      if (!pendingPhotos.length) {
+        photoPreviews.innerHTML = '<p class="muted" style="grid-column: 1 / -1; align-self: center;">No photos yet. Tap the pixel pool icon to open the camera.</p>';
+      }
+    }
+
+    function records() {
+      try {
+        return JSON.parse(localStorage.getItem(storageKey) || "[]");
+      } catch {
+        return [];
+      }
+    }
+
+    function saveRecords(nextRecords) {
+      localStorage.setItem(storageKey, JSON.stringify(nextRecords));
+      updateRecordCount();
+    }
+
+    function updateRecordCount() {
+      if (recordCount) recordCount.textContent = records().length;
+    }
+
+    function compressImage(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = reject;
+        reader.onload = () => {
+          const image = new Image();
+          image.onerror = reject;
+          image.onload = () => {
+            const maxSide = 1280;
+            const scale = Math.min(1, maxSide / Math.max(image.width, image.height));
+            const width = Math.round(image.width * scale);
+            const height = Math.round(image.height * scale);
+            const canvas = document.createElement("canvas");
+            canvas.width = width;
+            canvas.height = height;
+            const context = canvas.getContext("2d");
+            context.drawImage(image, 0, 0, width, height);
+            resolve(canvas.toDataURL("image/jpeg", 0.72));
+          };
+          image.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function addPhoto(file) {
+      if (!file) return;
+      const dataUrl = await compressImage(file);
+      pendingPhotos.push({
+        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+        tag: activePhotoTag,
+        capturedAt: new Date().toISOString(),
+        dataUrl
+      });
+      renderPhotos();
+    }
+
+    function savePoolCheck() {
+      const getField = (name) => document.querySelector(`[data-field="${name}"]`)?.value.trim() || "";
+      const record = {
+        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+        createdAt: new Date().toISOString(),
+        customerName: getField("customerName") || "Unnamed Pool",
+        concern: getField("concern") || "Cloudy water",
+        notes: getField("notes"),
+        photos: pendingPhotos,
+        photoSummary: pendingPhotos.reduce((summary, photo) => {
+          summary[photo.tag] = (summary[photo.tag] || 0) + 1;
+          return summary;
+        }, {})
+      };
+      saveRecords([record, ...records()]);
+      saveNote.classList.add("active");
+      setTimeout(() => showScreen("history"), 650);
+    }
+
+    function exportRecords() {
+      const data = {
+        exportedAt: new Date().toISOString(),
+        app: "ClearWay Pool AI Field MVP",
+        records: records()
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `clearway-pool-beta-${new Date().toISOString().slice(0, 10)}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function emailSummary() {
+      const savedRecords = records();
+      if (!savedRecords.length) {
+        alert("No saved pool checks yet.");
+        return;
+      }
+
+      const email = localStorage.getItem("clearwayOwnerEmail") || prompt("Send summary to which email?");
+      if (!email) return;
+      localStorage.setItem("clearwayOwnerEmail", email);
+
+      const lines = [
+        "ClearWay Pool AI beta summary",
+        "",
+        `Records: ${savedRecords.length}`,
+        `Generated: ${new Date().toLocaleString()}`,
+        "",
+        ...savedRecords.map((record, index) => {
+          const photoCounts = Object.entries(record.photoSummary || {})
+            .map(([tag, count]) => `${tagLabels[tag] || tag}: ${count}`)
+            .join(", ") || "No photos";
+          return [
+            `${index + 1}. ${record.customerName}`,
+            `Concern: ${record.concern}`,
+            `Time: ${new Date(record.createdAt).toLocaleString()}`,
+            `Photos: ${photoCounts}`,
+            `Notes: ${record.notes || "None"}`
+          ].join("\n");
+        }),
+        "",
+        "Full photo data is stored in the Export JSON file from the app."
+      ];
+
+      let body = lines.join("\n\n");
+      if (body.length > 6500) {
+        body = `${body.slice(0, 6500)}\n\nSummary trimmed for email. Use Export for the full data.`;
+      }
+
+      const subject = encodeURIComponent("ClearWay Pool AI beta data");
+      const encodedBody = encodeURIComponent(body);
+      window.location.href = `mailto:${encodeURIComponent(email)}?subject=${subject}&body=${encodedBody}`;
+    }
+
+    document.addEventListener("click", (event) => {
+      const tag = event.target.closest("[data-photo-tag]");
+      if (tag) {
+        activePhotoTag = tag.dataset.photoTag;
+        document.querySelectorAll("[data-photo-tag]").forEach((button) => {
+          button.classList.toggle("active", button === tag);
+        });
+        return;
+      }
+
+      if (event.target.closest("[data-open-camera]")) {
+        cameraInput.click();
+        return;
+      }
+
+      if (event.target.closest("[data-clear-photos]")) {
+        pendingPhotos = [];
+        renderPhotos();
+        return;
+      }
+
+      if (event.target.closest("[data-next-intake]")) {
+        showIntakeStage();
+        return;
+      }
+
+      if (event.target.closest("[data-back-photos]")) {
+        showCaptureStage();
+        return;
+      }
+
+      if (event.target.closest("[data-save-pool]")) {
+        savePoolCheck();
+        return;
+      }
+
+      if (event.target.closest("[data-export-records]")) {
+        exportRecords();
+        return;
+      }
+
+      if (event.target.closest("[data-email-summary]")) {
+        emailSummary();
+        return;
+      }
+
+      const trigger = event.target.closest("[data-go]");
+      if (!trigger) return;
+      if (trigger.dataset.go === "quick-add" && trigger.textContent.includes("Add New Pool")) {
+        resetQuickAdd();
+      }
+      showScreen(trigger.dataset.go);
+    });
+
+    cameraInput.addEventListener("change", async () => {
+      await addPhoto(cameraInput.files[0]);
+      cameraInput.value = "";
+    });
+
+    renderPhotos();
+    updateRecordCount();
+  </script>
+</body>
+</html>
