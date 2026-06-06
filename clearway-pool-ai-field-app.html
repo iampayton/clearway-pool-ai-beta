@@ -869,19 +869,25 @@
   </main>
 
   <script type="module">
-    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
     const screens = [...document.querySelectorAll(".screen")];
     const pickers = [...document.querySelectorAll(".picker-button")];
     const storageKey = "clearwayPoolChecksV1";
     const supabaseUrl = "https://wwhbwhgnwmmlpvrjkjek.supabase.co";
     const supabaseAnonKey = "sb_publishable_CN_Z7T4c3zN66C7xKVuJ8g_rQe9FJNX";
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    let supabase = null;
     const photoBucket = "pool-check-photos";
     const photos = {};
     let draft = {};
     let activeCheck = null;
     let usingFallback = false;
+
+    try {
+      const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
+      supabase = createClient(supabaseUrl, supabaseAnonKey);
+    } catch (error) {
+      console.warn("Supabase client failed to load, using local fallback", error);
+      usingFallback = true;
+    }
 
     const tests = {
       free_chlorine: { label: "Free Chlorine", min: 1, max: 4, unit: "ppm", low: "Sanitizer / chlorine product", high: "Retest and let level drift down" },
@@ -947,6 +953,7 @@
 
     async function records() {
       try {
+        if (!supabase) throw new Error("Supabase unavailable");
         const { data, error } = await supabase
           .from("pool_checks")
           .select("*")
@@ -965,6 +972,7 @@
 
     async function saveSharedCheck(check) {
       try {
+        if (!supabase) throw new Error("Supabase unavailable");
         const { error } = await supabase.from("pool_checks").upsert(toDb(check), { onConflict: "id" });
         if (error) throw error;
         usingFallback = false;
@@ -1024,6 +1032,7 @@
 
     async function uploadPhotos(checkId) {
       const uploaded = { ...photos };
+      if (!supabase) throw new Error("Supabase unavailable");
       for (const [key, dataUrl] of Object.entries(photos)) {
         if (!dataUrl || dataUrl.startsWith("http")) continue;
         const file = dataUrlToFile(dataUrl, `${key}.jpg`);
@@ -1256,7 +1265,7 @@
       input.value = "";
     });
 
-    document.addEventListener("click", (event) => {
+    document.addEventListener("click", async (event) => {
       if (event.target.closest("[data-start-check]")) {
         await resetDraft();
         return;
