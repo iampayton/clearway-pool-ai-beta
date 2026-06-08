@@ -3,26 +3,24 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ClearWay Pool AI Field App</title>
+  <title>ClearWay Pool AI</title>
   <style>
     :root {
       --seafoam: #63d7c6;
-      --seafoam-dark: #159b8c;
-      --seafoam-soft: #e7fbf8;
+      --seafoam-dark: #149d8d;
+      --seafoam-soft: #e6fbf7;
       --charcoal: #17242a;
-      --charcoal-soft: #2a3a41;
+      --charcoal-soft: #2b3b42;
       --mist: #f5fbfa;
-      --line: #dcecea;
       --white: #ffffff;
-      --muted: #6d7e85;
+      --line: #dcecea;
+      --muted: #6b7b82;
       --warn: #fff4d8;
       --shadow: 0 24px 60px rgba(18, 42, 46, 0.16);
       --radius: 24px;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -34,12 +32,7 @@
         linear-gradient(135deg, #f9fffd 0%, #e8f8f5 52%, #f8fbfa 100%);
     }
 
-    button,
-    input,
-    select,
-    textarea {
-      font: inherit;
-    }
+    button, input, select, textarea { font: inherit; }
 
     .shell {
       width: min(1120px, calc(100% - 32px));
@@ -72,32 +65,36 @@
       scrollbar-color: rgba(26, 169, 152, 0.42) transparent;
     }
 
-    .screen.active {
-      display: flex;
-    }
+    .screen.active { display: flex; }
 
     .app-top {
       padding: 22px 22px 10px;
       display: flex;
-      justify-content: space-between;
       align-items: center;
+      justify-content: space-between;
       gap: 12px;
     }
 
     .brand {
-      font-weight: 850;
+      font-weight: 900;
       letter-spacing: 0;
     }
 
-    .pill {
-      border: 1px solid rgba(26, 169, 152, 0.24);
-      color: var(--seafoam-dark);
-      background: var(--seafoam-soft);
-      border-radius: 999px;
-      padding: 7px 11px;
-      font-size: 12px;
-      font-weight: 850;
-      white-space: nowrap;
+    .top-icons {
+      display: flex;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      width: 42px;
+      height: 42px;
+      border: 0;
+      border-radius: 15px;
+      color: var(--charcoal);
+      background: var(--white);
+      box-shadow: inset 0 0 0 1px var(--line);
+      font-weight: 900;
+      cursor: pointer;
     }
 
     .content {
@@ -126,12 +123,7 @@
       letter-spacing: 0.08em;
     }
 
-    h1,
-    h2,
-    h3,
-    p {
-      margin: 0;
-    }
+    h1, h2, h3, p { margin: 0; }
 
     h1 {
       font-size: 34px;
@@ -182,7 +174,7 @@
       border: 0;
       border-radius: 17px;
       padding: 14px 15px;
-      font-weight: 850;
+      font-weight: 900;
       cursor: pointer;
       color: var(--charcoal);
       background: var(--white);
@@ -194,68 +186,73 @@
       box-shadow: 0 12px 24px rgba(26, 169, 152, 0.28);
     }
 
-    .start-cta {
-      min-height: 104px;
-      border-radius: 28px;
-      display: grid;
-      align-content: center;
-      gap: 7px;
-      text-align: left;
-      padding: 22px;
-      font-size: 22px;
-      line-height: 1;
-    }
-
-    .start-cta span {
-      display: block;
-      color: rgba(23, 36, 42, 0.7);
-      font-size: 13px;
-      font-weight: 800;
-      line-height: 1.35;
-    }
-
     .btn.dark {
       color: var(--white);
       background: var(--charcoal);
       box-shadow: none;
     }
 
-    .btn.full {
-      width: 100%;
-    }
+    .btn.full { width: 100%; }
 
-    .button-row {
+    .start-cta {
+      min-height: 126px;
+      border-radius: 30px;
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
-    }
-
-    .stat {
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      padding: 16px;
-      background: var(--white);
-      box-shadow: 0 12px 28px rgba(29, 67, 72, 0.08);
-    }
-
-    .stat strong {
-      display: block;
-      font-size: 25px;
+      align-content: center;
+      gap: 8px;
+      text-align: left;
+      padding: 24px;
+      font-size: 26px;
       line-height: 1;
     }
 
-    .stat span {
+    .start-cta span {
       display: block;
-      margin-top: 7px;
-      color: var(--muted);
+      color: rgba(23, 36, 42, 0.72);
+      font-size: 13px;
+      font-weight: 850;
+      line-height: 1.35;
+    }
+
+    .pill {
+      border: 1px solid rgba(26, 169, 152, 0.24);
+      color: var(--seafoam-dark);
+      background: var(--seafoam-soft);
+      border-radius: 999px;
+      padding: 7px 11px;
       font-size: 12px;
-      font-weight: 760;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
+    .status {
+      flex: 0 0 auto;
+      border-radius: 999px;
+      padding: 7px 10px;
+      font-size: 11px;
+      font-weight: 900;
+      background: #fff3d8;
+      color: #9a6507;
+    }
+
+    .pool-list, .history-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .pool-item, .history-item {
+      width: 100%;
+      text-align: left;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 14px;
+      background: var(--white);
+      cursor: pointer;
+    }
+
+    .selected-pool {
+      border-color: rgba(26, 169, 152, 0.48);
+      background: var(--seafoam-soft);
     }
 
     .form-grid {
@@ -271,9 +268,7 @@
       font-weight: 850;
     }
 
-    input,
-    select,
-    textarea {
+    input, select, textarea {
       width: 100%;
       border: 1px solid var(--line);
       border-radius: 16px;
@@ -288,62 +283,104 @@
       resize: vertical;
     }
 
-    .photo-grid {
+    .rules {
       display: grid;
       gap: 10px;
     }
 
-    .photo-tile {
+    .rule {
       display: grid;
-      grid-template-columns: 46px 1fr auto;
+      grid-template-columns: 38px 1fr;
       gap: 12px;
-      align-items: center;
-      border: 1px dashed rgba(26, 169, 152, 0.5);
-      border-radius: 20px;
+      align-items: start;
       padding: 14px;
-      background: linear-gradient(135deg, rgba(230, 251, 247, 0.85), rgba(255, 255, 255, 0.92));
+      border-radius: 18px;
+      background: var(--white);
+      border: 1px solid var(--line);
+    }
+
+    .num {
+      width: 34px;
+      height: 34px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      color: var(--white);
+      background: var(--charcoal);
+      font-weight: 900;
+      font-size: 13px;
+    }
+
+    .camera-card {
+      text-align: center;
+      background:
+        radial-gradient(circle at 50% 16%, rgba(99, 215, 198, 0.32), transparent 34%),
+        var(--white);
+    }
+
+    .camera-button {
+      width: 158px;
+      height: 158px;
+      margin: 12px auto;
+      border: 0;
+      border-radius: 36px;
+      display: grid;
+      place-items: center;
+      background: #dffaf6;
+      box-shadow: 0 16px 32px rgba(26, 169, 152, 0.2), inset 0 0 0 5px #ffffff;
       cursor: pointer;
     }
 
-    .photo-icon {
-      width: 46px;
-      height: 46px;
-      border-radius: 16px;
+    .pixel-art {
+      width: 92px;
+      height: 92px;
+      image-rendering: pixelated;
+      background:
+        linear-gradient(#1aa998 0 0) 23px 14px / 46px 8px no-repeat,
+        linear-gradient(#1aa998 0 0) 14px 23px / 64px 8px no-repeat,
+        linear-gradient(#63d7c6 0 0) 7px 32px / 78px 39px no-repeat,
+        linear-gradient(#ffffff 0 0) 18px 40px / 15px 7px no-repeat,
+        linear-gradient(#ffffff 0 0) 45px 50px / 21px 7px no-repeat,
+        linear-gradient(#1aa998 0 0) 14px 72px / 64px 8px no-repeat;
+    }
+
+    .thumb-grid {
       display: grid;
-      place-items: center;
-      color: var(--charcoal);
-      background: var(--seafoam);
-      font-size: 22px;
-      font-weight: 900;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 12px;
     }
 
-    .photo-thumb {
-      width: 52px;
-      height: 52px;
-      border-radius: 14px;
-      object-fit: cover;
-      display: none;
+    .thumb {
+      min-height: 84px;
       border: 1px solid var(--line);
-    }
-
-    .history-thumb {
-      width: 58px;
-      height: 58px;
-      border-radius: 16px;
-      object-fit: cover;
-      display: block;
+      border-radius: 18px;
+      overflow: hidden;
       background: var(--seafoam-soft);
-      border: 1px solid var(--line);
-      flex: 0 0 auto;
+      position: relative;
     }
 
-    .photo-tile.has-photo .photo-thumb {
+    .thumb img {
+      width: 100%;
+      height: 100%;
+      min-height: 84px;
+      object-fit: cover;
       display: block;
     }
 
-    .hidden-file {
-      display: none;
+    .thumb span {
+      position: absolute;
+      left: 7px;
+      bottom: 7px;
+      border-radius: 999px;
+      padding: 5px 7px;
+      color: var(--white);
+      background: rgba(23, 36, 42, 0.82);
+      font-size: 10px;
+      font-weight: 850;
     }
+
+    .hidden-file { display: none; }
 
     .test-grid {
       display: grid;
@@ -359,29 +396,6 @@
       border: 1px solid var(--line);
       border-radius: 18px;
       background: var(--white);
-    }
-
-    .step-label {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 10px;
-      color: var(--seafoam-dark);
-      font-size: 12px;
-      font-weight: 900;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-    }
-
-    .step-label span {
-      width: 26px;
-      height: 26px;
-      border-radius: 10px;
-      display: grid;
-      place-items: center;
-      color: var(--charcoal);
-      background: var(--seafoam);
-      letter-spacing: 0;
     }
 
     .target-range {
@@ -411,17 +425,7 @@
       font-size: 13px;
     }
 
-    .status {
-      flex: 0 0 auto;
-      border-radius: 999px;
-      padding: 7px 10px;
-      font-size: 11px;
-      font-weight: 850;
-      background: #fff3d8;
-      color: #9a6507;
-    }
-
-    .step-card {
+    .guide-card {
       color: var(--white);
       background:
         radial-gradient(circle at 86% 20%, rgba(99, 215, 198, 0.55), transparent 28%),
@@ -429,9 +433,7 @@
       border-color: transparent;
     }
 
-    .step-card .muted {
-      color: rgba(255, 255, 255, 0.72);
-    }
+    .guide-card .muted { color: rgba(255, 255, 255, 0.72); }
 
     .big-step {
       margin-top: 12px;
@@ -453,55 +455,15 @@
       font-size: 13px;
     }
 
-    .history-list {
-      display: grid;
-      gap: 10px;
-    }
-
-    .card-photo-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      margin-top: 12px;
-    }
-
-    .card-photo {
-      min-height: 84px;
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      overflow: hidden;
-      background: var(--seafoam-soft);
-      position: relative;
-    }
-
-    .card-photo img {
-      width: 100%;
-      height: 100%;
-      min-height: 84px;
+    .history-thumb {
+      width: 58px;
+      height: 58px;
+      border-radius: 16px;
       object-fit: cover;
       display: block;
-    }
-
-    .card-photo span {
-      position: absolute;
-      left: 7px;
-      bottom: 7px;
-      border-radius: 999px;
-      padding: 5px 7px;
-      color: var(--white);
-      background: rgba(23, 36, 42, 0.82);
-      font-size: 10px;
-      font-weight: 850;
-    }
-
-    .history-item {
-      width: 100%;
-      text-align: left;
+      background: var(--seafoam-soft);
       border: 1px solid var(--line);
-      border-radius: 20px;
-      padding: 14px;
-      background: var(--white);
-      cursor: pointer;
+      flex: 0 0 auto;
     }
 
     .empty {
@@ -514,9 +476,7 @@
       line-height: 1.45;
     }
 
-    .desktop-panel {
-      padding: 18px 0;
-    }
+    .desktop-panel { padding: 18px 0; }
 
     .desktop-panel h2 {
       font-size: 44px;
@@ -561,23 +521,14 @@
     }
 
     @media (max-width: 900px) {
-      .shell {
-        grid-template-columns: 1fr;
-      }
-
+      .shell { grid-template-columns: 1fr; }
       .phone {
         position: static;
         width: min(420px, 100%);
         margin: 0 auto;
       }
-
-      .desktop-panel {
-        order: -1;
-      }
-
-      .desktop-panel h2 {
-        font-size: 32px;
-      }
+      .desktop-panel { order: -1; }
+      .desktop-panel h2 { font-size: 32px; }
     }
 
     @media (max-width: 460px) {
@@ -585,112 +536,84 @@
         width: 100%;
         padding: 0;
       }
-
       .phone {
         min-height: 100vh;
         border-radius: 0;
         padding: 0;
       }
-
       .screen {
         height: 100vh;
         border-radius: 0;
       }
-
-      .desktop-panel {
-        display: none;
-      }
+      .desktop-panel { display: none; }
     }
   </style>
 </head>
 <body>
   <main class="shell">
-    <section class="phone" aria-label="ClearWay Pool AI app preview">
+    <section class="phone" aria-label="ClearWay Pool AI app">
       <div class="screen active" data-screen="home">
         <div class="app-top">
           <div class="brand">ClearWay Pool AI</div>
-          <div class="pill">Pool Check V1</div>
+          <div class="top-icons">
+            <button class="icon-btn" data-go="history" aria-label="History">H</button>
+            <button class="icon-btn" data-add-new-pool aria-label="Add pool">+</button>
+          </div>
         </div>
         <div class="content">
           <section class="hero">
-            <p class="eyebrow">Simple Pool Check</p>
-            <h1>Start with the pool. End with the next step.</h1>
-            <p class="hero-copy">Take photos, confirm values, get a clean next-step card, and save the check to history.</p>
+            <p class="eyebrow">Saturday Field Flow</p>
+            <h1>Tap start. Check the pool.</h1>
+            <p class="hero-copy">Pick the pool, take photos, confirm values, and get the Do Next Guide.</p>
           </section>
 
           <button class="btn primary full start-cta" data-start-check>
             Start Pool Check
-            <span>Tap here first. Add photos, confirm values, get the next step.</span>
+            <span>Tap here first. Add photos, confirm values, get the guide.</span>
           </button>
 
-          <section class="stats">
-            <div class="stat"><strong data-total-checks>0</strong><span>Saved Checks</span></div>
-            <div class="stat"><strong data-pool-count>0</strong><span>Saved Pools</span></div>
+          <section class="card">
+            <div class="row">
+              <div>
+                <h3>Use This Pool</h3>
+                <p class="muted" data-selected-pool-text>No pool selected yet.</p>
+              </div>
+              <button class="btn" data-edit-pool>Setup</button>
+            </div>
           </section>
 
           <section class="card">
             <div class="row">
               <div>
-                <h3>Recent Checks</h3>
-                <p class="muted">Latest pool checks saved on this device.</p>
+                <h3>Recent Pools</h3>
+                <p class="muted">Tap a pool to use it for the next check.</p>
               </div>
-              <button class="btn" data-go="history">View All</button>
+              <button class="btn" data-add-new-pool>Add Pool</button>
             </div>
-            <div class="history-list" data-recent-list style="margin-top: 12px;"></div>
-          </section>
-
-          <section class="card">
-            <h3>Saved Pools</h3>
-            <p class="muted" data-saved-pools>Start a pool check to save your first pool.</p>
+            <div class="pool-list" data-pool-list style="margin-top: 12px;"></div>
           </section>
         </div>
       </div>
 
-      <div class="screen" data-screen="start">
+      <div class="screen" data-screen="add-pool">
         <div class="app-top">
           <div class="brand">ClearWay Pool AI</div>
           <button class="btn" data-go="home">Home</button>
         </div>
         <div class="content">
           <section class="hero">
-            <p class="eyebrow">Start Pool Check</p>
-            <h1>Photos first. Values second.</h1>
-            <p class="hero-copy">Capture the pool, the test result, and products if available. Then confirm the values before the card is created.</p>
+            <p class="eyebrow">Add Pool</p>
+            <h1>Save the basics now. Add details later.</h1>
+            <p class="hero-copy">Trinity can add a pool fast today, then return later for measurements or missing setup info.</p>
           </section>
 
           <section class="card">
-            <div class="step-label"><span>1</span> Photos</div>
-            <h3>Photos</h3>
-            <p class="muted">These photos become the record for this check.</p>
-            <div class="photo-grid" style="margin-top: 14px;">
-              <label class="photo-tile" data-photo-tile="pool">
-                <span class="photo-icon">+</span>
-                <span><strong>Pool Photo</strong><span class="muted">Water clarity and overall condition.</span></span>
-                <img class="photo-thumb" data-photo-thumb="pool" alt="Pool preview" />
-                <input class="hidden-file" data-photo-input="pool" type="file" accept="image/*" capture="environment" />
-              </label>
-              <label class="photo-tile" data-photo-tile="test">
-                <span class="photo-icon">+</span>
-                <span><strong>Test Result Photo</strong><span class="muted">Strip, dye kit, or pool-store result.</span></span>
-                <img class="photo-thumb" data-photo-thumb="test" alt="Test result preview" />
-                <input class="hidden-file" data-photo-input="test" type="file" accept="image/*" capture="environment" />
-              </label>
-              <label class="photo-tile" data-photo-tile="product">
-                <span class="photo-icon">+</span>
-                <span><strong>Product Photo Optional</strong><span class="muted">What is used or available nearby.</span></span>
-                <img class="photo-thumb" data-photo-thumb="product" alt="Product preview" />
-                <input class="hidden-file" data-photo-input="product" type="file" accept="image/*" capture="environment" />
-              </label>
-            </div>
-          </section>
-
-          <section class="card">
-            <div class="step-label"><span>2</span> Pool Info</div>
-            <h3>Pool Info</h3>
+            <h3>Pool Basics</h3>
             <div class="form-grid" style="margin-top: 14px;">
-              <label>Pool Name <input data-field="poolName" placeholder="ex: Maple Ridge Pool" /></label>
+              <label>Pool Name <input data-pool-field="poolName" placeholder="ex: Maple Ridge Pool" /></label>
+              <label>Address Optional <input data-pool-field="address" placeholder="Can add later" /></label>
               <label>Pool Type
-                <select data-field="poolType">
+                <select data-pool-field="poolType">
                   <option>Chlorine pool</option>
                   <option>Salt pool</option>
                   <option>Above-ground pool</option>
@@ -698,8 +621,101 @@
                   <option>Not sure</option>
                 </select>
               </label>
+              <label>Heater
+                <select data-pool-field="heater">
+                  <option>Not sure</option>
+                  <option>No heater</option>
+                  <option>Gas heater</option>
+                  <option>Heat pump</option>
+                  <option>Solar heater</option>
+                </select>
+              </label>
+              <label>Filter
+                <select data-pool-field="filter">
+                  <option>Not sure</option>
+                  <option>Cartridge</option>
+                  <option>Sand</option>
+                  <option>DE</option>
+                </select>
+              </label>
+              <label>Measurements Later <textarea data-pool-field="measurements" placeholder="Gallons, surface, pump, equipment notes can be added later"></textarea></label>
+            </div>
+          </section>
+
+          <button class="btn primary full" data-save-pool>Save Pool</button>
+        </div>
+      </div>
+
+      <div class="screen" data-screen="rules">
+        <div class="app-top">
+          <div class="brand">ClearWay Pool AI</div>
+          <button class="btn" data-go="home">Home</button>
+        </div>
+        <div class="content">
+          <section class="hero">
+            <p class="eyebrow">Pool Check Rules</p>
+            <h1>Take the three photo types.</h1>
+            <p class="hero-copy">Fast and simple. Skip what you do not have.</p>
+          </section>
+
+          <section class="card">
+            <div class="rules">
+              <div class="rule"><div class="num">1</div><div><strong>Pool photo</strong><p class="muted">Show water clarity and condition.</p></div></div>
+              <div class="rule"><div class="num">2</div><div><strong>Test photo(s)</strong><p class="muted">Strip, dye kit, digital reader, or pool-store result. Add more than one if needed.</p></div></div>
+              <div class="rule"><div class="num">3</div><div><strong>Product photo(s)</strong><p class="muted">Show what is on hand so the guide can note what may be available or missing.</p></div></div>
+            </div>
+          </section>
+
+          <button class="btn primary full" data-start-photos>Start Photos</button>
+        </div>
+      </div>
+
+      <div class="screen" data-screen="photos">
+        <div class="app-top">
+          <div class="brand">ClearWay Pool AI</div>
+          <button class="btn" data-go="home">Home</button>
+        </div>
+        <div class="content">
+          <section class="hero">
+            <p class="eyebrow" data-photo-step-label>Pool Photo</p>
+            <h1 data-photo-step-title>Take a pool photo.</h1>
+            <p class="hero-copy" data-photo-step-copy>Show water clarity and the pool condition.</p>
+          </section>
+
+          <section class="card camera-card">
+            <h3 data-photo-card-title>Pool Photo</h3>
+            <p class="muted" data-photo-card-copy>Tap the pool icon to open the camera.</p>
+            <button class="camera-button" data-open-camera aria-label="Open camera">
+              <span class="pixel-art" aria-hidden="true"></span>
+            </button>
+            <input class="hidden-file" data-camera-input type="file" accept="image/*" capture="environment" />
+            <div class="thumb-grid" data-photo-thumbs></div>
+          </section>
+
+          <div class="row">
+            <button class="btn" data-skip-photo>Skip</button>
+            <button class="btn primary" data-next-photo-step>Next</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="screen" data-screen="values">
+        <div class="app-top">
+          <div class="brand">ClearWay Pool AI</div>
+          <button class="btn" data-go="home">Home</button>
+        </div>
+        <div class="content">
+          <section class="hero">
+            <p class="eyebrow">Confirm Values</p>
+            <h1>Enter what the test shows.</h1>
+            <p class="hero-copy">Leave blank for Unknown / Not Tested. ClearWay should not invent values.</p>
+          </section>
+
+          <section class="card">
+            <h3>Pool Check Info</h3>
+            <div class="form-grid" style="margin-top: 14px;">
               <label>Main Issue
-                <select data-field="mainIssue">
+                <select data-check-field="mainIssue">
                   <option>Cloudy Water</option>
                   <option>Green Water</option>
                   <option>Low Chlorine</option>
@@ -709,7 +725,7 @@
                 </select>
               </label>
               <label>Test Type
-                <select data-field="testType">
+                <select data-check-field="testType">
                   <option>Strip</option>
                   <option>Dye kit</option>
                   <option>Pool-store report</option>
@@ -721,77 +737,56 @@
           </section>
 
           <section class="card">
-            <div class="step-label"><span>3</span> Confirm Values</div>
             <h3>Confirmed Test Values</h3>
-            <p class="muted">Enter what the test shows. Leave blank for Unknown / Not Tested.</p>
             <div class="test-grid" style="margin-top: 14px;">
-              <div class="test-row" data-test-row="free_chlorine">
-                <label>Free Chlorine <input data-test-current="free_chlorine" inputmode="decimal" placeholder="ex: 1.0" /></label>
-                <div class="target-range">Target<br>1-4 ppm</div>
-              </div>
-              <div class="test-row" data-test-row="ph">
-                <label>pH <input data-test-current="ph" inputmode="decimal" placeholder="ex: 7.0" /></label>
-                <div class="target-range">Target<br>7.2-7.8</div>
-              </div>
-              <div class="test-row" data-test-row="alkalinity">
-                <label>Alkalinity <input data-test-current="alkalinity" inputmode="decimal" placeholder="ex: 80" /></label>
-                <div class="target-range">Target<br>80-120 ppm</div>
-              </div>
-              <div class="test-row" data-test-row="cya">
-                <label>CYA / Stabilizer <input data-test-current="cya" inputmode="decimal" placeholder="ex: 40" /></label>
-                <div class="target-range">Target<br>30-50 ppm</div>
-              </div>
-              <div class="test-row" data-test-row="calcium">
-                <label>Calcium Hardness <input data-test-current="calcium" inputmode="decimal" placeholder="ex: 250" /></label>
-                <div class="target-range">Target<br>200-400 ppm</div>
-              </div>
-              <div class="test-row" data-test-row="salt">
-                <label>Salt Optional <input data-test-current="salt" inputmode="decimal" placeholder="if saltwater" /></label>
-                <div class="target-range">Typical<br>2700-3400 ppm</div>
-              </div>
+              <div class="test-row"><label>Free Chlorine <input data-test-current="free_chlorine" inputmode="decimal" placeholder="Unknown" /></label><div class="target-range">Target<br>1-4 ppm</div></div>
+              <div class="test-row"><label>pH <input data-test-current="ph" inputmode="decimal" placeholder="Unknown" /></label><div class="target-range">Target<br>7.2-7.8</div></div>
+              <div class="test-row"><label>Total Alkalinity <input data-test-current="alkalinity" inputmode="decimal" placeholder="Unknown" /></label><div class="target-range">Target<br>80-120 ppm</div></div>
+              <div class="test-row"><label>Stabilizer / CYA <input data-test-current="cya" inputmode="decimal" placeholder="Unknown" /></label><div class="target-range">Target<br>30-50 ppm</div></div>
+              <div class="test-row"><label>Calcium Hardness <input data-test-current="calcium" inputmode="decimal" placeholder="Unknown" /></label><div class="target-range">Target<br>200-400 ppm</div></div>
+              <div class="test-row"><label>Salt Optional <input data-test-current="salt" inputmode="decimal" placeholder="if saltwater" /></label><div class="target-range">Typical<br>2700-3400 ppm</div></div>
             </div>
           </section>
 
           <section class="card">
-            <div class="step-label"><span>4</span> Notes</div>
             <h3>Notes Optional</h3>
-            <label style="margin-top: 12px;">Notes <textarea data-field="notes" placeholder="Product context, weather, dye color match, customer note"></textarea></label>
+            <label style="margin-top: 12px;">Notes <textarea data-check-field="notes" placeholder="Dye color match, product context, weather, customer note"></textarea></label>
           </section>
 
-          <button class="btn primary full" data-create-card>Get Next Step Card</button>
+          <button class="btn primary full" data-create-guide>Get Do Next Guide</button>
         </div>
       </div>
 
-      <div class="screen" data-screen="card">
+      <div class="screen" data-screen="guide">
         <div class="app-top">
           <div class="brand">ClearWay Pool AI</div>
           <button class="btn" data-go="home">Home</button>
         </div>
         <div class="content">
           <section class="hero">
-            <p class="eyebrow">Next Step Card</p>
-            <h1 data-card-title>Cloudy Water</h1>
-            <p class="hero-copy">A simple next step based on confirmed values and photos. No exact chemical dosing in V1.</p>
+            <p class="eyebrow">Do Next Guide</p>
+            <h1 data-guide-title>Cloudy Water</h1>
+            <p class="hero-copy">Photos, confirmed values, and pool setup become one simple next step.</p>
           </section>
 
           <section class="card">
             <div class="row">
               <div>
-                <p class="muted">Main issue</p>
-                <h2 data-card-issue>Cloudy Water</h2>
+                <p class="muted">Pool</p>
+                <h2 data-guide-pool>Unnamed Pool</h2>
               </div>
-              <span class="status">Retest needed</span>
+              <span class="status">Saved</span>
             </div>
           </section>
 
           <section class="card">
             <h3>Photos & Notes</h3>
-            <div class="card-photo-grid" data-card-photos></div>
-            <p class="muted" data-card-notes style="margin-top: 12px;">No notes added.</p>
+            <div class="thumb-grid" data-guide-photos></div>
+            <p class="muted" data-guide-notes style="margin-top: 12px;">No notes added.</p>
           </section>
 
           <section class="card">
-            <h3>Confirmed Values Summary</h3>
+            <h3>Confirmed Values</h3>
             <div class="summary-list" data-values-summary></div>
           </section>
 
@@ -800,31 +795,30 @@
             <div class="summary-list" data-outside-summary></div>
           </section>
 
-          <section class="card step-card">
+          <section class="card guide-card">
             <p class="muted">Simple next step</p>
-            <div class="big-step" data-next-step>Test first, confirm values, circulate, and retest.</div>
-            <p class="muted" style="margin-top: 12px;" data-product-guidance>Use the product category indicated by the confirmed values. Follow product labels.</p>
+            <div class="big-step" data-next-step>Confirm values before adding chemicals.</div>
+            <p class="muted" style="margin-top: 12px;" data-product-guidance>Follow product labels. No exact dosing is provided.</p>
+          </section>
+
+          <section class="card warning" data-caution-card>
+            <h3>Salt / Heater Caution</h3>
+            <p class="muted">Salt systems and heaters can be sensitive to rapid chemical changes. Confirm values, follow labels, add products separately, and retest before adding more.</p>
           </section>
 
           <section class="card warning">
-            <h3>What Not To Do</h3>
+            <h3>Do Not</h3>
             <ul>
-              <li>Do not add random chemicals today.</li>
               <li>Do not mix chemicals directly.</li>
-              <li>Do not assume the pool is ready for swimming.</li>
-              <li>Follow product labels and ask a pool pro when unsure.</li>
+              <li>Do not add multiple products at once.</li>
+              <li>Do not add random chemicals without confirming values.</li>
+              <li>Retest before swimming or adding more.</li>
             </ul>
           </section>
 
-          <section class="card">
-            <h3>Retest Reminder</h3>
-            <p class="muted">Retest before swimming or before adding more chemicals.</p>
-            <button class="btn primary full" data-start-timer style="margin-top: 12px;">Start Retest Timer</button>
-          </section>
-
-          <div class="button-row">
-            <button class="btn primary" data-save-check>Save Check</button>
-            <button class="btn" data-share-summary>Share Summary</button>
+          <div class="row">
+            <button class="btn primary" data-share-summary>Copy Summary</button>
+            <button class="btn" data-start-timer>Start Timer</button>
           </div>
         </div>
       </div>
@@ -838,14 +832,13 @@
           <section class="hero">
             <p class="eyebrow">History</p>
             <h1>Saved Pool Checks</h1>
-            <p class="hero-copy">Open a saved check to see photos, values, notes, and the next-step card.</p>
+            <p class="hero-copy">Saved checks open back into the photos, values, notes, and Do Next Guide.</p>
           </section>
-
           <section class="card">
             <div class="row">
               <div>
                 <h3>Saved Checks</h3>
-                <p class="muted"><span data-history-count>0</span> checks saved on this device.</p>
+                <p class="muted"><span data-history-count>0</span> checks saved.</p>
               </div>
               <button class="btn" data-export-history>Export</button>
             </div>
@@ -856,13 +849,13 @@
     </section>
 
     <aside class="desktop-panel">
-      <div class="pill" style="display: inline-flex;">Pool Check V1</div>
+      <div class="pill" style="display: inline-flex;">Greenlit Trinity Flow</div>
       <h2>ClearWay Pool AI</h2>
-      <p>The product is the treatment card: photos, confirmed test values, target-range awareness, a simple next step, retest reminder, and saved history.</p>
+      <p>One simple loop: pick/add pool, take required photo types, confirm test values, get the Do Next Guide, and save history.</p>
       <div class="screen-picker" aria-label="Screen picker">
-        <button class="picker-button active" data-go="home"><strong>Home</strong><span class="muted">Start Pool Check</span></button>
-        <button class="picker-button" data-go="start"><strong>Start Pool Check</strong><span class="muted">Photos and confirmed values</span></button>
-        <button class="picker-button" data-go="card"><strong>Next Step Card</strong><span class="muted">The core product</span></button>
+        <button class="picker-button active" data-go="home"><strong>Home</strong><span class="muted">Big start button</span></button>
+        <button class="picker-button" data-go="add-pool"><strong>Add Pool</strong><span class="muted">Fast now, details later</span></button>
+        <button class="picker-button" data-go="rules"><strong>Rules</strong><span class="muted">Three photo types</span></button>
         <button class="picker-button" data-go="history"><strong>History</strong><span class="muted">Saved checks</span></button>
       </div>
     </aside>
@@ -871,32 +864,85 @@
   <script type="module">
     const screens = [...document.querySelectorAll(".screen")];
     const pickers = [...document.querySelectorAll(".picker-button")];
-    const storageKey = "clearwayPoolChecksV1";
+    const poolStorageKey = "clearwayPoolsV2";
+    const checkStorageKey = "clearwayPoolChecksV2";
     const supabaseUrl = "https://wwhbwhgnwmmlpvrjkjek.supabase.co";
     const supabaseAnonKey = "sb_publishable_CN_Z7T4c3zN66C7xKVuJ8g_rQe9FJNX";
-    let supabase = null;
     const photoBucket = "pool-check-photos";
-    const photos = {};
-    let draft = {};
+    let supabase = null;
+    let selectedPoolId = null;
+    let editingPoolId = null;
+    let activePhotoStep = 0;
     let activeCheck = null;
-    let usingFallback = false;
+    let draft = freshDraft();
+
+    const photoSteps = [
+      { key: "pool", label: "Pool Photo", title: "Take a pool photo.", copy: "Show water clarity and the pool condition.", multi: false },
+      { key: "tests", label: "Test Photo(s)", title: "Add test photos.", copy: "Strip, dye kit, digital reader, or pool-store report. Add more than one if needed.", multi: true },
+      { key: "products", label: "Product Photo(s)", title: "Add product photos.", copy: "Show what products are on hand. Skip if none are available.", multi: true }
+    ];
+
+    const testMeta = {
+      free_chlorine: { label: "Free Chlorine", min: 1, max: 4, unit: "ppm", low: "Sanitizer / chlorine product", high: "Retest and let level drift down" },
+      ph: { label: "pH", min: 7.2, max: 7.8, unit: "", low: "pH increaser", high: "pH decreaser" },
+      alkalinity: { label: "Total Alkalinity", min: 80, max: 120, unit: "ppm", low: "Alkalinity increaser", high: "Pro review or pH/alkalinity adjustment" },
+      cya: { label: "Stabilizer / CYA", min: 30, max: 50, unit: "ppm", low: "Stabilizer", high: "Dilution / pro review" },
+      calcium: { label: "Calcium Hardness", min: 200, max: 400, unit: "ppm", low: "Calcium increaser", high: "Pro review" },
+      salt: { label: "Salt", min: 2700, max: 3400, unit: "ppm", low: "Salt system review", high: "Salt system review" }
+    };
 
     try {
       const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
       supabase = createClient(supabaseUrl, supabaseAnonKey);
     } catch (error) {
-      console.warn("Supabase client failed to load, using local fallback", error);
-      usingFallback = true;
+      console.warn("Supabase unavailable, using local fallback", error);
     }
 
-    const tests = {
-      free_chlorine: { label: "Free Chlorine", min: 1, max: 4, unit: "ppm", low: "Sanitizer / chlorine product", high: "Retest and let level drift down" },
-      ph: { label: "pH", min: 7.2, max: 7.8, unit: "", low: "pH increaser", high: "pH decreaser" },
-      alkalinity: { label: "Alkalinity", min: 80, max: 120, unit: "ppm", low: "Alkalinity increaser", high: "Pro review or pH/alkalinity adjustment" },
-      cya: { label: "CYA / Stabilizer", min: 30, max: 50, unit: "ppm", low: "Stabilizer", high: "Dilution / pro review" },
-      calcium: { label: "Calcium Hardness", min: 200, max: 400, unit: "ppm", low: "Calcium increaser", high: "Pro review" },
-      salt: { label: "Salt", min: 2700, max: 3400, unit: "ppm", low: "Salt system review", high: "Salt system review" }
-    };
+    function freshDraft() {
+      return {
+        photos: { pool: null, tests: [], products: [] }
+      };
+    }
+
+    function localPools() {
+      try { return JSON.parse(localStorage.getItem(poolStorageKey) || "[]"); }
+      catch { return []; }
+    }
+
+    function saveLocalPools(pools) {
+      localStorage.setItem(poolStorageKey, JSON.stringify(pools));
+    }
+
+    function localChecks() {
+      try { return JSON.parse(localStorage.getItem(checkStorageKey) || "[]"); }
+      catch { return []; }
+    }
+
+    function saveLocalChecks(checks) {
+      localStorage.setItem(checkStorageKey, JSON.stringify(checks));
+    }
+
+    function ensureStarterPool() {
+      const pools = localPools();
+      if (pools.length) return;
+      const starter = {
+        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+        poolName: "New Pool",
+        address: "",
+        poolType: "Not sure",
+        heater: "Not sure",
+        filter: "Not sure",
+        measurements: "",
+        updatedAt: new Date().toISOString()
+      };
+      saveLocalPools([starter]);
+      selectedPoolId = starter.id;
+    }
+
+    function selectedPool() {
+      const pools = localPools();
+      return pools.find((pool) => pool.id === selectedPoolId) || pools[0] || null;
+    }
 
     async function showScreen(name) {
       screens.forEach((screen) => {
@@ -905,83 +951,112 @@
         if (isActive) screen.scrollTo({ top: 0, behavior: "instant" });
       });
       pickers.forEach((button) => button.classList.toggle("active", button.dataset.go === name));
-      await renderHome();
+      renderHome();
       if (name === "history") await renderHistory();
     }
 
-    function localRecords() {
-      try {
-        return JSON.parse(localStorage.getItem(storageKey) || "[]");
-      } catch {
-        return [];
-      }
+    function resetDraft() {
+      draft = freshDraft();
+      activePhotoStep = 0;
+      activeCheck = null;
+      document.querySelectorAll("[data-check-field], [data-test-current]").forEach((field) => {
+        if (field.tagName === "SELECT") field.selectedIndex = 0;
+        else field.value = "";
+      });
+      renderPhotoStep();
     }
 
-    function saveLocalRecords(nextRecords) {
-      localStorage.setItem(storageKey, JSON.stringify(nextRecords));
+    function renderHome() {
+      ensureStarterPool();
+      const pools = localPools();
+      const pool = selectedPool();
+      document.querySelector("[data-selected-pool-text]").textContent = pool
+        ? `${pool.poolName} Â· ${pool.poolType} Â· Heater: ${pool.heater}`
+        : "No pool selected yet.";
+      document.querySelector("[data-pool-list]").innerHTML = pools.map((item) => `
+        <button class="pool-item ${item.id === selectedPoolId ? "selected-pool" : ""}" data-select-pool="${item.id}">
+          <div class="row">
+            <div>
+              <strong>${item.poolName}</strong>
+              <p class="muted">${item.poolType} Â· Heater: ${item.heater} Â· Filter: ${item.filter}</p>
+            </div>
+            <span class="status">${item.id === selectedPoolId ? "Using" : "Use"}</span>
+          </div>
+        </button>
+      `).join("");
     }
 
-    function fromDb(row) {
-      return {
-        id: row.id,
-        createdAt: row.created_at,
-        poolName: row.pool_name,
-        poolType: row.pool_type,
-        mainIssue: row.main_issue,
-        testType: row.test_type,
-        notes: row.notes || "",
-        photos: row.photos || {},
-        values: row.confirmed_values || [],
-        nextStep: row.next_step || ""
+    function savePoolFromForm() {
+      const get = (name) => document.querySelector(`[data-pool-field="${name}"]`)?.value.trim() || "";
+      const pools = localPools();
+      const pool = {
+        id: editingPoolId || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())),
+        poolName: get("poolName") || "Unnamed Pool",
+        address: get("address"),
+        poolType: get("poolType") || "Not sure",
+        heater: get("heater") || "Not sure",
+        filter: get("filter") || "Not sure",
+        measurements: get("measurements"),
+        updatedAt: new Date().toISOString()
       };
+      saveLocalPools([pool, ...pools.filter((item) => item.id !== pool.id)]);
+      selectedPoolId = pool.id;
+      editingPoolId = pool.id;
+      renderHome();
     }
 
-    function toDb(check) {
-      return {
-        id: check.id,
-        created_at: check.createdAt,
-        pool_name: check.poolName,
-        pool_type: check.poolType,
-        main_issue: check.mainIssue,
-        test_type: check.testType,
-        notes: check.notes || "",
-        photos: check.photos || {},
-        confirmed_values: check.values || [],
-        next_step: check.nextStep || ""
+    function setPoolForm(pool) {
+      const fields = {
+        poolName: pool?.poolName || "",
+        address: pool?.address || "",
+        poolType: pool?.poolType || "Chlorine pool",
+        heater: pool?.heater || "Not sure",
+        filter: pool?.filter || "Not sure",
+        measurements: pool?.measurements || ""
       };
+      Object.entries(fields).forEach(([key, value]) => {
+        const field = document.querySelector(`[data-pool-field="${key}"]`);
+        if (field) field.value = value;
+      });
     }
 
-    async function records() {
-      try {
-        if (!supabase) throw new Error("Supabase unavailable");
-        const { data, error } = await supabase
-          .from("pool_checks")
-          .select("*")
-          .order("created_at", { ascending: false });
-        if (error) throw error;
-        usingFallback = false;
-        const shared = (data || []).map(fromDb);
-        saveLocalRecords(shared);
-        return shared;
-      } catch (error) {
-        console.warn("Using local fallback history", error);
-        usingFallback = true;
-        return localRecords();
-      }
+    async function openAddPool() {
+      editingPoolId = null;
+      setPoolForm(null);
+      await showScreen("add-pool");
     }
 
-    async function saveSharedCheck(check) {
-      try {
-        if (!supabase) throw new Error("Supabase unavailable");
-        const { error } = await supabase.from("pool_checks").upsert(toDb(check), { onConflict: "id" });
-        if (error) throw error;
-        usingFallback = false;
-      } catch (error) {
-        console.warn("Saving to local fallback only", error);
-        usingFallback = true;
-      }
-      const existing = localRecords().filter((item) => item.id !== check.id);
-      saveLocalRecords([check, ...existing]);
+    async function openEditPool() {
+      const pool = selectedPool();
+      editingPoolId = pool?.id || null;
+      setPoolForm(pool);
+      await showScreen("add-pool");
+    }
+
+    function renderPhotoStep() {
+      const step = photoSteps[activePhotoStep];
+      document.querySelector("[data-photo-step-label]").textContent = step.label;
+      document.querySelector("[data-photo-step-title]").textContent = step.title;
+      document.querySelector("[data-photo-step-copy]").textContent = step.copy;
+      document.querySelector("[data-photo-card-title]").textContent = step.label;
+      document.querySelector("[data-photo-card-copy]").textContent = step.multi
+        ? "Tap the icon to add a photo. You can add more than one."
+        : "Tap the icon to open the camera.";
+      renderPhotoThumbs();
+    }
+
+    function currentPhotoArray() {
+      const step = photoSteps[activePhotoStep];
+      if (step.key === "pool") return draft.photos.pool ? [draft.photos.pool] : [];
+      return draft.photos[step.key];
+    }
+
+    function renderPhotoThumbs() {
+      const step = photoSteps[activePhotoStep];
+      const items = currentPhotoArray();
+      document.querySelector("[data-photo-thumbs]").innerHTML = items.length
+        ? items.map((src, index) => `<div class="thumb"><img alt="${step.label} ${index + 1}" src="${src}"><span>${step.label}</span></div>`).join("")
+        : '<div class="empty" style="grid-column: 1 / -1;">No photo added yet. Skip if unavailable.</div>';
     }
 
     function compressImage(file) {
@@ -1006,21 +1081,6 @@
       });
     }
 
-    async function resetDraft() {
-      Object.keys(photos).forEach((key) => delete photos[key]);
-      draft = {};
-      activeCheck = null;
-      document.querySelectorAll("[data-field], [data-test-current]").forEach((field) => {
-        if (field.tagName === "SELECT") field.selectedIndex = 0;
-        else field.value = "";
-      });
-      document.querySelectorAll("[data-photo-tile]").forEach((tile) => tile.classList.remove("has-photo"));
-      document.querySelectorAll("[data-photo-thumb]").forEach((thumb) => {
-        thumb.removeAttribute("src");
-      });
-      await showScreen("start");
-    }
-
     function dataUrlToFile(dataUrl, fileName) {
       const [meta, base64] = dataUrl.split(",");
       const mime = meta.match(/data:(.*);base64/)?.[1] || "image/jpeg";
@@ -1030,27 +1090,31 @@
       return new File([bytes], fileName, { type: mime });
     }
 
-    async function uploadPhotos(checkId) {
-      const uploaded = { ...photos };
-      if (!supabase) throw new Error("Supabase unavailable");
-      for (const [key, dataUrl] of Object.entries(photos)) {
-        if (!dataUrl || dataUrl.startsWith("http")) continue;
-        const file = dataUrlToFile(dataUrl, `${key}.jpg`);
-        const path = `${checkId}/${key}-${Date.now()}.jpg`;
-        const { error } = await supabase.storage.from(photoBucket).upload(path, file, {
-          contentType: "image/jpeg",
-          upsert: true
-        });
-        if (error) throw error;
-        const { data } = supabase.storage.from(photoBucket).getPublicUrl(path);
-        uploaded[key] = data.publicUrl;
-      }
-      return uploaded;
+    async function uploadOne(checkId, label, dataUrl, index) {
+      if (!supabase || !dataUrl || dataUrl.startsWith("http")) return dataUrl;
+      const path = `${checkId}/${label}-${index}-${Date.now()}.jpg`;
+      const file = dataUrlToFile(dataUrl, `${label}.jpg`);
+      const { error } = await supabase.storage.from(photoBucket).upload(path, file, { contentType: "image/jpeg", upsert: true });
+      if (error) throw error;
+      const { data } = supabase.storage.from(photoBucket).getPublicUrl(path);
+      return data.publicUrl;
     }
 
-    async function readDraft() {
-      const getField = (name) => document.querySelector(`[data-field="${name}"]`)?.value.trim() || "";
-      const values = Object.entries(tests).map(([key, meta]) => {
+    async function uploadPhotos(checkId) {
+      try {
+        return {
+          pool: await uploadOne(checkId, "pool", draft.photos.pool, 0),
+          tests: await Promise.all(draft.photos.tests.map((src, index) => uploadOne(checkId, "test", src, index))),
+          products: await Promise.all(draft.photos.products.map((src, index) => uploadOne(checkId, "product", src, index)))
+        };
+      } catch (error) {
+        console.warn("Photo upload failed, using local photo fallback", error);
+        return { ...draft.photos };
+      }
+    }
+
+    function readValues() {
+      return Object.entries(testMeta).map(([key, meta]) => {
         const raw = document.querySelector(`[data-test-current="${key}"]`)?.value.trim() || "";
         const value = Number(raw);
         let status = "Unknown / Not Tested";
@@ -1067,149 +1131,163 @@
             product = "No product category flagged";
           }
         }
-        return {
-          key,
-          label: meta.label,
-          current: raw,
-          target: `${meta.min}-${meta.max}${meta.unit ? " " + meta.unit : ""}`,
-          status,
-          product
-        };
+        return { key, label: meta.label, current: raw, target: `${meta.min}-${meta.max}${meta.unit ? " " + meta.unit : ""}`, status, product };
       });
-
-      const checkId = activeCheck?.id || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
-      let sharedPhotos = { ...photos };
-      try {
-        sharedPhotos = await uploadPhotos(checkId);
-      } catch (error) {
-        console.warn("Photo upload failed, using local photo fallback", error);
-        usingFallback = true;
-      }
-
-      return {
-        id: checkId,
-        createdAt: activeCheck?.createdAt || new Date().toISOString(),
-        poolName: getField("poolName") || "Unnamed Pool",
-        poolType: getField("poolType") || "Chlorine pool",
-        mainIssue: getField("mainIssue") || "Cloudy Water",
-        testType: getField("testType") || "Strip",
-        notes: getField("notes"),
-        photos: sharedPhotos,
-        values,
-        nextStep: buildNextStep(values, getField("mainIssue") || "Cloudy Water")
-      };
     }
 
     function buildNextStep(values, issue) {
       const entered = values.filter((item) => item.current);
       const outside = values.filter((item) => item.status === "low" || item.status === "high");
-      if (!entered.length) {
-        return "Confirm test values before adding chemicals.";
-      }
-      if (issue === "Cloudy Water") {
-        return "Check filtration and circulation. Retest before adding more.";
-      }
-      if (issue === "Green Water") {
-        return "Confirm sanitizer and pH levels. Do not add multiple chemicals at once.";
-      }
-      if (!outside.length) {
-        return "Confirmed values appear within target ranges. Circulate water and retest before swimming.";
-      }
-      const first = outside[0];
-      return `Some confirmed values appear outside target range. Focus on ${first.label}, follow product labels, and retest before adding more.`;
+      if (!entered.length) return "Confirm test values before adding chemicals.";
+      if (issue === "Cloudy Water") return "Check filtration and circulation. Retest before adding more.";
+      if (issue === "Green Water") return "Confirm sanitizer and pH levels. Do not add multiple chemicals at once.";
+      if (!outside.length) return "Confirmed values appear within target ranges. Circulate water and retest before swimming.";
+      return `Some confirmed values appear outside target range. Focus on ${outside[0].label}, follow product labels, and retest before adding more.`;
     }
 
-    function renderCard(check) {
+    async function createCheck() {
+      const pool = selectedPool() || { poolName: "Unnamed Pool", poolType: "Not sure", heater: "Not sure", filter: "Not sure" };
+      const checkId = crypto.randomUUID ? crypto.randomUUID() : String(Date.now());
+      const values = readValues();
+      const mainIssue = document.querySelector('[data-check-field="mainIssue"]').value;
+      const photos = await uploadPhotos(checkId);
+      return {
+        id: checkId,
+        createdAt: new Date().toISOString(),
+        poolId: pool.id || "",
+        poolName: pool.poolName,
+        poolType: pool.poolType,
+        heater: pool.heater,
+        filter: pool.filter,
+        mainIssue,
+        testType: document.querySelector('[data-check-field="testType"]').value,
+        notes: document.querySelector('[data-check-field="notes"]').value.trim(),
+        photos,
+        values,
+        nextStep: buildNextStep(values, mainIssue)
+      };
+    }
+
+    function toDb(check) {
+      return {
+        id: check.id,
+        created_at: check.createdAt,
+        pool_name: check.poolName,
+        pool_type: check.poolType,
+        main_issue: check.mainIssue,
+        test_type: check.testType,
+        notes: JSON.stringify({ notes: check.notes || "", heater: check.heater || "", filter: check.filter || "", poolId: check.poolId || "" }),
+        photos: check.photos || {},
+        confirmed_values: check.values || [],
+        next_step: check.nextStep || ""
+      };
+    }
+
+    function fromDb(row) {
+      let noteData = {};
+      try { noteData = JSON.parse(row.notes || "{}"); } catch { noteData = { notes: row.notes || "" }; }
+      return {
+        id: row.id,
+        createdAt: row.created_at,
+        poolId: noteData.poolId || "",
+        poolName: row.pool_name,
+        poolType: row.pool_type,
+        heater: noteData.heater || "Not sure",
+        filter: noteData.filter || "Not sure",
+        mainIssue: row.main_issue,
+        testType: row.test_type,
+        notes: noteData.notes || "",
+        photos: row.photos || {},
+        values: row.confirmed_values || [],
+        nextStep: row.next_step || ""
+      };
+    }
+
+    async function checks() {
+      try {
+        if (!supabase) throw new Error("Supabase unavailable");
+        const { data, error } = await supabase.from("pool_checks").select("*").order("created_at", { ascending: false });
+        if (error) throw error;
+        const shared = (data || []).map(fromDb);
+        saveLocalChecks(shared);
+        return shared;
+      } catch (error) {
+        console.warn("Using local fallback checks", error);
+        return localChecks();
+      }
+    }
+
+    async function saveCheck(check) {
+      try {
+        if (!supabase) throw new Error("Supabase unavailable");
+        const { error } = await supabase.from("pool_checks").upsert(toDb(check), { onConflict: "id" });
+        if (error) throw error;
+      } catch (error) {
+        console.warn("Saving local fallback check", error);
+      }
+      const existing = localChecks().filter((item) => item.id !== check.id);
+      saveLocalChecks([check, ...existing]);
+    }
+
+    function renderGuide(check) {
       activeCheck = check;
-      document.querySelector("[data-card-title]").textContent = check.mainIssue;
-      document.querySelector("[data-card-issue]").textContent = check.mainIssue;
+      document.querySelector("[data-guide-title]").textContent = check.mainIssue;
+      document.querySelector("[data-guide-pool]").textContent = check.poolName;
       document.querySelector("[data-next-step]").textContent = check.nextStep;
-      const cardPhotos = document.querySelector("[data-card-photos]");
+      document.querySelector("[data-guide-notes]").textContent = check.notes || "No notes added.";
+
       const photoItems = [
         ["Pool", check.photos?.pool],
-        ["Test", check.photos?.test],
-        ["Product", check.photos?.product]
+        ...(check.photos?.tests || []).map((src, index) => [`Test ${index + 1}`, src]),
+        ...(check.photos?.products || []).map((src, index) => [`Product ${index + 1}`, src])
       ].filter((item) => item[1]);
-      cardPhotos.innerHTML = photoItems.length
-        ? photoItems.map(([label, src]) => `<div class="card-photo"><img alt="${label} photo" src="${src}"><span>${label}</span></div>`).join("")
+      document.querySelector("[data-guide-photos]").innerHTML = photoItems.length
+        ? photoItems.map(([label, src]) => `<div class="thumb"><img alt="${label}" src="${src}"><span>${label}</span></div>`).join("")
         : '<div class="empty" style="grid-column: 1 / -1;">No photos saved for this check.</div>';
-      document.querySelector("[data-card-notes]").textContent = check.notes || "No notes added.";
 
-      const summary = document.querySelector("[data-values-summary]");
-      summary.innerHTML = check.values.map((item) => `
-        <div class="summary-item">
-          <span>${item.label}</span>
-          <strong>${item.current || "Unknown / Not Tested"} / ${item.target}</strong>
-        </div>
+      document.querySelector("[data-values-summary]").innerHTML = check.values.map((item) => `
+        <div class="summary-item"><span>${item.label}</span><strong>${item.current || "Unknown / Not Tested"} / ${item.target}</strong></div>
       `).join("");
 
-      const outsideItems = check.values.filter((item) => item.status === "low" || item.status === "high");
-      document.querySelector("[data-outside-summary]").innerHTML = outsideItems.length
-        ? `<div class="empty">Some confirmed values appear outside target range.</div>${outsideItems.map((item) => `
-          <div class="summary-item">
-            <span>${item.label} is ${item.status}</span>
-            <strong>${item.product}</strong>
-          </div>
+      const outside = check.values.filter((item) => item.status === "low" || item.status === "high");
+      document.querySelector("[data-outside-summary]").innerHTML = outside.length
+        ? `<div class="empty">Some confirmed values appear outside target range.</div>${outside.map((item) => `
+          <div class="summary-item"><span>${item.label} is ${item.status}</span><strong>${item.product}</strong></div>
         `).join("")}`
         : '<div class="empty">No entered values appear outside the target ranges. Retest before swimming.</div>';
 
-      const products = outsideItems.map((item) => item.product).filter(Boolean);
+      const products = outside.map((item) => item.product).filter(Boolean);
       document.querySelector("[data-product-guidance]").textContent = products.length
         ? `Product category to consider: ${products.join(", ")}. Follow product labels. No exact dosing is provided.`
         : "No product category is flagged from entered values. Continue to monitor and retest.";
-    }
-
-    async function saveCheck() {
-      const check = activeCheck || await readDraft();
-      await saveSharedCheck(check);
-      await showScreen("history");
-    }
-
-    async function autoSaveCheck(check) {
-      await saveSharedCheck(check);
-    }
-
-    async function renderHome() {
-      const saved = await records();
-      document.querySelector("[data-total-checks]").textContent = saved.length;
-      document.querySelector("[data-pool-count]").textContent = new Set(saved.map((item) => item.poolName)).size;
-      document.querySelector("[data-saved-pools]").textContent = saved.length
-        ? [...new Set(saved.map((item) => item.poolName))].slice(0, 5).join(", ")
-        : "Start a pool check to save your first pool.";
-      renderList(document.querySelector("[data-recent-list]"), saved.slice(0, 3));
+      document.querySelector("[data-caution-card]").style.display =
+        check.poolType === "Salt pool" || (check.heater && check.heater !== "No heater" && check.heater !== "Not sure")
+          ? "block"
+          : "none";
     }
 
     async function renderHistory() {
-      const saved = await records();
+      const saved = await checks();
       document.querySelector("[data-history-count]").textContent = saved.length;
-      renderList(document.querySelector("[data-history-list]"), saved);
-    }
-
-    function renderList(container, items) {
-      if (!items.length) {
-        container.innerHTML = '<div class="empty">No saved checks yet. Tap Start Pool Check.</div>';
-        return;
-      }
-      container.innerHTML = items.map((item) => `
-        <button class="history-item" data-open-check="${item.id}">
-          <div class="row">
-            ${item.photos?.pool ? `<img class="history-thumb" alt="Pool thumbnail" src="${item.photos.pool}">` : '<div class="history-thumb"></div>'}
-            <div>
-              <strong>${item.poolName}</strong>
-              <p class="muted">${new Date(item.createdAt).toLocaleString()}</p>
-              <p class="muted">${item.mainIssue} Â· ${item.poolType}</p>
+      document.querySelector("[data-history-list]").innerHTML = saved.length
+        ? saved.map((item) => `
+          <button class="history-item" data-open-check="${item.id}">
+            <div class="row">
+              ${item.photos?.pool ? `<img class="history-thumb" alt="Pool thumbnail" src="${item.photos.pool}">` : '<div class="history-thumb"></div>'}
+              <div>
+                <strong>${item.poolName}</strong>
+                <p class="muted">${new Date(item.createdAt).toLocaleString()}</p>
+                <p class="muted">${item.mainIssue} Â· ${item.poolType}</p>
+              </div>
+              <span class="status">Saved</span>
             </div>
-            <span class="status">Saved</span>
-          </div>
-        </button>
-      `).join("");
+          </button>
+        `).join("")
+        : '<div class="empty">No saved checks yet. Tap Start Pool Check.</div>';
     }
 
     async function copyText(text) {
-      if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(text);
-        return;
-      }
+      if (navigator.clipboard?.writeText) return navigator.clipboard.writeText(text);
       const area = document.createElement("textarea");
       area.value = text;
       document.body.appendChild(area);
@@ -1219,19 +1297,21 @@
     }
 
     async function shareSummary() {
-      const check = activeCheck || await readDraft();
-      const outside = check.values.filter((item) => item.status === "low" || item.status === "high");
+      if (!activeCheck) return;
       const body = [
         "ClearWay Pool Check",
         "",
+        "Pool:",
+        activeCheck.poolName,
+        "",
         "Issue:",
-        check.mainIssue,
+        activeCheck.mainIssue,
         "",
         "Confirmed values:",
-        ...check.values.map((item) => `${item.label}: ${item.current || "Unknown / Not Tested"} (target ${item.target})`),
+        ...activeCheck.values.map((item) => `${item.label}: ${item.current || "Unknown / Not Tested"} (target ${item.target})`),
         "",
         "Next step:",
-        check.nextStep,
+        activeCheck.nextStep,
         "",
         "Do not:",
         "Do not mix chemicals directly. Do not add random chemicals without confirming values.",
@@ -1244,7 +1324,7 @@
     }
 
     async function exportHistory() {
-      const blob = new Blob([JSON.stringify({ exportedAt: new Date().toISOString(), checks: await records() }, null, 2)], { type: "application/json" });
+      const blob = new Blob([JSON.stringify({ exportedAt: new Date().toISOString(), checks: await checks() }, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -1254,38 +1334,95 @@
     }
 
     document.addEventListener("change", async (event) => {
-      const input = event.target.closest("[data-photo-input]");
+      const input = event.target.closest("[data-camera-input]");
       if (!input || !input.files[0]) return;
-      const key = input.dataset.photoInput;
-      photos[key] = await compressImage(input.files[0]);
-      const thumb = document.querySelector(`[data-photo-thumb="${key}"]`);
-      const tile = document.querySelector(`[data-photo-tile="${key}"]`);
-      thumb.src = photos[key];
-      tile.classList.add("has-photo");
+      const dataUrl = await compressImage(input.files[0]);
+      const step = photoSteps[activePhotoStep];
+      if (step.key === "pool") draft.photos.pool = dataUrl;
+      else draft.photos[step.key].push(dataUrl);
       input.value = "";
+      renderPhotoThumbs();
     });
 
     document.addEventListener("click", async (event) => {
-      if (event.target.closest("[data-start-check]")) {
-        await resetDraft();
+      const nav = event.target.closest("[data-go]");
+      if (nav) {
+        await showScreen(nav.dataset.go);
         return;
       }
 
-      if (event.target.closest("[data-create-card]")) {
-        const button = event.target.closest("[data-create-card]");
+      if (event.target.closest("[data-add-new-pool]")) {
+        await openAddPool();
+        return;
+      }
+
+      if (event.target.closest("[data-edit-pool]")) {
+        await openEditPool();
+        return;
+      }
+
+      const selectPool = event.target.closest("[data-select-pool]");
+      if (selectPool) {
+        selectedPoolId = selectPool.dataset.selectPool;
+        renderHome();
+        return;
+      }
+
+      if (event.target.closest("[data-save-pool]")) {
+        savePoolFromForm();
+        await showScreen("home");
+        return;
+      }
+
+      if (event.target.closest("[data-start-check]")) {
+        ensureStarterPool();
+        resetDraft();
+        await showScreen("rules");
+        return;
+      }
+
+      if (event.target.closest("[data-start-photos]")) {
+        activePhotoStep = 0;
+        renderPhotoStep();
+        await showScreen("photos");
+        return;
+      }
+
+      if (event.target.closest("[data-open-camera]")) {
+        document.querySelector("[data-camera-input]").click();
+        return;
+      }
+
+      if (event.target.closest("[data-skip-photo]") || event.target.closest("[data-next-photo-step]")) {
+        if (activePhotoStep < photoSteps.length - 1) {
+          activePhotoStep += 1;
+          renderPhotoStep();
+        } else {
+          await showScreen("values");
+        }
+        return;
+      }
+
+      if (event.target.closest("[data-create-guide]")) {
+        const button = event.target.closest("[data-create-guide]");
         button.textContent = "Saving...";
         button.disabled = true;
-        const check = await readDraft();
-        renderCard(check);
-        await autoSaveCheck(check);
-        await showScreen("card");
-        button.textContent = "Get Next Step Card";
+        const check = await createCheck();
+        await saveCheck(check);
+        renderGuide(check);
+        await showScreen("guide");
+        button.textContent = "Get Do Next Guide";
         button.disabled = false;
         return;
       }
 
-      if (event.target.closest("[data-save-check]")) {
-        await saveCheck();
+      const open = event.target.closest("[data-open-check]");
+      if (open) {
+        const check = (await checks()).find((item) => item.id === open.dataset.openCheck);
+        if (check) {
+          renderGuide(check);
+          await showScreen("guide");
+        }
         return;
       }
 
@@ -1295,31 +1432,17 @@
       }
 
       if (event.target.closest("[data-start-timer]")) {
-        alert("Retest timer started. V1 visual reminder: retest before swimming.");
+        alert("Retest timer started. V1 reminder: retest before swimming or adding more.");
         return;
       }
 
       if (event.target.closest("[data-export-history]")) {
         await exportHistory();
-        return;
       }
-
-      const open = event.target.closest("[data-open-check]");
-      if (open) {
-        const check = (await records()).find((item) => item.id === open.dataset.openCheck);
-        if (check) {
-          renderCard(check);
-          await showScreen("card");
-        }
-        return;
-      }
-
-      const trigger = event.target.closest("[data-go]");
-      if (!trigger) return;
-      await showScreen(trigger.dataset.go);
     });
 
-    await renderHome();
+    ensureStarterPool();
+    renderHome();
   </script>
 </body>
 </html>
