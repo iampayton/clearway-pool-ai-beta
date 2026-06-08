@@ -437,6 +437,37 @@
 
     .guide-card .muted { color: rgba(255, 255, 255, 0.72); }
 
+    .guide-icons {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .guide-icon {
+      display: grid;
+      gap: 7px;
+      justify-items: center;
+      padding: 12px 8px;
+      border-radius: 18px;
+      color: var(--charcoal);
+      background: rgba(255, 255, 255, 0.9);
+      font-size: 11px;
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .guide-icon span {
+      width: 34px;
+      height: 34px;
+      border-radius: 13px;
+      display: grid;
+      place-items: center;
+      color: var(--charcoal);
+      background: var(--seafoam);
+      font-size: 13px;
+    }
+
     .big-step {
       margin-top: 12px;
       font-size: 28px;
@@ -810,6 +841,11 @@
             <p class="muted">Simple next step</p>
             <div class="big-step" data-next-step>Confirm values before adding chemicals.</div>
             <p class="muted" style="margin-top: 12px;" data-product-guidance>Follow product labels. No exact dosing is provided.</p>
+            <div class="guide-icons" aria-label="Do Next Guide actions">
+              <div class="guide-icon"><span>T</span>Test First</div>
+              <div class="guide-icon"><span>F</span>Check Flow</div>
+              <div class="guide-icon"><span>R</span>Retest</div>
+            </div>
           </section>
 
           <section class="card warning" data-caution-card>
