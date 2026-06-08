@@ -195,21 +195,23 @@
     .btn.full { width: 100%; }
 
     .start-cta {
-      min-height: 126px;
-      border-radius: 30px;
+      min-height: 520px;
+      border-radius: 34px;
       display: grid;
       align-content: center;
-      gap: 8px;
-      text-align: left;
-      padding: 24px;
-      font-size: 26px;
-      line-height: 1;
+      justify-items: center;
+      gap: 14px;
+      text-align: center;
+      padding: 34px 26px;
+      font-size: 38px;
+      line-height: 0.96;
     }
 
     .start-cta span {
       display: block;
+      max-width: 260px;
       color: rgba(23, 36, 42, 0.72);
-      font-size: 13px;
+      font-size: 15px;
       font-weight: 850;
       line-height: 1.35;
     }
@@ -546,6 +548,7 @@
         border-radius: 0;
       }
       .desktop-panel { display: none; }
+      .start-cta { min-height: calc(100vh - 124px); }
     }
   </style>
 </head>
@@ -561,37 +564,10 @@
           </div>
         </div>
         <div class="content">
-          <section class="hero">
-            <p class="eyebrow">Saturday Field Flow</p>
-            <h1>Tap start. Check the pool.</h1>
-            <p class="hero-copy">Pick the pool, take photos, confirm values, and get the Do Next Guide.</p>
-          </section>
-
           <button class="btn primary full start-cta" data-start-check>
-            Start Pool Check
-            <span>Tap here first. Add photos, confirm values, get the guide.</span>
+            Start Pool Check<br>Tap Here
+            <span>Pool info, photos, values, Do Next Guide.</span>
           </button>
-
-          <section class="card">
-            <div class="row">
-              <div>
-                <h3>Use This Pool</h3>
-                <p class="muted" data-selected-pool-text>No pool selected yet.</p>
-              </div>
-              <button class="btn" data-edit-pool>Setup</button>
-            </div>
-          </section>
-
-          <section class="card">
-            <div class="row">
-              <div>
-                <h3>Recent Pools</h3>
-                <p class="muted">Tap a pool to use it for the next check.</p>
-              </div>
-              <button class="btn" data-add-new-pool>Add Pool</button>
-            </div>
-            <div class="pool-list" data-pool-list style="margin-top: 12px;"></div>
-          </section>
         </div>
       </div>
 
@@ -653,20 +629,55 @@
         </div>
         <div class="content">
           <section class="hero">
-            <p class="eyebrow">Pool Check Rules</p>
-            <h1>Take the three photo types.</h1>
-            <p class="hero-copy">Fast and simple. Skip what you do not have.</p>
+            <p class="eyebrow">Pool Info</p>
+            <h1>Input pool info or skip.</h1>
+            <p class="hero-copy">Fast setup for Trinity. This should take under 30 seconds.</p>
           </section>
 
           <section class="card">
-            <div class="rules">
-              <div class="rule"><div class="num">1</div><div><strong>Pool photo</strong><p class="muted">Show water clarity and condition.</p></div></div>
-              <div class="rule"><div class="num">2</div><div><strong>Test photo(s)</strong><p class="muted">Strip, dye kit, digital reader, or pool-store result. Add more than one if needed.</p></div></div>
-              <div class="rule"><div class="num">3</div><div><strong>Product photo(s)</strong><p class="muted">Show what is on hand so the guide can note what may be available or missing.</p></div></div>
+            <h3>Quick Pool Setup</h3>
+            <div class="form-grid" style="margin-top: 14px;">
+              <label>Pool Name <input data-fast-pool-field="poolName" placeholder="ex: Johnson Pool" /></label>
+              <label>Pool Type
+                <select data-fast-pool-field="poolType">
+                  <option>Not sure</option>
+                  <option>Chlorine pool</option>
+                  <option>Salt pool</option>
+                  <option>Above-ground pool</option>
+                  <option>Spa / hot tub</option>
+                </select>
+              </label>
+              <label>Heater
+                <select data-fast-pool-field="heater">
+                  <option>Not sure</option>
+                  <option>No heater</option>
+                  <option>Gas heater</option>
+                  <option>Heat pump</option>
+                  <option>Solar heater</option>
+                </select>
+              </label>
+              <label>Filter
+                <select data-fast-pool-field="filter">
+                  <option>Not sure</option>
+                  <option>Cartridge</option>
+                  <option>Sand</option>
+                  <option>DE</option>
+                </select>
+              </label>
             </div>
           </section>
 
-          <button class="btn primary full" data-start-photos>Start Photos</button>
+          <section class="card">
+            <h3>Next: 3 Photo Types</h3>
+            <div class="rules" style="margin-top: 12px;">
+              <div class="rule"><div class="num">1</div><div><strong>Pool</strong><p class="muted">Water clarity.</p></div></div>
+              <div class="rule"><div class="num">2</div><div><strong>Test</strong><p class="muted">One or more test photos.</p></div></div>
+              <div class="rule"><div class="num">3</div><div><strong>Products</strong><p class="muted">What is on hand.</p></div></div>
+            </div>
+          </section>
+
+          <button class="btn primary full" data-save-fast-pool>Continue to Photos</button>
+          <button class="btn full" data-skip-pool-info>Skip Pool Info</button>
         </div>
       </div>
 
@@ -851,7 +862,7 @@
     <aside class="desktop-panel">
       <div class="pill" style="display: inline-flex;">Greenlit Trinity Flow</div>
       <h2>ClearWay Pool AI</h2>
-      <p>One simple loop: pick/add pool, take required photo types, confirm test values, get the Do Next Guide, and save history.</p>
+      <p>One simple loop: giant start button, optional pool info, required photo types, confirm test values, get the Do Next Guide, and save history.</p>
       <div class="screen-picker" aria-label="Screen picker">
         <button class="picker-button active" data-go="home"><strong>Home</strong><span class="muted">Big start button</span></button>
         <button class="picker-button" data-go="add-pool"><strong>Add Pool</strong><span class="muted">Fast now, details later</span></button>
@@ -1003,6 +1014,35 @@
       selectedPoolId = pool.id;
       editingPoolId = pool.id;
       renderHome();
+    }
+
+    function saveFastPoolFromForm() {
+      const get = (name) => document.querySelector(`[data-fast-pool-field="${name}"]`)?.value.trim() || "";
+      const hasAnyInfo = ["poolName", "poolType", "heater", "filter"].some((name) => {
+        const value = get(name);
+        return value && value !== "Not sure";
+      });
+      if (!hasAnyInfo) return;
+      const pools = localPools();
+      const pool = {
+        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+        poolName: get("poolName") || `Pool ${pools.length + 1}`,
+        address: "",
+        poolType: get("poolType") || "Not sure",
+        heater: get("heater") || "Not sure",
+        filter: get("filter") || "Not sure",
+        measurements: "",
+        updatedAt: new Date().toISOString()
+      };
+      saveLocalPools([pool, ...pools]);
+      selectedPoolId = pool.id;
+      renderHome();
+    }
+
+    async function startPhotoFlow() {
+      activePhotoStep = 0;
+      renderPhotoStep();
+      await showScreen("photos");
     }
 
     function setPoolForm(pool) {
@@ -1381,10 +1421,19 @@
         return;
       }
 
+      if (event.target.closest("[data-save-fast-pool]")) {
+        saveFastPoolFromForm();
+        await startPhotoFlow();
+        return;
+      }
+
+      if (event.target.closest("[data-skip-pool-info]")) {
+        await startPhotoFlow();
+        return;
+      }
+
       if (event.target.closest("[data-start-photos]")) {
-        activePhotoStep = 0;
-        renderPhotoStep();
-        await showScreen("photos");
+        await startPhotoFlow();
         return;
       }
 
