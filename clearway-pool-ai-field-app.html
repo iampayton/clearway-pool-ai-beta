@@ -857,6 +857,18 @@
 
     .guide-card .muted { color: var(--seafoam-dark); }
 
+    .pool-id-card {
+      background:
+        radial-gradient(circle at 94% 0%, rgba(99, 215, 198, 0.42), transparent 34%),
+        var(--white);
+      border-color: rgba(26, 169, 152, 0.22);
+    }
+
+    .pool-id-card h1 {
+      font-size: 32px;
+      line-height: 1;
+    }
+
     .customer-report {
       border-color: rgba(26, 169, 152, 0.34);
       background: linear-gradient(180deg, #ffffff, var(--seafoam-soft));
@@ -1266,17 +1278,13 @@
           <button class="btn" data-go="home">Home</button>
         </div>
         <div class="content">
-          <section class="hero">
-            <p class="eyebrow">Do Next Guide</p>
+          <section class="card pool-id-card">
             <h1 data-guide-pool>Unnamed Pool</h1>
-            <p class="hero-copy" data-guide-title>Pool check complete.</p>
           </section>
 
           <section class="card guide-card">
-            <p class="muted">Step-by-step</p>
             <div class="big-step" data-next-step>Confirm values before adding chemicals.</div>
             <div class="summary-list" data-step-guide-list style="margin-top: 14px;"></div>
-            <p class="muted" style="margin-top: 12px;" data-product-guidance>Follow product labels. No exact dosing is provided.</p>
           </section>
 
           <section class="card">
@@ -1344,10 +1352,7 @@
             </ul>
           </section>
 
-          <div class="row">
-            <button class="btn primary" data-share-summary>Copy Summary</button>
-            <button class="btn" data-start-timer>Start Timer</button>
-          </div>
+          <button class="btn full" data-start-timer>Start Timer</button>
         </div>
       </div>
 
@@ -2284,6 +2289,7 @@
       const action = check.brainInput || check.whatAdded || "Service notes were saved.";
       const copy = `${check.poolName} was checked today. ${action}`;
       const list = [
+        ...(check.mainIssue ? [`Visit type: ${check.mainIssue}.`] : []),
         ...outside.map((item) => `${item.label} appears ${item.status}. Retest before adding more.`),
         ...attention.map((item) => `${item.label}: ${item.detail}`),
         ...(caution ? ["Salt systems and heaters need slower, careful changes. Follow labels and retest."] : []),
@@ -2296,7 +2302,6 @@
     function renderGuide(check) {
       activeCheck = check;
       document.querySelector("[data-guide-pool]").textContent = check.poolName;
-      document.querySelector("[data-guide-title]").textContent = check.mainIssue || "Pool check complete.";
       document.querySelector("[data-next-step]").textContent = check.nextStep;
       const stepGuide = buildStepGuide(check);
       const stepList = document.querySelector("[data-step-guide-list]");
@@ -2365,10 +2370,6 @@
         `).join("")}`
         : '<div class="empty">No entered values appear outside the target ranges. Retest before swimming.</div>';
 
-      const products = outside.map((item) => item.product).filter(Boolean);
-      document.querySelector("[data-product-guidance]").textContent = products.length
-        ? `Product category to consider: ${products.join(", ")}. Follow product labels. No exact dosing is provided.`
-        : "No product category is flagged from entered values. Continue to monitor and retest.";
       document.querySelector("[data-caution-card]").style.display =
         check.poolType === "Salt pool" || (check.heater && check.heater !== "No heater" && check.heater !== "Not sure")
           ? "block"
@@ -2729,11 +2730,6 @@
           renderGuide(check);
           await showScreen("guide");
         }
-        return;
-      }
-
-      if (event.target.closest("[data-share-summary]")) {
-        await shareSummary();
         return;
       }
 
