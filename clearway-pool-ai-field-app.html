@@ -731,6 +731,8 @@
               <span class="pixel-art" aria-hidden="true"></span>
             </button>
             <input class="hidden-file" data-camera-input type="file" accept="image/*" capture="environment" />
+            <input class="hidden-file" data-library-input type="file" accept="image/*" multiple />
+            <button class="btn full" data-open-library>Choose From Library</button>
             <div class="thumb-grid" data-photo-thumbs></div>
           </section>
 
@@ -1411,12 +1413,15 @@
     }
 
     document.addEventListener("change", async (event) => {
-      const input = event.target.closest("[data-camera-input]");
+      const input = event.target.closest("[data-camera-input], [data-library-input]");
       if (!input || !input.files[0]) return;
-      const dataUrl = await compressImage(input.files[0]);
       const step = photoSteps[activePhotoStep];
-      if (step.key === "pool") draft.photos.pool = dataUrl;
-      else draft.photos[step.key].push(dataUrl);
+      const files = [...input.files];
+      for (const file of files) {
+        const dataUrl = await compressImage(file);
+        if (step.key === "pool") draft.photos.pool = dataUrl;
+        else draft.photos[step.key].push(dataUrl);
+      }
       input.value = "";
       renderPhotoThumbs();
     });
@@ -1476,6 +1481,13 @@
 
       if (event.target.closest("[data-open-camera]")) {
         document.querySelector("[data-camera-input]").click();
+        return;
+      }
+
+      if (event.target.closest("[data-open-library]")) {
+        const input = document.querySelector("[data-library-input]");
+        input.multiple = photoSteps[activePhotoStep].key !== "pool";
+        input.click();
         return;
       }
 
