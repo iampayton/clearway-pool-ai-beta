@@ -95,6 +95,13 @@
       box-shadow: inset 0 0 0 1px var(--line);
       font-weight: 900;
       cursor: pointer;
+      display: grid;
+      place-items: center;
+    }
+
+    .icon-btn svg {
+      width: 22px;
+      height: 22px;
     }
 
     .content {
@@ -107,25 +114,6 @@
     .home-content {
       min-height: calc(100% - 74px);
       position: relative;
-    }
-
-    .hero {
-      border-radius: 30px;
-      padding: 24px;
-      color: var(--white);
-      background:
-        radial-gradient(circle at 84% 0%, rgba(99, 215, 198, 0.72), transparent 38%),
-        linear-gradient(150deg, rgba(23, 36, 42, 0.98), rgba(23, 36, 42, 0.84));
-      box-shadow: 0 18px 38px rgba(24, 36, 42, 0.24);
-    }
-
-    .eyebrow {
-      margin: 0 0 9px;
-      color: rgba(255, 255, 255, 0.72);
-      font-size: 12px;
-      font-weight: 850;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
     }
 
     h1, h2, h3, p { margin: 0; }
@@ -145,17 +133,6 @@
     h3 {
       font-size: 16px;
       line-height: 1.2;
-    }
-
-    .hero-copy {
-      margin-top: 14px;
-      color: rgba(255, 255, 255, 0.76);
-      font-size: 14px;
-      line-height: 1.45;
-    }
-
-    .setup-hero {
-      display: none;
     }
 
     .setup-card {
@@ -248,52 +225,36 @@
     }
 
     .photo-cta {
-      min-height: 520px;
+      min-height: 460px;
       border: 0;
-      border-radius: 48% 52% 44% 56% / 38% 42% 58% 62%;
+      border-radius: 34px;
       color: var(--charcoal);
       background: var(--seafoam);
       box-shadow: 0 18px 38px rgba(26, 169, 152, 0.28);
       display: grid;
       align-content: center;
       justify-items: center;
-      gap: 14px;
+      gap: 16px;
       text-align: center;
       cursor: pointer;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .photo-cta::before {
-      content: "";
-      position: absolute;
-      inset: 18px 24px;
-      border: 2px solid rgba(255, 255, 255, 0.38);
-      border-radius: inherit;
     }
 
     .photo-cta svg {
-      width: 66px;
-      height: 66px;
-      position: relative;
-      z-index: 1;
+      width: 70px;
+      height: 70px;
     }
 
     .photo-cta strong {
       max-width: 260px;
       font-size: 36px;
-      line-height: 0.95;
-      position: relative;
-      z-index: 1;
+      line-height: 0.98;
     }
 
     .photo-cta span {
       max-width: 220px;
-      color: rgba(23, 36, 42, 0.72);
-      font-size: 14px;
-      font-weight: 850;
-      position: relative;
-      z-index: 1;
+      color: rgba(23, 36, 42, 0.66);
+      font-size: 15px;
+      font-weight: 800;
     }
 
     .brain-cta {
@@ -354,14 +315,16 @@
     }
 
     .icon-action {
-      min-height: 58px;
+      min-height: 66px;
       border: 0;
       border-radius: 19px;
+      padding: 9px 6px;
       color: var(--charcoal);
       background: var(--white);
       box-shadow: inset 0 0 0 1px var(--line);
       display: grid;
       place-items: center;
+      gap: 3px;
       cursor: pointer;
     }
 
@@ -371,8 +334,51 @@
     }
 
     .icon-action svg {
-      width: 34px;
-      height: 34px;
+      width: 26px;
+      height: 26px;
+    }
+
+    .icon-action span {
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .note-actions {
+      display: grid;
+      grid-template-columns: 80px 1fr;
+      gap: 10px;
+    }
+
+    .do-next-btn {
+      min-height: 66px;
+      font-size: 19px;
+    }
+
+    .sheet-backdrop {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      border-radius: 34px;
+      background: rgba(16, 27, 32, 0.45);
+      display: grid;
+      align-items: end;
+    }
+
+    .sheet-backdrop[hidden] { display: none; }
+
+    .sheet {
+      margin: 0 10px 14px;
+      border-radius: 26px;
+      background: var(--white);
+      padding: 20px;
+      box-shadow: 0 -10px 40px rgba(16, 27, 32, 0.25);
+    }
+
+    .sheet-actions {
+      display: grid;
+      grid-template-columns: 1fr 1.4fr;
+      gap: 10px;
+      margin-top: 16px;
     }
 
     .card {
@@ -421,51 +427,29 @@
     .btn.full { width: 100%; }
 
     .start-cta {
-      min-height: 520px;
-      border-radius: 48% 52% 44% 56% / 38% 42% 58% 62%;
+      min-height: 460px;
+      border-radius: 34px;
       display: grid;
       align-content: center;
       justify-items: center;
-      gap: 14px;
+      gap: 16px;
       text-align: center;
       padding: 34px 26px;
       font-size: 38px;
-      line-height: 0.96;
-      position: relative;
-      overflow: hidden;
+      line-height: 0.98;
     }
 
-    .start-cta::before {
-      content: "";
-      position: absolute;
-      inset: 18px 24px;
-      border: 2px solid rgba(255, 255, 255, 0.38);
-      border-radius: inherit;
-      pointer-events: none;
-    }
-
-    .start-cta::after {
-      content: "";
-      position: absolute;
-      left: -20%;
-      right: -20%;
-      bottom: 24%;
-      height: 88px;
-      background: rgba(255, 255, 255, 0.18);
-      border-radius: 50%;
-      transform: rotate(-4deg);
-      pointer-events: none;
+    .start-cta svg {
+      width: 74px;
+      height: 74px;
     }
 
     .start-cta span {
-      display: none;
-      max-width: 260px;
-      color: rgba(23, 36, 42, 0.72);
+      max-width: 240px;
+      color: rgba(23, 36, 42, 0.66);
       font-size: 15px;
-      font-weight: 850;
+      font-weight: 800;
       line-height: 1.35;
-      position: relative;
-      z-index: 1;
     }
 
     .home-pool-line {
@@ -482,10 +466,10 @@
     }
 
     .home-maint {
-      min-height: 74px;
+      min-height: 92px;
       border: 0;
       border-radius: 22px;
-      padding: 12px;
+      padding: 12px 8px;
       color: var(--charcoal);
       background: var(--white);
       box-shadow: inset 0 0 0 1px var(--line);
@@ -493,13 +477,14 @@
       cursor: pointer;
       display: grid;
       place-items: center;
+      gap: 6px;
     }
 
     .home-maint span {
-      display: none;
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 850;
+      display: block;
+      color: rgba(23, 36, 42, 0.66);
+      font-size: 11px;
+      font-weight: 900;
       text-transform: uppercase;
       letter-spacing: 0.04em;
     }
@@ -525,95 +510,11 @@
     .home-maint.red { background: #ffe9df; }
     .home-maint.gray { background: #eef3f2; }
 
-    .home-status-icon {
-      position: relative;
-      width: 42px;
-      height: 42px;
-      color: var(--charcoal);
-    }
-
     .home-status-svg {
-      width: 44px;
-      height: 44px;
+      width: 36px;
+      height: 36px;
       color: var(--charcoal);
       display: block;
-    }
-
-    .filter-icon {
-      border: 4px solid currentColor;
-      border-radius: 10px;
-      width: 34px;
-      height: 30px;
-    }
-
-    .filter-icon::before,
-    .filter-icon::after {
-      content: "";
-      position: absolute;
-      background: currentColor;
-      border-radius: 999px;
-    }
-
-    .filter-icon::before {
-      left: 11px;
-      top: 4px;
-      width: 12px;
-      height: 4px;
-    }
-
-    .filter-icon::after {
-      left: 18px;
-      top: 5px;
-      width: 4px;
-      height: 31px;
-    }
-
-    .salt-icon {
-      width: 25px;
-      height: 34px;
-      margin: 3px auto 0;
-      border: 4px solid currentColor;
-      border-radius: 8px 8px 10px 10px;
-      transform: rotate(-8deg);
-    }
-
-    .salt-icon::before,
-    .salt-icon::after {
-      content: "";
-      position: absolute;
-      background: currentColor;
-      border-radius: 999px;
-    }
-
-    .salt-icon::before {
-      left: 2px;
-      right: 2px;
-      top: -11px;
-      height: 7px;
-    }
-
-    .salt-icon::after {
-      left: 8px;
-      top: 10px;
-      width: 4px;
-      height: 4px;
-      box-shadow: 7px 3px 0 currentColor, 1px 10px 0 currentColor;
-    }
-
-    .start-cta > strong {
-      position: relative;
-      z-index: 1;
-    }
-
-    .pill {
-      border: 1px solid rgba(26, 169, 152, 0.24);
-      color: var(--seafoam-dark);
-      background: var(--seafoam-soft);
-      border-radius: 999px;
-      padding: 7px 11px;
-      font-size: 12px;
-      font-weight: 850;
-      white-space: nowrap;
     }
 
     .status {
@@ -626,12 +527,12 @@
       color: #9a6507;
     }
 
-    .pool-list, .history-list {
+    .history-list {
       display: grid;
       gap: 10px;
     }
 
-    .pool-item, .history-item {
+    .history-item {
       width: 100%;
       text-align: left;
       border: 1px solid var(--line);
@@ -729,12 +630,6 @@
       justify-items: end;
     }
 
-
-    .selected-pool {
-      border-color: rgba(26, 169, 152, 0.48);
-      background: var(--seafoam-soft);
-    }
-
     .form-grid {
       display: grid;
       gap: 11px;
@@ -761,67 +656,6 @@
     textarea {
       min-height: 84px;
       resize: vertical;
-    }
-
-    .rules {
-      display: grid;
-      gap: 10px;
-    }
-
-    .rule {
-      display: grid;
-      grid-template-columns: 38px 1fr;
-      gap: 12px;
-      align-items: start;
-      padding: 14px;
-      border-radius: 18px;
-      background: var(--white);
-      border: 1px solid var(--line);
-    }
-
-    .num {
-      width: 34px;
-      height: 34px;
-      border-radius: 12px;
-      display: grid;
-      place-items: center;
-      color: var(--white);
-      background: var(--charcoal);
-      font-weight: 900;
-      font-size: 13px;
-    }
-
-    .camera-card {
-      text-align: center;
-      background:
-        radial-gradient(circle at 50% 16%, rgba(99, 215, 198, 0.32), transparent 34%),
-        var(--white);
-    }
-
-    .camera-button {
-      width: 158px;
-      height: 158px;
-      margin: 12px auto;
-      border: 0;
-      border-radius: 36px;
-      display: grid;
-      place-items: center;
-      background: #dffaf6;
-      box-shadow: 0 16px 32px rgba(26, 169, 152, 0.2), inset 0 0 0 5px #ffffff;
-      cursor: pointer;
-    }
-
-    .pixel-art {
-      width: 92px;
-      height: 92px;
-      image-rendering: pixelated;
-      background:
-        linear-gradient(#1aa998 0 0) 23px 14px / 46px 8px no-repeat,
-        linear-gradient(#1aa998 0 0) 14px 23px / 64px 8px no-repeat,
-        linear-gradient(#63d7c6 0 0) 7px 32px / 78px 39px no-repeat,
-        linear-gradient(#ffffff 0 0) 18px 40px / 15px 7px no-repeat,
-        linear-gradient(#ffffff 0 0) 45px 50px / 21px 7px no-repeat,
-        linear-gradient(#1aa998 0 0) 14px 72px / 64px 8px no-repeat;
     }
 
     .thumb-grid {
@@ -860,33 +694,25 @@
       font-weight: 850;
     }
 
+    .thumb-x {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 26px;
+      height: 26px;
+      border: 0;
+      border-radius: 999px;
+      background: rgba(23, 36, 42, 0.82);
+      color: var(--white);
+      font-size: 16px;
+      font-weight: 900;
+      line-height: 1;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+    }
+
     .hidden-file { display: none; }
-
-    .test-grid {
-      display: grid;
-      gap: 10px;
-    }
-
-    .test-row {
-      display: grid;
-      grid-template-columns: 1fr 98px;
-      gap: 8px;
-      align-items: end;
-      padding: 12px;
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      background: var(--white);
-    }
-
-    .target-range {
-      padding: 12px;
-      border-radius: 16px;
-      color: var(--seafoam-dark);
-      background: var(--seafoam-soft);
-      font-size: 12px;
-      font-weight: 850;
-      line-height: 1.35;
-    }
 
     .summary-list {
       display: grid;
@@ -904,58 +730,6 @@
       border: 1px solid var(--line);
       font-size: 13px;
     }
-
-    .maintenance-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-top: 12px;
-    }
-
-    .maintenance-card {
-      padding: 14px;
-      border-radius: 18px;
-      background: var(--white);
-      border: 1px solid var(--line);
-    }
-
-    .maintenance-card strong {
-      display: block;
-      margin-bottom: 6px;
-    }
-
-    .mini-status-row {
-      display: flex;
-      gap: 7px;
-      margin-top: 8px;
-    }
-
-    .mini-status {
-      border: 0;
-      border-radius: 999px;
-      padding: 7px 9px;
-      color: var(--white);
-      font-size: 11px;
-      font-weight: 900;
-      cursor: pointer;
-    }
-
-    .mini-status.green { background: #159b62; }
-    .mini-status.red { background: #c64235; }
-    .mini-status.gray { background: #7a8a90; }
-
-    .maintenance-detail {
-      display: none;
-      margin-top: 12px;
-      padding: 12px;
-      border-radius: 16px;
-      background: var(--seafoam-soft);
-      color: var(--charcoal);
-      font-size: 13px;
-      line-height: 1.45;
-    }
-
-    .maintenance-detail.active { display: block; }
 
     .guide-card {
       color: var(--charcoal);
@@ -977,37 +751,6 @@
     .pool-id-card h1 {
       font-size: 32px;
       line-height: 1;
-    }
-
-    .guide-icons {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      margin-top: 14px;
-    }
-
-    .guide-icon {
-      display: grid;
-      gap: 7px;
-      justify-items: center;
-      padding: 12px 8px;
-      border-radius: 18px;
-      color: var(--charcoal);
-      background: rgba(255, 255, 255, 0.9);
-      font-size: 11px;
-      font-weight: 900;
-      text-align: center;
-    }
-
-    .guide-icon span {
-      width: 34px;
-      height: 34px;
-      border-radius: 13px;
-      display: grid;
-      place-items: center;
-      color: var(--charcoal);
-      background: var(--seafoam);
-      font-size: 13px;
     }
 
     .big-step {
@@ -1124,7 +867,7 @@
     @media (max-width: 900px) {
       .shell { grid-template-columns: 1fr; }
       .phone {
-        position: static;
+        position: relative;
         width: min(420px, 100%);
         margin: 0 auto;
       }
@@ -1158,19 +901,35 @@
         <div class="app-top">
           <div class="brand">ClearWay Pool AI</div>
           <div class="top-icons">
-            <button class="icon-btn" data-go="history" aria-label="History">H</button>
-            <button class="icon-btn" data-edit-pool aria-label="Pool settings">⚙</button>
+            <button class="icon-btn" data-go="history" aria-label="History">
+              <svg aria-hidden="true" viewBox="0 0 48 48" fill="none">
+                <circle cx="24" cy="24" r="17" stroke="currentColor" stroke-width="4"/>
+                <path d="M24 14v10l7 5" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <button class="icon-btn" data-edit-pool aria-label="Pool settings">
+              <svg aria-hidden="true" viewBox="0 0 48 48" fill="none">
+                <circle cx="24" cy="24" r="7" stroke="currentColor" stroke-width="4"/>
+                <path d="M24 5v7M24 36v7M5 24h7M36 24h7M10.5 10.5l5 5M32.5 32.5l5 5M37.5 10.5l-5 5M15.5 32.5l-5 5" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+              </svg>
+            </button>
           </div>
         </div>
         <div class="content home-content">
           <button class="btn primary full start-cta" data-start-check>
+            <svg aria-hidden="true" viewBox="0 0 64 64" fill="none">
+              <path d="M18 24h8l4-6h10l4 6h8a6 6 0 0 1 6 6v20a6 6 0 0 1-6 6H18a6 6 0 0 1-6-6V30a6 6 0 0 1 6-6Z" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>
+              <circle cx="35" cy="40" r="10" stroke="currentColor" stroke-width="4"/>
+            </svg>
             <strong>Start<br>Quick Check</strong>
-            <span></span>
+            <span>Takes about a minute.</span>
           </button>
           <p class="muted home-pool-line" data-selected-pool-text title="Tap to change pool">New Pool · Tap to change</p>
           <div class="home-status-row" aria-label="Maintenance status">
             <button class="home-maint gray" data-home-maintenance="filter">
-              <i class="home-status-icon filter-icon" aria-hidden="true"></i>
+              <svg class="home-status-svg" aria-hidden="true" viewBox="0 0 48 48" fill="none">
+                <path d="M8 10h32L28 26v11l-8 5V26L8 10Z" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>
+              </svg>
               <span>Filter</span>
               <strong data-home-filter-state>Not logged</strong>
             </button>
@@ -1185,7 +944,10 @@
               <small>Half skimmer</small>
             </button>
             <button class="home-maint gray" data-home-maintenance="saltCell">
-              <i class="home-status-icon salt-icon" aria-hidden="true"></i>
+              <svg class="home-status-svg" aria-hidden="true" viewBox="0 0 48 48" fill="none">
+                <rect x="13" y="9" width="22" height="30" rx="6" stroke="currentColor" stroke-width="4"/>
+                <path d="M20 17v14M28 17v14" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>
+              </svg>
               <span>Salt Cell</span>
               <strong data-home-salt-state>Not needed</strong>
             </button>
@@ -1199,17 +961,17 @@
           <button class="btn" data-go="home">Home</button>
         </div>
         <div class="content">
-          <section class="hero">
-            <p class="eyebrow">Add Pool</p>
-            <h1>Save the basics now. Add details later.</h1>
-            <p class="hero-copy">Add the basics now. Come back later for the rest.</p>
+          <section class="setup-card setup-card-main">
+            <p class="setup-label">Settings</p>
+            <h1>Pool Details</h1>
+            <p class="setup-help" style="margin-bottom: 0;">Edit if you need.</p>
           </section>
 
           <section class="card">
             <h3>Pool Basics</h3>
             <div class="form-grid" style="margin-top: 14px;">
               <label>Pool Name <input data-pool-field="poolName" placeholder="ex: Maple Ridge Pool" /></label>
-              <label>Address Optional <input data-pool-field="address" placeholder="Can add later" /></label>
+              <label>Address (optional) <input data-pool-field="address" placeholder="Can add later" /></label>
               <label>Pool Type
                 <select data-pool-field="poolType">
                   <option>Chlorine pool</option>
@@ -1243,13 +1005,13 @@
                   <option>DE</option>
                 </select>
               </label>
-              <label>Measurements Later <textarea data-pool-field="measurements" placeholder="Gallons, surface, pump, equipment notes can be added later"></textarea></label>
+              <label>Notes (optional) <textarea data-pool-field="measurements" placeholder="Gallons, equipment, anything else."></textarea></label>
             </div>
           </section>
 
           <section class="card">
             <h3>Products</h3>
-            <p class="muted" style="margin-top: 6px;">One photo of the products you have. ClearWay uses it to plan Do Next.</p>
+            <p class="muted" style="margin-top: 6px;">One photo of what you have. ClearWay uses it for Do Next.</p>
             <div class="thumb-grid" data-pool-chem-thumbs></div>
             <button class="btn full" type="button" data-pool-chem-add style="margin-top: 12px;">Add / Update Product Photo</button>
             <input class="hidden-file" data-pool-chem-input type="file" accept="image/*" multiple />
@@ -1262,7 +1024,7 @@
       <div class="screen" data-screen="rules">
         <div class="app-top">
           <div class="brand">ClearWay Pool AI</div>
-          <button class="btn" data-go="home">Home</button>
+          <button class="btn" data-back>Back</button>
         </div>
         <div class="content">
           <section class="setup-card setup-card-main">
@@ -1286,7 +1048,7 @@
       <div class="screen" data-screen="photos">
         <div class="app-top">
           <div class="brand">ClearWay Pool AI</div>
-          <button class="btn" data-go="home">Home</button>
+          <button class="btn" data-back>Back</button>
         </div>
         <div class="content">
           <button class="photo-cta" data-open-camera aria-label="Open camera">
@@ -1302,25 +1064,25 @@
           <div class="thumb-grid" data-photo-thumbs></div>
 
           <div class="capture-actions">
-            <button class="icon-action" data-open-library aria-label="Choose from library" title="Choose from library">
+            <button class="icon-action" data-open-library aria-label="Choose from library">
               <svg aria-hidden="true" viewBox="0 0 48 48" fill="none">
-                <path d="M10 10h11v28H10a4 4 0 0 1-4-4V14a4 4 0 0 1 4-4Z" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>
-                <path d="M25 10h13a4 4 0 0 1 4 4v20a4 4 0 0 1-4 4H25V10Z" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>
-                <path d="M21 10v28M31 17h6M31 25h6" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+                <rect x="8" y="10" width="32" height="28" rx="5" stroke="currentColor" stroke-width="4"/>
+                <circle cx="18" cy="20" r="3.5" fill="currentColor"/>
+                <path d="M10 34l9-9 7 7 5-5 7 7" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>
               </svg>
+              <span>Library</span>
             </button>
-            <button class="icon-action" data-manual-input aria-label="Skip to note" title="Skip to note">
+            <button class="icon-action" data-manual-input aria-label="Type a note instead">
               <svg aria-hidden="true" viewBox="0 0 48 48" fill="none">
-                <circle cx="21" cy="21" r="12" stroke="currentColor" stroke-width="4"/>
-                <path d="M31 31l10 10" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+                <path d="M30 10l8 8-20 20H10v-8L30 10Z" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>
               </svg>
+              <span>Type</span>
             </button>
-            <button class="icon-action primary" data-next-photo-step aria-label="Next photo step" title="Next">
+            <button class="icon-action primary" data-next-photo-step aria-label="Next">
               <svg aria-hidden="true" viewBox="0 0 48 48" fill="none">
-                <path d="M8 12l12 12L8 36" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M20 12l12 12-12 12" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M32 12l8 12-8 12" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M16 10l16 14-16 14" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
+              <span>Next</span>
             </button>
           </div>
         </div>
@@ -1329,7 +1091,7 @@
       <div class="screen" data-screen="values">
         <div class="app-top">
           <div class="brand">ClearWay Pool AI</div>
-          <button class="btn" data-go="home">Home</button>
+          <button class="btn" data-back>Back</button>
         </div>
         <div class="content">
           <button class="brain-cta" data-dictate-target="brainInput" aria-label="Talk note">
@@ -1343,25 +1105,14 @@
 
           <textarea class="brain-note" data-check-field="brainInput" placeholder="ex: Routine check. Water clear. Chlorine looked low on strip. Cleaned filter, brushed steps, added product by label. Retest later today."></textarea>
 
-          <div class="capture-actions">
-            <button class="icon-action" data-use-weather aria-label="Add weather note" title="Weather">
-              <svg aria-hidden="true" viewBox="0 0 48 48" fill="none">
-                <path d="M17 31h18a7 7 0 0 0 0-14 12 12 0 0 0-23-2 8 8 0 0 0 5 16Z" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>
-                <path d="M15 38h18" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
-              </svg>
-            </button>
-            <button class="icon-action" data-clear-brain-input aria-label="Clear note" title="Clear">
+          <div class="note-actions">
+            <button class="icon-action" data-clear-brain-input aria-label="Clear note">
               <svg aria-hidden="true" viewBox="0 0 48 48" fill="none">
                 <path d="M14 14l20 20M34 14 14 34" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
               </svg>
+              <span>Clear</span>
             </button>
-            <button class="icon-action primary" data-create-guide aria-label="Get Do Next" title="Do Next">
-              <svg aria-hidden="true" viewBox="0 0 48 48" fill="none">
-                <path d="M8 12l12 12L8 36" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M20 12l12 12-12 12" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M32 12l8 12-8 12" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </button>
+            <button class="btn primary do-next-btn" data-create-guide aria-label="Get Do Next">Get Do Next</button>
           </div>
         </div>
       </div>
@@ -1410,7 +1161,7 @@
             </div>
           </section>
 
-          <button class="btn full" data-start-timer>Start Retest Timer</button>
+          <button class="btn primary full" data-start-timer>Start Retest Timer</button>
         </div>
       </div>
 
@@ -1433,6 +1184,17 @@
             <p class="muted" style="margin-top: 10px;"><span data-history-count>0</span> saved. <span data-history-shown>0</span> showing.</p>
           </section>
           <div class="history-list" data-history-list></div>
+        </div>
+      </div>
+
+      <div class="sheet-backdrop" data-sheet hidden>
+        <div class="sheet" role="dialog" aria-modal="true">
+          <h3 data-sheet-title>Status</h3>
+          <p class="muted" data-sheet-body style="margin-top: 8px;"></p>
+          <div class="sheet-actions">
+            <button class="btn" data-sheet-close>Close</button>
+            <button class="btn primary" data-sheet-confirm>Done today</button>
+          </div>
         </div>
       </div>
     </section>
@@ -1592,7 +1354,7 @@
       const photos = setupDraft.chemInventoryPhotos || [];
       thumbs.classList.toggle("active", Boolean(activeSetupQuestion()?.photo));
       thumbs.innerHTML = photos.length
-        ? photos.map((src, index) => `<div class="thumb"><img alt="Products ${index + 1}" src="${src}"><span>Products</span></div>`).join("")
+        ? photos.map((src, index) => `<div class="thumb"><img alt="Products ${index + 1}" src="${src}"><span>Products</span><button class="thumb-x" data-remove-setup-chem="${index}" aria-label="Remove photo">&times;</button></div>`).join("")
         : '<div class="empty" style="grid-column: 1 / -1;">No product photo yet.</div>';
     }
 
@@ -1881,16 +1643,35 @@
       };
     }
 
+    let sheetAction = null;
+
+    function openSheet(title, body, confirmLabel) {
+      const backdrop = document.querySelector("[data-sheet]");
+      if (!backdrop) return;
+      document.querySelector("[data-sheet-title]").textContent = title;
+      document.querySelector("[data-sheet-body]").textContent = body;
+      const confirmBtn = document.querySelector("[data-sheet-confirm]");
+      confirmBtn.style.display = confirmLabel ? "block" : "none";
+      if (confirmLabel) confirmBtn.textContent = confirmLabel;
+      backdrop.hidden = false;
+    }
+
+    function closeSheet() {
+      const backdrop = document.querySelector("[data-sheet]");
+      if (backdrop) backdrop.hidden = true;
+      sheetAction = null;
+    }
+
     function showMaintenanceDetail(poolId, type) {
       const pool = localPools().find((item) => item.id === poolId) || selectedPool();
       const info = maintenanceInfo(pool, type);
       if (type === "saltCell" && pool?.poolType !== "Salt pool") {
-        alert(`${info.label}\n${info.detail}`);
+        openSheet(info.label, info.detail, "");
         return;
       }
-      const verb = type === "waterLevel" ? "Checked today?" : "Done today?";
-      const ok = confirm(`${info.label}\nLast: ${info.last}\nNext: ${info.next}\n${info.detail}\n\n${verb} OK marks it done.`);
-      if (ok) logMaintenance(type);
+      const verb = type === "waterLevel" ? "Checked today" : "Done today";
+      sheetAction = () => logMaintenance(type);
+      openSheet(info.label, `Last: ${info.last}. Next: ${info.next}. ${info.detail}`, verb);
     }
 
     function logMaintenance(type) {
@@ -1912,7 +1693,7 @@
       if (!thumbs) return;
       const photos = editPoolChemPhotos || [];
       thumbs.innerHTML = photos.length
-        ? photos.map((src, index) => `<div class="thumb"><img alt="Products ${index + 1}" src="${src}"><span>Products</span></div>`).join("")
+        ? photos.map((src, index) => `<div class="thumb"><img alt="Products ${index + 1}" src="${src}"><span>Products</span><button class="thumb-x" data-remove-chem="${index}" aria-label="Remove photo">&times;</button></div>`).join("")
         : '<div class="empty" style="grid-column: 1 / -1;">No product photo yet.</div>';
     }
 
@@ -2013,7 +1794,7 @@
       const step = photoSteps[activePhotoStep];
       const items = currentPhotoArray();
       document.querySelector("[data-photo-thumbs]").innerHTML = items.length
-        ? items.map((src, index) => `<div class="thumb"><img alt="${step.label} ${index + 1}" src="${src}"><span>${step.label}</span></div>`).join("")
+        ? items.map((src, index) => `<div class="thumb"><img alt="${step.label} ${index + 1}" src="${src}"><span>${step.label}</span><button class="thumb-x" data-remove-photo="${index}" aria-label="Remove photo">&times;</button></div>`).join("")
         : '<div class="empty" style="grid-column: 1 / -1;">No photo yet. Skip if you need to.</div>';
     }
 
@@ -2107,6 +1888,22 @@
       if (lower.includes("filter")) return "Filter Check";
       if (lower.includes("water level") || lower.includes("low water")) return "Water Level Check";
       return "Routine Check";
+    }
+
+    function inferProductCategories(text) {
+      const lower = (text || "").toLowerCase();
+      const categories = new Set();
+      if (lower.includes("green") || lower.includes("algae")) { categories.add("algaecide"); categories.add("test strips"); }
+      if (lower.includes("cloudy") || lower.includes("hazy")) { categories.add("clarifier"); categories.add("filter cleaner"); }
+      if (lower.includes("low chlorine") || lower.includes("chlorine low") || lower.includes("no chlorine")) categories.add("chlorine sanitizer");
+      if (lower.includes("high ph") || lower.includes("ph high")) categories.add("pH decreaser");
+      if (lower.includes("low ph") || lower.includes("ph low")) categories.add("pH increaser");
+      if (lower.includes("alkalinity")) categories.add("alkalinity increaser");
+      if (lower.includes("stabilizer") || lower.includes("cya")) categories.add("stabilizer");
+      if (lower.includes("salt")) categories.add("pool salt");
+      if (lower.includes("strip") || lower.includes("test")) categories.add("test strips");
+      if (lower.includes("filter")) categories.add("filter cleaner");
+      return [...categories];
     }
 
     function inferTestTypeFromText(text) {
@@ -2210,6 +2007,7 @@
         whatAdded: brain,
         notes: brain,
         weatherLog,
+        productCategories: inferProductCategories(brain),
         photos,
         values,
         nextStep: buildNextStep(values, mainIssue)
@@ -2245,6 +2043,7 @@
           chemInventoryNote: check.chemInventoryNote || "",
           chemInventoryUpdatedAt: check.chemInventoryUpdatedAt || "",
           weatherLog: check.weatherLog || null,
+          productCategories: check.productCategories || [],
           report: check.report || null,
           learning: check.learning || null
         }),
@@ -2273,6 +2072,7 @@
         chemInventoryNote: noteData.chemInventoryNote || "",
         chemInventoryUpdatedAt: noteData.chemInventoryUpdatedAt || "",
         weatherLog: noteData.weatherLog || null,
+        productCategories: noteData.productCategories || [],
         report: noteData.report || null,
         learning: noteData.learning || null,
         mainIssue: row.main_issue,
@@ -2536,38 +2336,6 @@
       dictateInto(document.querySelector(`[data-check-field="${fieldName}"]`));
     }
 
-    async function usePhoneWeather() {
-      const field = document.querySelector('[data-check-field="brainInput"]') || document.querySelector('[data-check-field="weatherNote"]');
-      if (!field) return;
-      if (!navigator.geolocation) {
-        alert("Weather needs phone location. Add a quick weather note by hand.");
-        field.focus();
-        return;
-      }
-      const position = await new Promise((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: false, timeout: 8000, maximumAge: 900000 });
-      }).catch(() => null);
-      if (!position) {
-        alert("Location was not available. Add a quick weather note by hand.");
-        field.focus();
-        return;
-      }
-      const { latitude, longitude } = position.coords;
-      const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,precipitation,wind_speed_10m&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=auto&forecast_days=1`;
-      try {
-        const response = await fetch(url);
-        if (!response.ok) throw new Error("Weather request failed");
-        const data = await response.json();
-        const current = data.current || {};
-        const note = `Weather: ${current.temperature_2m ?? "?"}F, rain ${current.precipitation ?? "?"} in, wind ${current.wind_speed_10m ?? "?"} mph. Check water level if rain, heat, or wind was high.`;
-        field.value = `${field.value ? field.value + " " : ""}${note}`.trim();
-      } catch (error) {
-        console.warn("Weather note failed", error);
-        alert("Weather did not load. Add a quick weather note by hand.");
-        field.focus();
-      }
-    }
-
     document.addEventListener("change", async (event) => {
       const poolChemInput = event.target.closest("[data-pool-chem-input]");
       if (poolChemInput && poolChemInput.files[0]) {
@@ -2619,6 +2387,67 @@
     });
 
     document.addEventListener("click", async (event) => {
+      if (event.target.closest("[data-sheet-confirm]")) {
+        if (sheetAction) sheetAction();
+        closeSheet();
+        return;
+      }
+
+      if (event.target.closest("[data-sheet-close]") || event.target.matches(".sheet-backdrop")) {
+        closeSheet();
+        return;
+      }
+
+      if (event.target.closest("[data-back]")) {
+        const activeScreen = document.querySelector(".screen.active")?.dataset.screen;
+        if (activeScreen === "values") {
+          activePhotoStep = photoSteps.length - 1;
+          renderPhotoStep();
+          await showScreen("photos");
+        } else if (activeScreen === "photos") {
+          if (activePhotoStep > 0) {
+            activePhotoStep -= 1;
+            renderPhotoStep();
+          } else {
+            await showScreen("home");
+          }
+        } else if (activeScreen === "rules" && !visitConcernMode && setupIndex > 0) {
+          setupIndex -= 1;
+          renderSetupQuestion();
+        } else {
+          await showScreen("home");
+        }
+        return;
+      }
+
+      const removePhoto = event.target.closest("[data-remove-photo]");
+      if (removePhoto) {
+        const step = photoSteps[activePhotoStep];
+        if (step.key === "pool" && !Array.isArray(draft.photos.pool)) {
+          draft.photos.pool = draft.photos.pool ? [draft.photos.pool] : [];
+        }
+        currentPhotoArray().splice(Number(removePhoto.dataset.removePhoto), 1);
+        renderPhotoThumbs();
+        return;
+      }
+
+      const removeChem = event.target.closest("[data-remove-chem]");
+      if (removeChem) {
+        editPoolChemPhotos = editPoolChemPhotos || [];
+        editPoolChemPhotos.splice(Number(removeChem.dataset.removeChem), 1);
+        editPoolChemChanged = true;
+        renderPoolChemThumbs();
+        return;
+      }
+
+      const removeSetupChem = event.target.closest("[data-remove-setup-chem]");
+      if (removeSetupChem) {
+        setupDraft.chemInventoryPhotos = setupDraft.chemInventoryPhotos || [];
+        setupDraft.chemInventoryPhotos.splice(Number(removeSetupChem.dataset.removeSetupChem), 1);
+        renderSetupPhotoThumbs();
+        return;
+      }
+
       if (event.target.closest("[data-setup-chem-camera]")) {
         document.querySelector("[data-setup-chem-input]")?.click();
         return;
@@ -2663,11 +2492,6 @@
       const dictate = event.target.closest("[data-dictate-target]");
       if (dictate) {
         startDictation(dictate.dataset.dictateTarget);
-        return;
-      }
-
-      if (event.target.closest("[data-use-weather]")) {
-        await usePhoneWeather();
         return;
       }
 
