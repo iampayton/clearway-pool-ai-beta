@@ -104,6 +104,11 @@
       gap: 14px;
     }
 
+    .home-content {
+      min-height: calc(100% - 74px);
+      position: relative;
+    }
+
     .hero {
       border-radius: 30px;
       padding: 24px;
@@ -196,7 +201,7 @@
 
     .start-cta {
       min-height: 520px;
-      border-radius: 34px;
+      border-radius: 48% 52% 44% 56% / 38% 42% 58% 62%;
       display: grid;
       align-content: center;
       justify-items: center;
@@ -205,6 +210,30 @@
       padding: 34px 26px;
       font-size: 38px;
       line-height: 0.96;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .start-cta::before {
+      content: "";
+      position: absolute;
+      inset: 18px 24px;
+      border: 2px solid rgba(255, 255, 255, 0.38);
+      border-radius: inherit;
+      pointer-events: none;
+    }
+
+    .start-cta::after {
+      content: "";
+      position: absolute;
+      left: -20%;
+      right: -20%;
+      bottom: 24%;
+      height: 88px;
+      background: rgba(255, 255, 255, 0.18);
+      border-radius: 50%;
+      transform: rotate(-4deg);
+      pointer-events: none;
     }
 
     .start-cta span {
@@ -214,6 +243,56 @@
       font-size: 15px;
       font-weight: 850;
       line-height: 1.35;
+      position: relative;
+      z-index: 1;
+    }
+
+    .home-pool-line {
+      text-align: center;
+      margin-top: -4px;
+    }
+
+    .home-status-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .home-maint {
+      min-height: 74px;
+      border: 0;
+      border-radius: 22px;
+      padding: 12px;
+      color: var(--charcoal);
+      background: var(--white);
+      box-shadow: inset 0 0 0 1px var(--line);
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .home-maint span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 850;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .home-maint strong {
+      display: block;
+      margin-top: 7px;
+      font-size: 15px;
+      line-height: 1.1;
+    }
+
+    .home-maint.green { background: #dff9ef; }
+    .home-maint.red { background: #ffe9df; }
+    .home-maint.gray { background: #eef3f2; }
+
+    .start-cta > strong {
+      position: relative;
+      z-index: 1;
     }
 
     .pill {
@@ -631,7 +710,7 @@
         border-radius: 0;
       }
       .desktop-panel { display: none; }
-      .start-cta { min-height: calc(100vh - 124px); }
+      .start-cta { min-height: calc(100vh - 246px); }
     }
   </style>
 </head>
@@ -646,11 +725,22 @@
             <button class="icon-btn" data-add-new-pool aria-label="Add pool">+</button>
           </div>
         </div>
-        <div class="content">
+        <div class="content home-content">
           <button class="btn primary full start-cta" data-start-check>
-            Start Pool Check<br>Tap Here
+            <strong>Start Pool Check<br>Tap Here</strong>
             <span>Pool info, photos, values, Do Next Guide.</span>
           </button>
+          <p class="muted home-pool-line" data-selected-pool-text>New Pool / Not sure / Heater: Not sure</p>
+          <div class="home-status-row" aria-label="Maintenance status">
+            <button class="home-maint gray" data-home-maintenance="filter">
+              <span>Filter</span>
+              <strong data-home-filter-state>Not logged</strong>
+            </button>
+            <button class="home-maint gray" data-home-maintenance="saltCell">
+              <span>Salt Cell</span>
+              <strong data-home-salt-state>Not needed</strong>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -720,6 +810,11 @@
           <section class="card">
             <h3>Quick Pool Setup</h3>
             <div class="form-grid" style="margin-top: 14px;">
+              <label>Use Saved Pool
+                <select data-fast-pool-select>
+                  <option value="">New or last pool</option>
+                </select>
+              </label>
               <label>Pool Name <input data-fast-pool-field="poolName" placeholder="ex: Johnson Pool" /></label>
               <label>Pool Type
                 <select data-fast-pool-field="poolType">
@@ -851,6 +946,17 @@
           </section>
 
           <section class="card">
+            <div class="row">
+              <div>
+                <h3>First Look</h3>
+                <p class="muted">Say what you see. Good, cloudy, green wall, low water, dirty filter, anything obvious.</p>
+              </div>
+              <button class="btn" data-dictate-target="firstImpression">Talk</button>
+            </div>
+            <label style="margin-top: 12px;">What do you see? <textarea data-check-field="firstImpression" placeholder="ex: Water is cloudy. Light green on wall. Filter pressure looks high."></textarea></label>
+          </section>
+
+          <section class="card">
             <h3>Confirmed Test Values</h3>
             <div class="test-grid" style="margin-top: 14px;">
               <div class="test-row"><label>Free Chlorine <input data-test-current="free_chlorine" inputmode="decimal" placeholder="Unknown" /></label><div class="target-range">Target<br>1-4 ppm</div></div>
@@ -863,9 +969,31 @@
           </section>
 
           <section class="card">
-            <h3>What Would You Do Next?</h3>
-            <p class="muted">This teaches the ClearWay brain what Trinity would actually recommend.</p>
-            <label style="margin-top: 12px;">Trinity's Next Step <textarea data-check-field="notes" placeholder="ex: Backwash filter, run pump 4 hours, retest chlorine and pH"></textarea></label>
+            <div class="row">
+              <div>
+                <h3>What Changed?</h3>
+                <p class="muted">Quick notes help ClearWay learn what is normal for this pool.</p>
+              </div>
+              <button class="btn" data-use-weather>Weather</button>
+            </div>
+            <div class="form-grid" style="margin-top: 14px;">
+              <label>Weather / Water Level <textarea data-check-field="weatherNote" placeholder="ex: Heavy rain yesterday. Water low. Lots of sun this week."></textarea></label>
+              <label>Changed Since Last Check <textarea data-check-field="whatChanged" placeholder="ex: Customer added tablets. Filter was cleaned. Pump ran less than normal."></textarea></label>
+            </div>
+          </section>
+
+          <section class="card">
+            <div class="row">
+              <div>
+                <h3>What Would You Do Next?</h3>
+                <p class="muted">This teaches the ClearWay brain what Trinity would actually recommend.</p>
+              </div>
+              <button class="btn" data-dictate-target="notes">Talk</button>
+            </div>
+            <div class="form-grid" style="margin-top: 14px;">
+              <label>What Did You Add or Clean? <textarea data-check-field="whatAdded" placeholder="ex: Cleaned filter. Brushed walls. Added product by label."></textarea></label>
+              <label>Trinity's Next Step <textarea data-check-field="notes" placeholder="ex: Backwash filter, run pump 4 hours, retest chlorine and pH"></textarea></label>
+            </div>
           </section>
 
           <button class="btn primary full" data-create-guide>Get Do Next Guide</button>
@@ -907,7 +1035,18 @@
           <section class="card">
             <h3>Photos & Notes</h3>
             <div class="thumb-grid" data-guide-photos></div>
-            <p class="muted" data-guide-notes style="margin-top: 12px;">No notes added.</p>
+            <div class="summary-list" data-guide-notes style="margin-top: 12px;"></div>
+          </section>
+
+          <section class="card" data-learning-card>
+            <div class="row">
+              <div>
+                <h3>Learning Signal</h3>
+                <p class="muted" data-learning-copy>This check needs more proof before ClearWay should learn from it.</p>
+              </div>
+              <span class="status" data-learning-status>Needs proof</span>
+            </div>
+            <div class="summary-list" data-learning-list style="margin-top: 12px;"></div>
           </section>
 
           <section class="card">
@@ -1062,7 +1201,10 @@
 
     function ensureStarterPool() {
       const pools = localPools();
-      if (pools.length) return;
+      if (pools.length) {
+        if (!selectedPoolId) selectedPoolId = pools[0].id;
+        return;
+      }
       const starter = {
         id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
         poolName: "New Pool",
@@ -1104,6 +1246,16 @@
       renderPhotoStep();
     }
 
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      }[char]));
+    }
+
     function renderHome() {
       ensureStarterPool();
       const pools = localPools();
@@ -1112,6 +1264,8 @@
       if (selectedText) {
         selectedText.textContent = pool ? `${pool.poolName} Â· ${pool.poolType} Â· Heater: ${pool.heater}` : "No pool selected yet.";
       }
+      if (selectedText && pool) selectedText.textContent = `${pool.poolName} / ${pool.poolType} / Heater: ${pool.heater}`;
+      renderHomeMaintenance(pool);
       const poolList = document.querySelector("[data-pool-list]");
       if (!poolList) return;
       poolList.innerHTML = pools.map((item) => `
@@ -1129,6 +1283,20 @@
           </div>
         </button>
       `).join("");
+    }
+
+    function renderHomeMaintenance(pool) {
+      const filterBox = document.querySelector('[data-home-maintenance="filter"]');
+      const saltBox = document.querySelector('[data-home-maintenance="saltCell"]');
+      const filterState = document.querySelector("[data-home-filter-state]");
+      const saltState = document.querySelector("[data-home-salt-state]");
+      if (!filterBox || !saltBox || !pool) return;
+      const filter = maintenanceInfo(pool, "filter");
+      const salt = maintenanceInfo(pool, "saltCell");
+      filterBox.className = `home-maint ${filter.color}`;
+      saltBox.className = `home-maint ${salt.color}`;
+      if (filterState) filterState.textContent = filter.color === "red" ? "Check due" : filter.detail;
+      if (saltState) saltState.textContent = salt.color === "red" ? "Check due" : salt.detail;
     }
 
     function formatDate(value) {
@@ -1226,12 +1394,30 @@
 
     function saveFastPoolFromForm() {
       const get = (name) => document.querySelector(`[data-fast-pool-field="${name}"]`)?.value.trim() || "";
+      const chosenId = document.querySelector("[data-fast-pool-select]")?.value || "";
       const hasAnyInfo = ["poolName", "poolType", "heater", "filter"].some((name) => {
         const value = get(name);
         return value && value !== "Not sure";
       });
-      if (!hasAnyInfo) return;
       const pools = localPools();
+      if (chosenId && chosenId !== "__new") {
+        const current = pools.find((item) => item.id === chosenId);
+        if (current) {
+          const updated = {
+            ...current,
+            poolName: get("poolName") || current.poolName,
+            poolType: get("poolType") || current.poolType,
+            heater: get("heater") || current.heater,
+            filter: get("filter") || current.filter,
+            updatedAt: new Date().toISOString()
+          };
+          saveLocalPools([updated, ...pools.filter((item) => item.id !== updated.id)]);
+          selectedPoolId = updated.id;
+          renderHome();
+          return;
+        }
+      }
+      if (!hasAnyInfo) return;
       const pool = {
         id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
         poolName: get("poolName") || `Pool ${pools.length + 1}`,
@@ -1266,6 +1452,31 @@
         const field = document.querySelector(`[data-pool-field="${key}"]`);
         if (field) field.value = value;
       });
+    }
+
+    function setFastPoolForm(pool) {
+      const fields = {
+        poolName: pool?.poolName || "",
+        poolType: pool?.poolType || "Not sure",
+        heater: pool?.heater || "Not sure",
+        filter: pool?.filter || "Not sure"
+      };
+      Object.entries(fields).forEach(([key, value]) => {
+        const field = document.querySelector(`[data-fast-pool-field="${key}"]`);
+        if (field) field.value = value;
+      });
+    }
+
+    function renderFastPoolSelect() {
+      const select = document.querySelector("[data-fast-pool-select]");
+      if (!select) return;
+      const pools = localPools();
+      select.innerHTML = [
+        '<option value="__new">Add new pool now</option>',
+        ...pools.map((pool) => `<option value="${pool.id}">${escapeHtml(pool.poolName)} / ${escapeHtml(pool.poolType)}</option>`)
+      ].join("");
+      select.value = selectedPoolId || "__new";
+      setFastPoolForm(selectedPool());
     }
 
     async function openAddPool() {
@@ -1416,6 +1627,10 @@
         saltCellCleanedAt: pool.saltCellCleanedAt || "",
         mainIssue,
         testType: document.querySelector('[data-check-field="testType"]').value,
+        firstImpression: document.querySelector('[data-check-field="firstImpression"]').value.trim(),
+        weatherNote: document.querySelector('[data-check-field="weatherNote"]').value.trim(),
+        whatChanged: document.querySelector('[data-check-field="whatChanged"]').value.trim(),
+        whatAdded: document.querySelector('[data-check-field="whatAdded"]').value.trim(),
         notes: document.querySelector('[data-check-field="notes"]').value.trim(),
         photos,
         values,
@@ -1433,6 +1648,10 @@
         test_type: check.testType,
         notes: JSON.stringify({
           notes: check.notes || "",
+          firstImpression: check.firstImpression || "",
+          weatherNote: check.weatherNote || "",
+          whatChanged: check.whatChanged || "",
+          whatAdded: check.whatAdded || "",
           heater: check.heater || "",
           filter: check.filter || "",
           poolId: check.poolId || "",
@@ -1460,6 +1679,10 @@
         saltCellCleanedAt: noteData.saltCellCleanedAt || "",
         mainIssue: row.main_issue,
         testType: row.test_type,
+        firstImpression: noteData.firstImpression || "",
+        weatherNote: noteData.weatherNote || "",
+        whatChanged: noteData.whatChanged || "",
+        whatAdded: noteData.whatAdded || "",
         notes: noteData.notes || "",
         photos: row.photos || {},
         values: row.confirmed_values || [],
@@ -1495,12 +1718,47 @@
       }
     }
 
+    function learningQuality(check) {
+      const enteredValues = (check.values || []).filter((item) => item.current).length;
+      const poolPhotos = normalizePhotoList(check.photos?.pool).length;
+      const testPhotos = normalizePhotoList(check.photos?.tests).length;
+      const proStep = Boolean((check.notes || "").trim());
+      const firstLook = Boolean((check.firstImpression || "").trim());
+      const signals = [
+        { ok: poolPhotos > 0, label: "Pool photo saved" },
+        { ok: testPhotos > 0, label: "Test photo saved" },
+        { ok: enteredValues > 0, label: "Test values confirmed" },
+        { ok: firstLook, label: "First look recorded" },
+        { ok: proStep, label: "Next step recorded" }
+      ];
+      const score = signals.filter((item) => item.ok).length;
+      if (score >= 5) return { status: "Strong", copy: "Good check. ClearWay can learn from this with more history.", signals };
+      if (score >= 3) return { status: "Useful", copy: "Useful check. Better after one more proof point or retest.", signals };
+      return { status: "Needs proof", copy: "Do not teach the brain much from this yet. Add photos, values, or Trinity's next step.", signals };
+    }
+
     function renderGuide(check) {
       activeCheck = check;
       document.querySelector("[data-guide-title]").textContent = check.mainIssue;
       document.querySelector("[data-guide-pool]").textContent = check.poolName;
       document.querySelector("[data-next-step]").textContent = check.nextStep;
-      document.querySelector("[data-guide-notes]").textContent = check.notes || "No notes added.";
+      const noteRows = [
+        ["First look", check.firstImpression],
+        ["Weather / water", check.weatherNote],
+        ["Changed since last check", check.whatChanged],
+        ["Added or cleaned", check.whatAdded],
+        ["Trinity's next step", check.notes]
+      ].filter((item) => item[1]);
+      document.querySelector("[data-guide-notes]").innerHTML = noteRows.length
+        ? noteRows.map(([label, value]) => `<div class="summary-item"><span>${label}</span><strong>${escapeHtml(value)}</strong></div>`).join("")
+        : '<div class="empty">No notes added.</div>';
+
+      const quality = learningQuality(check);
+      document.querySelector("[data-learning-status]").textContent = quality.status;
+      document.querySelector("[data-learning-copy]").textContent = quality.copy;
+      document.querySelector("[data-learning-list]").innerHTML = quality.signals.map((item) => `
+        <div class="summary-item"><span>${item.label}</span><strong>${item.ok ? "Yes" : "No"}</strong></div>
+      `).join("");
 
       const photoItems = [
         ...normalizePhotoList(check.photos?.pool).map((src, index) => [`Pool/Spa ${index + 1}`, src]),
@@ -1511,11 +1769,11 @@
         ? photoItems.map(([label, src]) => `<div class="thumb"><img alt="${label}" src="${src}"><span>${label}</span></div>`).join("")
         : '<div class="empty" style="grid-column: 1 / -1;">No photos saved for this check.</div>';
 
-      document.querySelector("[data-values-summary]").innerHTML = check.values.map((item) => `
+      document.querySelector("[data-values-summary]").innerHTML = (check.values || []).map((item) => `
         <div class="summary-item"><span>${item.label}</span><strong>${item.current || "Unknown / Not Tested"} / ${item.target}</strong></div>
       `).join("");
 
-      const outside = check.values.filter((item) => item.status === "low" || item.status === "high");
+      const outside = (check.values || []).filter((item) => item.status === "low" || item.status === "high");
       document.querySelector("[data-outside-summary]").innerHTML = outside.length
         ? `<div class="empty">Some confirmed values appear outside target range.</div>${outside.map((item) => `
           <div class="summary-item"><span>${item.label} is ${item.status}</span><strong>${item.product}</strong></div>
@@ -1550,6 +1808,8 @@
           </button>
         `).join("")
         : '<div class="empty">No saved checks yet. Tap Start Pool Check.</div>';
+      const historyList = document.querySelector("[data-history-list]");
+      historyList.innerHTML = historyList.innerHTML.replaceAll("Ã‚Â·", "/");
     }
 
     async function copyText(text) {
@@ -1574,7 +1834,16 @@
         activeCheck.mainIssue,
         "",
         "Confirmed values:",
-        ...activeCheck.values.map((item) => `${item.label}: ${item.current || "Unknown / Not Tested"} (target ${item.target})`),
+        ...(activeCheck.values || []).map((item) => `${item.label}: ${item.current || "Unknown / Not Tested"} (target ${item.target})`),
+        "",
+        "First look:",
+        activeCheck.firstImpression || "Not added",
+        "",
+        "Changed / added:",
+        activeCheck.whatChanged || activeCheck.whatAdded ? [activeCheck.whatChanged, activeCheck.whatAdded].filter(Boolean).join(" / ") : "Not added",
+        "",
+        "Weather / water:",
+        activeCheck.weatherNote || "Not added",
         "",
         "Next step:",
         activeCheck.nextStep,
@@ -1599,7 +1868,74 @@
       URL.revokeObjectURL(url);
     }
 
+    function startDictation(fieldName) {
+      const field = document.querySelector(`[data-check-field="${fieldName}"]`);
+      if (!field) return;
+      field.focus();
+      const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!Speech) {
+        alert("Use the phone keyboard mic for this note.");
+        return;
+      }
+      const recognition = new Speech();
+      recognition.lang = "en-US";
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+      recognition.onresult = (event) => {
+        const said = event.results?.[0]?.[0]?.transcript || "";
+        field.value = `${field.value ? field.value + " " : ""}${said}`.trim();
+      };
+      recognition.onerror = () => alert("Dictation did not catch that. Try the phone keyboard mic.");
+      recognition.start();
+    }
+
+    async function usePhoneWeather() {
+      const field = document.querySelector('[data-check-field="weatherNote"]');
+      if (!field) return;
+      if (!navigator.geolocation) {
+        alert("Weather needs phone location. Add a quick weather note by hand.");
+        field.focus();
+        return;
+      }
+      const position = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: false, timeout: 8000, maximumAge: 900000 });
+      }).catch(() => null);
+      if (!position) {
+        alert("Location was not available. Add a quick weather note by hand.");
+        field.focus();
+        return;
+      }
+      const { latitude, longitude } = position.coords;
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,precipitation,wind_speed_10m&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=auto&forecast_days=1`;
+      try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error("Weather request failed");
+        const data = await response.json();
+        const current = data.current || {};
+        const note = `Weather: ${current.temperature_2m ?? "?"}F, rain ${current.precipitation ?? "?"} in, wind ${current.wind_speed_10m ?? "?"} mph. Check water level if rain, heat, or wind was high.`;
+        field.value = `${field.value ? field.value + " " : ""}${note}`.trim();
+      } catch (error) {
+        console.warn("Weather note failed", error);
+        alert("Weather did not load. Add a quick weather note by hand.");
+        field.focus();
+      }
+    }
+
     document.addEventListener("change", async (event) => {
+      const fastPoolSelect = event.target.closest("[data-fast-pool-select]");
+      if (fastPoolSelect) {
+        if (fastPoolSelect.value === "__new") {
+          selectedPoolId = null;
+          setFastPoolForm(null);
+          return;
+        }
+        selectedPoolId = fastPoolSelect.value || selectedPoolId;
+        setFastPoolForm(selectedPool());
+        renderMaintenanceDates();
+        renderHome();
+        return;
+      }
+
       const input = event.target.closest("[data-camera-input], [data-library-input]");
       if (!input || !input.files[0]) return;
       const step = photoSteps[activePhotoStep];
@@ -1617,6 +1953,17 @@
     });
 
     document.addEventListener("click", async (event) => {
+      const dictate = event.target.closest("[data-dictate-target]");
+      if (dictate) {
+        startDictation(dictate.dataset.dictateTarget);
+        return;
+      }
+
+      if (event.target.closest("[data-use-weather]")) {
+        await usePhoneWeather();
+        return;
+      }
+
       const nav = event.target.closest("[data-go]");
       if (nav) {
         await showScreen(nav.dataset.go);
@@ -1625,6 +1972,13 @@
 
       if (event.target.closest("[data-add-new-pool]")) {
         await openAddPool();
+        return;
+      }
+
+      const homeMaintenance = event.target.closest("[data-home-maintenance]");
+      if (homeMaintenance) {
+        const pool = selectedPool();
+        if (pool) showMaintenanceDetail(pool.id, homeMaintenance.dataset.homeMaintenance);
         return;
       }
 
@@ -1656,6 +2010,7 @@
       if (event.target.closest("[data-start-check]")) {
         ensureStarterPool();
         resetDraft();
+        renderFastPoolSelect();
         await showScreen("rules");
         renderMaintenanceDates();
         return;
@@ -1690,7 +2045,7 @@
 
       if (event.target.closest("[data-open-library]")) {
         const input = document.querySelector("[data-library-input]");
-        input.multiple = photoSteps[activePhotoStep].key !== "pool";
+        input.multiple = Boolean(photoSteps[activePhotoStep].multi);
         input.click();
         return;
       }
