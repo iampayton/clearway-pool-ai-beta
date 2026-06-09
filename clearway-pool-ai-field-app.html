@@ -237,7 +237,7 @@
     }
 
     .start-cta span {
-      display: block;
+      display: none;
       max-width: 260px;
       color: rgba(23, 36, 42, 0.72);
       font-size: 15px;
@@ -248,8 +248,7 @@
     }
 
     .home-pool-line {
-      text-align: center;
-      margin-top: -4px;
+      display: none;
     }
 
     .home-status-row {
@@ -266,12 +265,14 @@
       color: var(--charcoal);
       background: var(--white);
       box-shadow: inset 0 0 0 1px var(--line);
-      text-align: left;
+      text-align: center;
       cursor: pointer;
+      display: grid;
+      place-items: center;
     }
 
     .home-maint span {
-      display: block;
+      display: none;
       color: var(--muted);
       font-size: 12px;
       font-weight: 850;
@@ -280,14 +281,14 @@
     }
 
     .home-maint strong {
-      display: block;
+      display: none;
       margin-top: 7px;
       font-size: 15px;
       line-height: 1.1;
     }
 
     .home-maint small {
-      display: block;
+      display: none;
       margin-top: 4px;
       color: rgba(23, 36, 42, 0.68);
       font-size: 11px;
@@ -296,8 +297,94 @@
     }
 
     .home-maint.green { background: #dff9ef; }
+    .home-maint.yellow { background: #fff4c2; }
     .home-maint.red { background: #ffe9df; }
     .home-maint.gray { background: #eef3f2; }
+
+    .home-status-icon {
+      position: relative;
+      width: 42px;
+      height: 42px;
+      color: var(--charcoal);
+    }
+
+    .filter-icon {
+      border: 4px solid currentColor;
+      border-radius: 10px;
+      width: 34px;
+      height: 30px;
+    }
+
+    .filter-icon::before,
+    .filter-icon::after {
+      content: "";
+      position: absolute;
+      background: currentColor;
+      border-radius: 999px;
+    }
+
+    .filter-icon::before {
+      left: 11px;
+      top: 4px;
+      width: 12px;
+      height: 4px;
+    }
+
+    .filter-icon::after {
+      left: 18px;
+      top: 5px;
+      width: 4px;
+      height: 31px;
+    }
+
+    .water-icon,
+    .water-icon::before,
+    .water-icon::after {
+      content: "";
+      position: absolute;
+      left: 2px;
+      width: 38px;
+      height: 8px;
+      border: solid currentColor;
+      border-width: 0 0 4px 0;
+      border-radius: 50%;
+    }
+
+    .water-icon { top: 8px; }
+    .water-icon::before { top: 10px; }
+    .water-icon::after { top: 20px; }
+
+    .salt-icon {
+      width: 25px;
+      height: 34px;
+      margin: 3px auto 0;
+      border: 4px solid currentColor;
+      border-radius: 8px 8px 10px 10px;
+      transform: rotate(-8deg);
+    }
+
+    .salt-icon::before,
+    .salt-icon::after {
+      content: "";
+      position: absolute;
+      background: currentColor;
+      border-radius: 999px;
+    }
+
+    .salt-icon::before {
+      left: 2px;
+      right: 2px;
+      top: -11px;
+      height: 7px;
+    }
+
+    .salt-icon::after {
+      left: 8px;
+      top: 10px;
+      width: 4px;
+      height: 4px;
+      box-shadow: 7px 3px 0 currentColor, 1px 10px 0 currentColor;
+    }
 
     .start-cta > strong {
       position: relative;
@@ -736,21 +823,24 @@
         </div>
         <div class="content home-content">
           <button class="btn primary full start-cta" data-start-check>
-            <strong>Start Pool Check<br>Tap Here</strong>
-            <span>Pool info, photos, values, Do Next Guide.</span>
+            <strong>Start<br>Pool Check</strong>
+            <span></span>
           </button>
           <p class="muted home-pool-line" data-selected-pool-text>New Pool / Not sure / Heater: Not sure</p>
           <div class="home-status-row" aria-label="Maintenance status">
             <button class="home-maint gray" data-home-maintenance="filter">
+              <i class="home-status-icon filter-icon" aria-hidden="true"></i>
               <span>Filter</span>
               <strong data-home-filter-state>Not logged</strong>
             </button>
             <button class="home-maint gray" data-home-maintenance="waterLevel">
+              <i class="home-status-icon water-icon" aria-hidden="true"></i>
               <span>Water</span>
               <strong data-home-water-state>Check level</strong>
               <small>Half skimmer</small>
             </button>
             <button class="home-maint gray" data-home-maintenance="saltCell">
+              <i class="home-status-icon salt-icon" aria-hidden="true"></i>
               <span>Salt Cell</span>
               <strong data-home-salt-state>Not needed</strong>
             </button>
@@ -1320,7 +1410,7 @@
       waterBox.className = `home-maint ${water.color}`;
       saltBox.className = `home-maint ${salt.color}`;
       if (filterState) filterState.textContent = filter.color === "red" ? "Check due" : filter.detail;
-      if (waterState) waterState.textContent = water.color === "red" ? "Check level" : "Looks current";
+      if (waterState) waterState.textContent = water.color === "red" ? "Check level" : (water.color === "yellow" ? "Check soon" : "Looks current");
       if (saltState) saltState.textContent = salt.color === "red" ? "Check due" : salt.detail;
     }
 
@@ -1352,16 +1442,20 @@
       nextDate.setDate(nextDate.getDate() + interval);
       const daysPast = daysBetween(nextDate, new Date());
       const overdue = daysPast > 0;
+      const daysUntilDue = daysBetween(new Date(), nextDate);
+      const checkSoon = type === "waterLevel" && daysUntilDue <= 2 && !overdue;
       return {
         label,
         short,
-        color: overdue ? "red" : "green",
+        color: overdue ? "red" : (checkSoon ? "yellow" : "green"),
         last: formatDate(pool[key]),
         next: nextDate.toLocaleDateString(),
         detail: type === "waterLevel"
           ? (overdue
             ? `Water level check is due. Aim near halfway up the skimmer.`
-            : `Water level was checked. Next visual check around ${nextDate.toLocaleDateString()}.`)
+            : (checkSoon
+              ? `Water level check is coming up. Weather can move this faster.`
+              : `Water level was checked. Next visual check around ${nextDate.toLocaleDateString()}.`))
           : (overdue
             ? `${label} is ${daysPast} day${daysPast === 1 ? "" : "s"} past due.`
             : `${label} is on track. Next check around ${nextDate.toLocaleDateString()}.`)
