@@ -155,33 +155,53 @@
     }
 
     .setup-hero {
-      min-height: 300px;
-      border-radius: 34px;
-      padding: 34px 24px;
-      color: var(--white);
-      background:
-        radial-gradient(circle at 78% 12%, rgba(99, 215, 198, 0.76), transparent 40%),
-        linear-gradient(150deg, rgba(23, 36, 42, 0.98), rgba(23, 36, 42, 0.86));
-      display: grid;
-      align-content: end;
-      box-shadow: 0 18px 38px rgba(24, 36, 42, 0.24);
+      display: none;
     }
 
     .setup-card {
       border: 1px solid var(--line);
-      border-radius: 26px;
+      border-radius: 28px;
       background: var(--white);
-      padding: 18px;
+      padding: 20px;
       box-shadow: 0 12px 28px rgba(29, 67, 72, 0.08);
+    }
+
+    .setup-card-main {
+      background:
+        radial-gradient(circle at 90% 0%, rgba(99, 215, 198, 0.42), transparent 34%),
+        var(--white);
+    }
+
+    .setup-label {
+      margin-bottom: 8px;
+      color: var(--seafoam-dark);
+      font-size: 12px;
+      font-weight: 950;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .setup-card h1 {
+      margin-bottom: 8px;
+      font-size: 28px;
+      line-height: 1;
+    }
+
+    .setup-help {
+      margin-bottom: 14px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+      font-weight: 750;
     }
 
     .setup-card input {
       width: 100%;
-      min-height: 58px;
+      min-height: 66px;
       border: 1px solid var(--line);
       border-radius: 18px;
       padding: 0 16px;
-      font-size: 18px;
+      font-size: 20px;
       font-weight: 850;
       outline: none;
     }
@@ -196,7 +216,7 @@
     .setup-option {
       border: 0;
       border-radius: 17px;
-      padding: 14px 12px;
+      padding: 12px 10px;
       color: var(--charcoal);
       background: var(--seafoam-soft);
       font-weight: 900;
@@ -1115,13 +1135,10 @@
           <button class="btn" data-go="home">Home</button>
         </div>
         <div class="content">
-          <section class="setup-hero">
-            <p class="eyebrow">One-Time Setup</p>
+          <section class="setup-card setup-card-main">
+            <p class="setup-label">One-Time Setup</p>
             <h1 data-setup-question>Pool address?</h1>
-            <p class="hero-copy" data-setup-help>This becomes the pool ID. Skip if you need to move fast.</p>
-          </section>
-
-          <section class="setup-card">
+            <p class="setup-help" data-setup-help>This becomes the pool ID. Skip if you need to move fast.</p>
             <input data-setup-answer placeholder="Say it or type it" />
             <div class="setup-options" data-setup-options></div>
           </section>
