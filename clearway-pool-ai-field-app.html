@@ -254,7 +254,7 @@
 
     .home-status-row {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(3, 1fr);
       gap: 10px;
     }
 
@@ -284,6 +284,15 @@
       margin-top: 7px;
       font-size: 15px;
       line-height: 1.1;
+    }
+
+    .home-maint small {
+      display: block;
+      margin-top: 4px;
+      color: rgba(23, 36, 42, 0.68);
+      font-size: 11px;
+      font-weight: 850;
+      line-height: 1.12;
     }
 
     .home-maint.green { background: #dff9ef; }
@@ -736,6 +745,11 @@
               <span>Filter</span>
               <strong data-home-filter-state>Not logged</strong>
             </button>
+            <button class="home-maint gray" data-home-maintenance="waterLevel">
+              <span>Water</span>
+              <strong data-home-water-state>Check level</strong>
+              <small>Half skimmer</small>
+            </button>
             <button class="home-maint gray" data-home-maintenance="saltCell">
               <span>Salt Cell</span>
               <strong data-home-salt-state>Not needed</strong>
@@ -853,6 +867,11 @@
                 <strong>Filter</strong>
                 <p class="muted">Last: <span data-filter-date>Not logged</span></p>
                 <button class="btn full" data-log-maintenance="filter" style="margin-top: 10px;">Cleaned Filter</button>
+              </div>
+              <div class="maintenance-card">
+                <strong>Water Level</strong>
+                <p class="muted">Last: <span data-water-date>Not logged</span></p>
+                <button class="btn full" data-log-maintenance="waterLevel" style="margin-top: 10px;">Checked Water</button>
               </div>
               <div class="maintenance-card">
                 <strong>Salt Cell</strong>
@@ -1213,6 +1232,7 @@
         heater: "Not sure",
         filter: "Not sure",
         measurements: "",
+        waterLevelCheckedAt: "",
         updatedAt: new Date().toISOString()
       };
       saveLocalPools([starter]);
@@ -1287,15 +1307,20 @@
 
     function renderHomeMaintenance(pool) {
       const filterBox = document.querySelector('[data-home-maintenance="filter"]');
+      const waterBox = document.querySelector('[data-home-maintenance="waterLevel"]');
       const saltBox = document.querySelector('[data-home-maintenance="saltCell"]');
       const filterState = document.querySelector("[data-home-filter-state]");
+      const waterState = document.querySelector("[data-home-water-state]");
       const saltState = document.querySelector("[data-home-salt-state]");
-      if (!filterBox || !saltBox || !pool) return;
+      if (!filterBox || !waterBox || !saltBox || !pool) return;
       const filter = maintenanceInfo(pool, "filter");
+      const water = maintenanceInfo(pool, "waterLevel");
       const salt = maintenanceInfo(pool, "saltCell");
       filterBox.className = `home-maint ${filter.color}`;
+      waterBox.className = `home-maint ${water.color}`;
       saltBox.className = `home-maint ${salt.color}`;
       if (filterState) filterState.textContent = filter.color === "red" ? "Check due" : filter.detail;
+      if (waterState) waterState.textContent = water.color === "red" ? "Check level" : "Looks current";
       if (saltState) saltState.textContent = salt.color === "red" ? "Check due" : salt.detail;
     }
 
@@ -1309,14 +1334,18 @@
 
     function maintenanceInfo(pool, type) {
       const isSalt = pool?.poolType === "Salt pool";
-      const key = type === "filter" ? "filterCleanedAt" : "saltCellCleanedAt";
-      const label = type === "filter" ? "Filter" : "Salt Cell";
-      const interval = type === "filter" ? 60 : 90;
+      const setup = {
+        filter: { key: "filterCleanedAt", label: "Filter", short: "F", interval: 60 },
+        waterLevel: { key: "waterLevelCheckedAt", label: "Water Level", short: "WL", interval: 7 },
+        saltCell: { key: "saltCellCleanedAt", label: "Salt Cell", short: "SC", interval: 90 }
+      }[type] || { key: "filterCleanedAt", label: "Filter", short: "F", interval: 60 };
+      const { key, label, short, interval } = setup;
       if (type === "saltCell" && !isSalt) {
-        return { label, short: "SC", color: "gray", last: "Not a salt pool", next: "Not needed", detail: "Salt cell tracking is mainly for salt pools." };
+        return { label, short, color: "gray", last: "Not a salt pool", next: "Not needed", detail: "Salt cell tracking is mainly for salt pools." };
       }
       if (!pool?.[key]) {
-        return { label, short: type === "filter" ? "F" : "SC", color: "red", last: "Not logged", next: "Log when cleaned", detail: `${label} has not been logged yet.` };
+        const action = type === "waterLevel" ? "Check water level" : "Log when cleaned";
+        return { label, short, color: "red", last: "Not logged", next: action, detail: `${label} has not been logged yet.` };
       }
       const lastDate = new Date(pool[key]);
       const nextDate = new Date(lastDate);
@@ -1325,13 +1354,17 @@
       const overdue = daysPast > 0;
       return {
         label,
-        short: type === "filter" ? "F" : "SC",
+        short,
         color: overdue ? "red" : "green",
         last: formatDate(pool[key]),
         next: nextDate.toLocaleDateString(),
-        detail: overdue
-          ? `${label} is ${daysPast} day${daysPast === 1 ? "" : "s"} past due.`
-          : `${label} is on track. Next check around ${nextDate.toLocaleDateString()}.`
+        detail: type === "waterLevel"
+          ? (overdue
+            ? `Water level check is due. Aim near halfway up the skimmer.`
+            : `Water level was checked. Next visual check around ${nextDate.toLocaleDateString()}.`)
+          : (overdue
+            ? `${label} is ${daysPast} day${daysPast === 1 ? "" : "s"} past due.`
+            : `${label} is on track. Next check around ${nextDate.toLocaleDateString()}.`)
       };
     }
 
@@ -1349,14 +1382,17 @@
     function renderMaintenanceDates() {
       const pool = selectedPool();
       const filterDate = document.querySelector("[data-filter-date]");
+      const waterDate = document.querySelector("[data-water-date]");
       const saltCellDate = document.querySelector("[data-saltcell-date]");
       if (filterDate) filterDate.textContent = formatDate(pool?.filterCleanedAt);
+      if (waterDate) waterDate.textContent = formatDate(pool?.waterLevelCheckedAt);
       if (saltCellDate) saltCellDate.textContent = formatDate(pool?.saltCellCleanedAt);
       const detail = document.querySelector("[data-maintenance-detail-box]");
       if (detail && pool) {
         const filter = maintenanceInfo(pool, "filter");
+        const water = maintenanceInfo(pool, "waterLevel");
         const salt = maintenanceInfo(pool, "saltCell");
-        detail.innerHTML = `<strong>Quick status</strong><br>Filter: ${filter.detail}<br>Salt Cell: ${salt.detail}`;
+        detail.innerHTML = `<strong>Quick status</strong><br>Filter: ${filter.detail}<br>Water: ${water.detail}<br>Salt Cell: ${salt.detail}`;
         detail.classList.add("active");
       }
     }
@@ -1365,7 +1401,7 @@
       const pool = selectedPool();
       if (!pool) return;
       const pools = localPools();
-      const key = type === "filter" ? "filterCleanedAt" : "saltCellCleanedAt";
+      const key = type === "filter" ? "filterCleanedAt" : (type === "waterLevel" ? "waterLevelCheckedAt" : "saltCellCleanedAt");
       const updated = { ...pool, [key]: new Date().toISOString(), updatedAt: new Date().toISOString() };
       saveLocalPools([updated, ...pools.filter((item) => item.id !== updated.id)]);
       selectedPoolId = updated.id;
@@ -1376,6 +1412,7 @@
     function savePoolFromForm() {
       const get = (name) => document.querySelector(`[data-pool-field="${name}"]`)?.value.trim() || "";
       const pools = localPools();
+      const existingPool = pools.find((item) => item.id === editingPoolId);
       const pool = {
         id: editingPoolId || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())),
         poolName: get("poolName") || "Unnamed Pool",
@@ -1384,6 +1421,9 @@
         heater: get("heater") || "Not sure",
         filter: get("filter") || "Not sure",
         measurements: get("measurements"),
+        filterCleanedAt: existingPool?.filterCleanedAt || "",
+        waterLevelCheckedAt: existingPool?.waterLevelCheckedAt || "",
+        saltCellCleanedAt: existingPool?.saltCellCleanedAt || "",
         updatedAt: new Date().toISOString()
       };
       saveLocalPools([pool, ...pools.filter((item) => item.id !== pool.id)]);
@@ -1426,6 +1466,7 @@
         heater: get("heater") || "Not sure",
         filter: get("filter") || "Not sure",
         measurements: "",
+        waterLevelCheckedAt: "",
         updatedAt: new Date().toISOString()
       };
       saveLocalPools([pool, ...pools]);
@@ -1624,6 +1665,7 @@
         heater: pool.heater,
         filter: pool.filter,
         filterCleanedAt: pool.filterCleanedAt || "",
+        waterLevelCheckedAt: pool.waterLevelCheckedAt || "",
         saltCellCleanedAt: pool.saltCellCleanedAt || "",
         mainIssue,
         testType: document.querySelector('[data-check-field="testType"]').value,
@@ -1656,6 +1698,7 @@
           filter: check.filter || "",
           poolId: check.poolId || "",
           filterCleanedAt: check.filterCleanedAt || "",
+          waterLevelCheckedAt: check.waterLevelCheckedAt || "",
           saltCellCleanedAt: check.saltCellCleanedAt || ""
         }),
         photos: check.photos || {},
@@ -1676,6 +1719,7 @@
         heater: noteData.heater || "Not sure",
         filter: noteData.filter || "Not sure",
         filterCleanedAt: noteData.filterCleanedAt || "",
+        waterLevelCheckedAt: noteData.waterLevelCheckedAt || "",
         saltCellCleanedAt: noteData.saltCellCleanedAt || "",
         mainIssue: row.main_issue,
         testType: row.test_type,
@@ -1745,6 +1789,7 @@
       const noteRows = [
         ["First look", check.firstImpression],
         ["Weather / water", check.weatherNote],
+        ["Water level checked", check.waterLevelCheckedAt ? new Date(check.waterLevelCheckedAt).toLocaleDateString() : ""],
         ["Changed since last check", check.whatChanged],
         ["Added or cleaned", check.whatAdded],
         ["Trinity's next step", check.notes]
@@ -1844,6 +1889,9 @@
         "",
         "Weather / water:",
         activeCheck.weatherNote || "Not added",
+        "",
+        "Water level checked:",
+        activeCheck.waterLevelCheckedAt ? new Date(activeCheck.waterLevelCheckedAt).toLocaleDateString() : "Not logged",
         "",
         "Next step:",
         activeCheck.nextStep,
