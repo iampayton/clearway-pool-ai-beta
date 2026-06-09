@@ -894,6 +894,16 @@
             </div>
           </section>
 
+          <section class="card" style="background: var(--seafoam-soft);">
+            <div class="row">
+              <div>
+                <h3>Saved to History</h3>
+                <p class="muted">This pool check is saved. Open History to confirm or review it later.</p>
+              </div>
+              <button class="btn primary" data-go="history">View History</button>
+            </div>
+          </section>
+
           <section class="card">
             <h3>Photos & Notes</h3>
             <div class="thumb-grid" data-guide-photos></div>
@@ -1040,6 +1050,14 @@
 
     function saveLocalChecks(checks) {
       localStorage.setItem(checkStorageKey, JSON.stringify(checks));
+    }
+
+    function mergeChecks(primary, secondary) {
+      const byId = new Map();
+      [...primary, ...secondary].forEach((check) => {
+        if (check?.id && !byId.has(check.id)) byId.set(check.id, check);
+      });
+      return [...byId.values()].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     }
 
     function ensureStarterPool() {
@@ -1450,20 +1468,24 @@
     }
 
     async function checks() {
+      const local = localChecks();
       try {
         if (!supabase) throw new Error("Supabase unavailable");
         const { data, error } = await supabase.from("pool_checks").select("*").order("created_at", { ascending: false });
         if (error) throw error;
         const shared = (data || []).map(fromDb);
-        saveLocalChecks(shared);
-        return shared;
+        const merged = mergeChecks(shared, local);
+        saveLocalChecks(merged);
+        return merged;
       } catch (error) {
         console.warn("Using local fallback checks", error);
-        return localChecks();
+        return local;
       }
     }
 
     async function saveCheck(check) {
+      const existing = localChecks().filter((item) => item.id !== check.id);
+      saveLocalChecks([check, ...existing]);
       try {
         if (!supabase) throw new Error("Supabase unavailable");
         const { error } = await supabase.from("pool_checks").upsert(toDb(check), { onConflict: "id" });
@@ -1471,8 +1493,6 @@
       } catch (error) {
         console.warn("Saving local fallback check", error);
       }
-      const existing = localChecks().filter((item) => item.id !== check.id);
-      saveLocalChecks([check, ...existing]);
     }
 
     function renderGuide(check) {
