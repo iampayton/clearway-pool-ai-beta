@@ -427,6 +427,25 @@
       font-size: 13px;
     }
 
+    .maintenance-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .maintenance-card {
+      padding: 14px;
+      border-radius: 18px;
+      background: var(--white);
+      border: 1px solid var(--line);
+    }
+
+    .maintenance-card strong {
+      display: block;
+      margin-bottom: 6px;
+    }
+
     .guide-card {
       color: var(--white);
       background:
@@ -695,6 +714,23 @@
                   <option>DE</option>
                 </select>
               </label>
+            </div>
+          </section>
+
+          <section class="card">
+            <h3>Maintenance Memory</h3>
+            <p class="muted">Tap when done so the date stays with this pool.</p>
+            <div class="maintenance-grid">
+              <div class="maintenance-card">
+                <strong>Filter</strong>
+                <p class="muted">Last: <span data-filter-date>Not logged</span></p>
+                <button class="btn full" data-log-maintenance="filter" style="margin-top: 10px;">Cleaned Filter</button>
+              </div>
+              <div class="maintenance-card">
+                <strong>Salt Cell</strong>
+                <p class="muted">Last: <span data-saltcell-date>Not logged</span></p>
+                <button class="btn full" data-log-maintenance="saltCell" style="margin-top: 10px;">Cleaned Salt Cell</button>
+              </div>
             </div>
           </section>
 
@@ -1020,10 +1056,13 @@
       ensureStarterPool();
       const pools = localPools();
       const pool = selectedPool();
-      document.querySelector("[data-selected-pool-text]").textContent = pool
-        ? `${pool.poolName} Â· ${pool.poolType} Â· Heater: ${pool.heater}`
-        : "No pool selected yet.";
-      document.querySelector("[data-pool-list]").innerHTML = pools.map((item) => `
+      const selectedText = document.querySelector("[data-selected-pool-text]");
+      if (selectedText) {
+        selectedText.textContent = pool ? `${pool.poolName} Â· ${pool.poolType} Â· Heater: ${pool.heater}` : "No pool selected yet.";
+      }
+      const poolList = document.querySelector("[data-pool-list]");
+      if (!poolList) return;
+      poolList.innerHTML = pools.map((item) => `
         <button class="pool-item ${item.id === selectedPoolId ? "selected-pool" : ""}" data-select-pool="${item.id}">
           <div class="row">
             <div>
@@ -1034,6 +1073,30 @@
           </div>
         </button>
       `).join("");
+    }
+
+    function formatDate(value) {
+      return value ? new Date(value).toLocaleDateString() : "Not logged";
+    }
+
+    function renderMaintenanceDates() {
+      const pool = selectedPool();
+      const filterDate = document.querySelector("[data-filter-date]");
+      const saltCellDate = document.querySelector("[data-saltcell-date]");
+      if (filterDate) filterDate.textContent = formatDate(pool?.filterCleanedAt);
+      if (saltCellDate) saltCellDate.textContent = formatDate(pool?.saltCellCleanedAt);
+    }
+
+    function logMaintenance(type) {
+      const pool = selectedPool();
+      if (!pool) return;
+      const pools = localPools();
+      const key = type === "filter" ? "filterCleanedAt" : "saltCellCleanedAt";
+      const updated = { ...pool, [key]: new Date().toISOString(), updatedAt: new Date().toISOString() };
+      saveLocalPools([updated, ...pools.filter((item) => item.id !== updated.id)]);
+      selectedPoolId = updated.id;
+      renderMaintenanceDates();
+      renderHome();
     }
 
     function savePoolFromForm() {
@@ -1238,6 +1301,8 @@
         poolType: pool.poolType,
         heater: pool.heater,
         filter: pool.filter,
+        filterCleanedAt: pool.filterCleanedAt || "",
+        saltCellCleanedAt: pool.saltCellCleanedAt || "",
         mainIssue,
         testType: document.querySelector('[data-check-field="testType"]').value,
         notes: document.querySelector('[data-check-field="notes"]').value.trim(),
@@ -1255,7 +1320,14 @@
         pool_type: check.poolType,
         main_issue: check.mainIssue,
         test_type: check.testType,
-        notes: JSON.stringify({ notes: check.notes || "", heater: check.heater || "", filter: check.filter || "", poolId: check.poolId || "" }),
+        notes: JSON.stringify({
+          notes: check.notes || "",
+          heater: check.heater || "",
+          filter: check.filter || "",
+          poolId: check.poolId || "",
+          filterCleanedAt: check.filterCleanedAt || "",
+          saltCellCleanedAt: check.saltCellCleanedAt || ""
+        }),
         photos: check.photos || {},
         confirmed_values: check.values || [],
         next_step: check.nextStep || ""
@@ -1273,6 +1345,8 @@
         poolType: row.pool_type,
         heater: noteData.heater || "Not sure",
         filter: noteData.filter || "Not sure",
+        filterCleanedAt: noteData.filterCleanedAt || "",
+        saltCellCleanedAt: noteData.saltCellCleanedAt || "",
         mainIssue: row.main_issue,
         testType: row.test_type,
         notes: noteData.notes || "",
@@ -1460,6 +1534,13 @@
         ensureStarterPool();
         resetDraft();
         await showScreen("rules");
+        renderMaintenanceDates();
+        return;
+      }
+
+      const maintenance = event.target.closest("[data-log-maintenance]");
+      if (maintenance) {
+        logMaintenance(maintenance.dataset.logMaintenance);
         return;
       }
 
