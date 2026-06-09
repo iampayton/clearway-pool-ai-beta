@@ -848,14 +848,14 @@
     .maintenance-detail.active { display: block; }
 
     .guide-card {
-      color: var(--white);
+      color: var(--charcoal);
       background:
-        radial-gradient(circle at 86% 20%, rgba(99, 215, 198, 0.55), transparent 28%),
-        var(--charcoal);
-      border-color: transparent;
+        radial-gradient(circle at 92% 0%, rgba(99, 215, 198, 0.52), transparent 34%),
+        linear-gradient(180deg, #ffffff, #f0fffb);
+      border-color: rgba(26, 169, 152, 0.28);
     }
 
-    .guide-card .muted { color: rgba(255, 255, 255, 0.72); }
+    .guide-card .muted { color: var(--seafoam-dark); }
 
     .customer-report {
       border-color: rgba(26, 169, 152, 0.34);
@@ -919,6 +919,32 @@
       font-size: 28px;
       line-height: 1.05;
       font-weight: 900;
+    }
+
+    .step-row {
+      display: grid;
+      grid-template-columns: 38px 1fr;
+      gap: 10px;
+      align-items: center;
+      padding: 13px;
+      border-radius: 18px;
+      background: var(--white);
+      border: 1px solid rgba(26, 169, 152, 0.18);
+      font-size: 15px;
+      font-weight: 900;
+      line-height: 1.25;
+    }
+
+    .step-num {
+      width: 34px;
+      height: 34px;
+      border-radius: 13px;
+      display: grid;
+      place-items: center;
+      background: var(--seafoam);
+      color: var(--charcoal);
+      font-size: 14px;
+      font-weight: 950;
     }
 
     .warning {
@@ -2078,14 +2104,14 @@
     function buildStepGuide(check) {
       const steps = [];
       const text = `${check.brainInput || ""} ${check.nextStep || ""}`.toLowerCase();
-      steps.push("Review pool and test photos.");
-      if (check.brainInput) steps.push("Use Trinity's service note as the main record for this visit.");
-      if (text.includes("filter")) steps.push("Check filter flow and clean or backwash if needed.");
-      if (text.includes("water level") || text.includes("low water")) steps.push("Check water level and watch for unusual loss.");
-      if (text.includes("green") || text.includes("algae")) steps.push("Confirm sanitizer and pH before adding products.");
-      if (text.includes("cloudy")) steps.push("Run circulation and retest before adding more.");
-      steps.push("Follow product labels and add products separately.");
-      steps.push("Retest before swimming or adding more.");
+      steps.push("Check the photos.");
+      if (text.includes("filter")) steps.push("Check the filter.");
+      if (text.includes("water level") || text.includes("low water")) steps.push("Check the water level.");
+      if (text.includes("green") || text.includes("algae")) steps.push("Check chlorine and pH first.");
+      if (text.includes("cloudy")) steps.push("Run the pump.");
+      if (check.brainInput) steps.push("Follow the tech note.");
+      steps.push("Do not mix chemicals.");
+      steps.push("Retest before more.");
       return [...new Set(steps)];
     }
 
@@ -2097,11 +2123,11 @@
         const sentence = text.split(/[.!?]/).map((item) => item.trim()).filter(Boolean).find((item) => /next|retest|run|clean|brush|watch|check|follow|pump|filter/i.test(item));
         if (sentence) return sentence;
       }
-      if (!entered.length) return "Use the service note and photos. Retest before adding more.";
+      if (!entered.length) return "Follow the note. Retest before more.";
       if (issue === "Cloudy Water") return "Check filtration and circulation. Retest before adding more.";
       if (issue === "Green Water") return "Confirm sanitizer and pH levels. Do not add multiple chemicals at once.";
       if (!outside.length) return "Confirmed values appear within target ranges. Circulate water and retest before swimming.";
-      return `Some confirmed values appear outside target range. Focus on ${outside[0].label}, follow product labels, and retest before adding more.`;
+      return `${outside[0].label} needs attention. Follow the label. Retest before more.`;
     }
 
     async function createCheck() {
@@ -2276,7 +2302,7 @@
       const stepList = document.querySelector("[data-step-guide-list]");
       if (stepList) {
         stepList.innerHTML = stepGuide.map((step, index) => `
-          <div class="summary-item"><span>Step ${index + 1}</span><strong>${escapeHtml(step)}</strong></div>
+          <div class="step-row"><span class="step-num">${index + 1}</span><strong>${escapeHtml(step)}</strong></div>
         `).join("");
       }
       const noteRows = [
