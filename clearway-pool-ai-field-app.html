@@ -3,6 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#63d7c6" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="ClearWay" />
   <title>ClearWay Pool AI</title>
   <style>
     :root {
@@ -21,6 +25,8 @@
     }
 
     * { box-sizing: border-box; }
+
+    [hidden] { display: none !important; }
 
     body {
       margin: 0;
@@ -349,6 +355,34 @@
       gap: 10px;
     }
 
+    .test-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .test-grid label {
+      display: grid;
+      gap: 5px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--white);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .test-grid input {
+      border: 0;
+      border-radius: 0;
+      padding: 0;
+      font-size: 22px;
+      font-weight: 900;
+      color: var(--charcoal);
+      background: transparent;
+    }
+
     .do-next-btn {
       min-height: 66px;
       font-size: 19px;
@@ -461,9 +495,23 @@
 
     .home-status-row {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
       gap: 10px;
     }
+
+    .retest-banner {
+      border: 0;
+      border-radius: 20px;
+      padding: 15px 16px;
+      background: var(--charcoal);
+      color: var(--white);
+      font-weight: 900;
+      font-size: 15px;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .retest-banner.due { background: #c64235; }
 
     .home-maint {
       min-height: 92px;
@@ -925,6 +973,7 @@
             <span>Takes about a minute.</span>
           </button>
           <p class="muted home-pool-line" data-selected-pool-text title="Tap to change pool">New Pool · Tap to change</p>
+          <button class="retest-banner" data-retest-banner hidden>Retest reminder</button>
           <div class="home-status-row" aria-label="Maintenance status">
             <button class="home-maint gray" data-home-maintenance="filter">
               <svg class="home-status-svg" aria-hidden="true" viewBox="0 0 48 48" fill="none">
@@ -1099,11 +1148,21 @@
               <rect x="22" y="8" width="20" height="34" rx="10" stroke="currentColor" stroke-width="5"/>
               <path d="M14 30c0 10 8 18 18 18s18-8 18-18M32 48v8M24 56h16" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
             </svg>
-            <strong>What did you do?<br>What next?</strong>
-            <span>Say what you saw. Say what you did. Say test numbers if you have them.</span>
+            <strong>Talk about<br>the pool</strong>
+            <span>Say what you see. Say what you did. Say test numbers if you have them.</span>
           </button>
 
           <textarea class="brain-note" data-check-field="brainInput" placeholder="ex: Routine check. Water clear. Chlorine looked low on strip. Cleaned filter, brushed steps, added product by label. Retest later today."></textarea>
+
+          <button class="btn full" type="button" data-toggle-tests>Add test numbers (optional)</button>
+          <div class="test-grid" data-test-grid hidden>
+            <label>Chlorine <input data-test-current="free_chlorine" type="number" inputmode="decimal" step="0.5" min="0" placeholder="1–4" /></label>
+            <label>pH <input data-test-current="ph" type="number" inputmode="decimal" step="0.1" min="0" placeholder="7.2–7.8" /></label>
+            <label>Alkalinity <input data-test-current="alkalinity" type="number" inputmode="numeric" step="10" min="0" placeholder="80–120" /></label>
+            <label>Stabilizer <input data-test-current="cya" type="number" inputmode="numeric" step="5" min="0" placeholder="30–50" /></label>
+            <label>Hardness <input data-test-current="calcium" type="number" inputmode="numeric" step="10" min="0" placeholder="200–400" /></label>
+            <label>Salt <input data-test-current="salt" type="number" inputmode="numeric" step="100" min="0" placeholder="2700–3400" /></label>
+          </div>
 
           <div class="note-actions">
             <button class="icon-action" data-clear-brain-input aria-label="Clear note">
@@ -1216,6 +1275,7 @@
     const pickers = [...document.querySelectorAll(".picker-button")];
     const poolStorageKey = "clearwayPoolsV2";
     const checkStorageKey = "clearwayPoolChecksV2";
+    const retestStorageKey = "clearwayRetestV1";
     const supabaseUrl = "https://wwhbwhgnwmmlpvrjkjek.supabase.co";
     const supabaseAnonKey = "sb_publishable_CN_Z7T4c3zN66C7xKVuJ8g_rQe9FJNX";
     const photoBucket = "pool-check-photos";
@@ -1244,7 +1304,7 @@
     };
 
     const setupQuestions = [
-      { key: "address", question: "Find pool", help: "Type address or pool name. New one starts setup.", placeholder: "Address or pool name" },
+      { key: "address", question: "Find pool", help: "Type it or say it. New pool? Just type a name.", placeholder: "Address or pool name" },
       { key: "poolName", question: "Pool name?", help: "Optional. Name it so you can find it fast.", placeholder: "Maple Pool" },
       { key: "poolType", question: "Pool type?", help: "Pick the closest one.", options: ["Chlorine pool", "Salt pool", "Above-ground pool", "Not sure"] },
       { key: "hasSpa", question: "Spa too?", help: "If yes, ClearWay asks for pool and spa photos.", options: ["Yes", "No", "Not sure"] },
@@ -1553,6 +1613,10 @@
         if (field.tagName === "SELECT") field.selectedIndex = 0;
         else field.value = "";
       });
+      const testGrid = document.querySelector("[data-test-grid]");
+      if (testGrid) testGrid.hidden = true;
+      const testToggle = document.querySelector("[data-toggle-tests]");
+      if (testToggle) testToggle.textContent = "Add test numbers (optional)";
       renderPhotoStep();
     }
 
@@ -1574,6 +1638,32 @@
         selectedText.textContent = pool ? `${pool.poolName} · Tap to change` : "No pool yet. Tap to add.";
       }
       renderHomeMaintenance(pool);
+      renderRetestBanner();
+    }
+
+    function readRetestReminder() {
+      try { return JSON.parse(localStorage.getItem(retestStorageKey) || "null"); }
+      catch { return null; }
+    }
+
+    function renderRetestBanner() {
+      const banner = document.querySelector("[data-retest-banner]");
+      if (!banner) return;
+      const reminder = readRetestReminder();
+      if (!reminder || !reminder.endsAt) {
+        banner.hidden = true;
+        return;
+      }
+      const left = reminder.endsAt - Date.now();
+      const who = reminder.poolName ? ` ${reminder.poolName}` : "";
+      banner.hidden = false;
+      if (left <= 0) {
+        banner.classList.add("due");
+        banner.textContent = `Time to retest${who}. Tap to start.`;
+      } else {
+        banner.classList.remove("due");
+        banner.textContent = `Retest${who} in ${Math.ceil(left / 60000)} min`;
+      }
     }
 
     function renderHomeMaintenance(pool) {
@@ -1590,6 +1680,7 @@
       filterBox.className = `home-maint ${filter.color}`;
       waterBox.className = `home-maint ${water.color}`;
       saltBox.className = `home-maint ${salt.color}`;
+      saltBox.hidden = pool.poolType !== "Salt pool";
       if (filterState) filterState.textContent = filter.color === "red" ? "Check due" : filter.detail;
       if (waterState) waterState.textContent = water.color === "red" ? "Check level" : (water.color === "yellow" ? "Check soon" : "Looks current");
       if (saltState) saltState.textContent = salt.color === "red" ? "Check due" : salt.detail;
@@ -1616,7 +1707,7 @@
       }
       if (!pool?.[key]) {
         const action = type === "waterLevel" ? "Check water level" : "Log when cleaned";
-        return { label, short, color: "red", last: "Not logged", next: action, detail: `${label} has not been logged yet.` };
+        return { label, short, color: "gray", last: "Not set", next: action, detail: `${label} is not set yet. Tap it to set it.` };
       }
       const lastDate = new Date(pool[key]);
       const nextDate = new Date(lastDate);
@@ -1653,6 +1744,7 @@
       const confirmBtn = document.querySelector("[data-sheet-confirm]");
       confirmBtn.style.display = confirmLabel ? "block" : "none";
       if (confirmLabel) confirmBtn.textContent = confirmLabel;
+      confirmBtn.parentElement.style.gridTemplateColumns = confirmLabel ? "1fr 1.4fr" : "1fr";
       backdrop.hidden = false;
     }
 
@@ -1884,7 +1976,7 @@
       if (lower.includes("cloudy") || lower.includes("hazy")) return "Cloudy Water";
       if (lower.includes("low chlorine") || lower.includes("chlorine low")) return "Low Chlorine";
       if (lower.includes("high chlorine") || lower.includes("chlorine high")) return "High Chlorine";
-      if (lower.includes("ph") || lower.includes("p h")) return "pH Concern";
+      if (/\bp ?h\b/.test(lower)) return "pH Concern";
       if (lower.includes("filter")) return "Filter Check";
       if (lower.includes("water level") || lower.includes("low water")) return "Water Level Check";
       return "Routine Check";
@@ -1982,6 +2074,7 @@
       const concern = draft.visitConcern ? `Visit concern: ${draft.visitConcern}. ` : "";
       const brain = `${concern}${brainText()}`.trim();
       const mainIssue = inferIssueFromText(brain);
+      const previous = localChecks().find((item) => item.poolId && item.poolId === (pool.id || "") && (Date.now() - new Date(item.createdAt).getTime()) < 172800000);
       const [photos, weatherLog] = await Promise.all([uploadPhotos(checkId), quietWeatherLog()]);
       const check = {
         id: checkId,
@@ -2008,6 +2101,7 @@
         notes: brain,
         weatherLog,
         productCategories: inferProductCategories(brain),
+        followUpOf: previous ? previous.id : "",
         photos,
         values,
         nextStep: buildNextStep(values, mainIssue)
@@ -2044,6 +2138,7 @@
           chemInventoryUpdatedAt: check.chemInventoryUpdatedAt || "",
           weatherLog: check.weatherLog || null,
           productCategories: check.productCategories || [],
+          followUpOf: check.followUpOf || "",
           report: check.report || null,
           learning: check.learning || null
         }),
@@ -2073,6 +2168,7 @@
         chemInventoryUpdatedAt: noteData.chemInventoryUpdatedAt || "",
         weatherLog: noteData.weatherLog || null,
         productCategories: noteData.productCategories || [],
+        followUpOf: noteData.followUpOf || "",
         report: noteData.report || null,
         learning: noteData.learning || null,
         mainIssue: row.main_issue,
@@ -2173,6 +2269,7 @@
       const button = document.querySelector("[data-start-timer]");
       if (!button || retestTimer) return;
       const end = Date.now() + 30 * 60000;
+      localStorage.setItem(retestStorageKey, JSON.stringify({ poolName: activeCheck?.poolName || "", checkId: activeCheck?.id || "", endsAt: end }));
       const tick = () => {
         const left = end - Date.now();
         if (left <= 0) {
@@ -2214,8 +2311,11 @@
         saltLine.style.display = needsCaution ? "block" : "none";
       }
 
+      const shortTestNames = { free_chlorine: "Cl", ph: "pH", alkalinity: "Alk", cya: "CYA", calcium: "Hard", salt: "Salt" };
+      const enteredTests = (check.values || []).filter((item) => item.current).map((item) => `${shortTestNames[item.key] || item.label} ${item.current}`).join(" · ");
       const noteRows = [
         ["Note", check.brainInput || check.notes || check.firstImpression],
+        ["Tests", enteredTests],
         ["Weather", check.weatherNote],
         ["Issue", check.mainIssue]
       ].filter((item) => item[1]);
@@ -2531,6 +2631,29 @@
         return;
       }
 
+      if (event.target.closest("[data-retest-banner]")) {
+        localStorage.removeItem(retestStorageKey);
+        ensureStarterPool();
+        resetDraft();
+        const pool = selectedPool();
+        if (pool && pool.profileComplete) {
+          await startPhotoFlow();
+        } else {
+          await startSetupWizard();
+        }
+        return;
+      }
+
+      if (event.target.closest("[data-toggle-tests]")) {
+        const grid = document.querySelector("[data-test-grid]");
+        const toggle = document.querySelector("[data-toggle-tests]");
+        if (grid && toggle) {
+          grid.hidden = !grid.hidden;
+          toggle.textContent = grid.hidden ? "Add test numbers (optional)" : "Hide test numbers";
+        }
+        return;
+      }
+
       if (event.target.closest("[data-save-pool]")) {
         savePoolFromForm();
         await showScreen("home");
@@ -2578,10 +2701,18 @@
 
       if (event.target.closest("[data-create-guide]")) {
         const button = event.target.closest("[data-create-guide]");
+        const hasPhoto = normalizePhotoList(draft.photos.pool).length || draft.photos.tests.length;
+        const hasNote = Boolean(brainText());
+        const hasValues = readValues().some((item) => item.current);
+        if (!hasPhoto && !hasNote && !hasValues) {
+          openSheet("Add one thing first", "Take one photo, say one note, or add one test number. Then ClearWay can help.", "");
+          return;
+        }
         button.disabled = true;
         button.style.opacity = "0.72";
         const check = await createCheck();
         await saveCheck(check);
+        localStorage.removeItem(retestStorageKey);
         renderGuide(check);
         await showScreen("guide");
         button.style.opacity = "";
@@ -2611,6 +2742,9 @@
 
     ensureStarterPool();
     renderHome();
+    setInterval(() => {
+      if (document.querySelector(".screen.active")?.dataset.screen === "home") renderRetestBanner();
+    }, 60000);
   </script>
 </body>
 </html>
