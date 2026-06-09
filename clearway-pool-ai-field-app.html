@@ -771,7 +771,7 @@
           <section class="card">
             <h3>Next: 3 Photo Types</h3>
             <div class="rules" style="margin-top: 12px;">
-              <div class="rule"><div class="num">1</div><div><strong>Pool</strong><p class="muted">Water clarity.</p></div></div>
+              <div class="rule"><div class="num">1</div><div><strong>Pool / Spa</strong><p class="muted">Water clarity for pool, spa, or both.</p></div></div>
               <div class="rule"><div class="num">2</div><div><strong>Test</strong><p class="muted">One or more test photos.</p></div></div>
               <div class="rule"><div class="num">3</div><div><strong>Products</strong><p class="muted">What is on hand.</p></div></div>
             </div>
@@ -997,7 +997,7 @@
     let draft = freshDraft();
 
     const photoSteps = [
-      { key: "pool", label: "Pool Photo", title: "Take a pool photo.", copy: "Show water clarity and the pool condition.", multi: false },
+      { key: "pool", label: "Pool / Spa Photo(s)", title: "Add pool or spa photos.", copy: "Show water clarity for the pool, spa, or both. Add more than one if needed.", multi: true },
       { key: "tests", label: "Test Photo(s)", title: "Add test photos.", copy: "Strip, dye kit, digital reader, or pool-store report. Add more than one if needed.", multi: true },
       { key: "products", label: "Product Photo(s)", title: "Add product photos.", copy: "Show what products are on hand. Skip if none are available.", multi: true }
     ];
@@ -1020,7 +1020,7 @@
 
     function freshDraft() {
       return {
-        photos: { pool: null, tests: [], products: [] }
+        photos: { pool: [], tests: [], products: [] }
       };
     }
 
@@ -1277,8 +1277,13 @@
 
     function currentPhotoArray() {
       const step = photoSteps[activePhotoStep];
-      if (step.key === "pool") return draft.photos.pool ? [draft.photos.pool] : [];
+      if (step.key === "pool") return Array.isArray(draft.photos.pool) ? draft.photos.pool : (draft.photos.pool ? [draft.photos.pool] : []);
       return draft.photos[step.key];
+    }
+
+    function normalizePhotoList(value) {
+      if (!value) return [];
+      return Array.isArray(value) ? value.filter(Boolean) : [value].filter(Boolean);
     }
 
     function renderPhotoThumbs() {
@@ -1333,7 +1338,7 @@
     async function uploadPhotos(checkId) {
       try {
         return {
-          pool: await uploadOne(checkId, "pool", draft.photos.pool, 0),
+          pool: await Promise.all((Array.isArray(draft.photos.pool) ? draft.photos.pool : [draft.photos.pool].filter(Boolean)).map((src, index) => uploadOne(checkId, "pool", src, index))),
           tests: await Promise.all(draft.photos.tests.map((src, index) => uploadOne(checkId, "test", src, index))),
           products: await Promise.all(draft.photos.products.map((src, index) => uploadOne(checkId, "product", src, index)))
         };
@@ -1478,7 +1483,7 @@
       document.querySelector("[data-guide-notes]").textContent = check.notes || "No notes added.";
 
       const photoItems = [
-        ["Pool", check.photos?.pool],
+        ...normalizePhotoList(check.photos?.pool).map((src, index) => [`Pool/Spa ${index + 1}`, src]),
         ...(check.photos?.tests || []).map((src, index) => [`Test ${index + 1}`, src]),
         ...(check.photos?.products || []).map((src, index) => [`Product ${index + 1}`, src])
       ].filter((item) => item[1]);
@@ -1514,7 +1519,7 @@
         ? saved.map((item) => `
           <button class="history-item" data-open-check="${item.id}">
             <div class="row">
-              ${item.photos?.pool ? `<img class="history-thumb" alt="Pool thumbnail" src="${item.photos.pool}">` : '<div class="history-thumb"></div>'}
+              ${normalizePhotoList(item.photos?.pool)[0] ? `<img class="history-thumb" alt="Pool thumbnail" src="${normalizePhotoList(item.photos?.pool)[0]}">` : '<div class="history-thumb"></div>'}
               <div>
                 <strong>${item.poolName}</strong>
                 <p class="muted">${new Date(item.createdAt).toLocaleString()}</p>
@@ -1581,7 +1586,10 @@
       const files = [...input.files];
       for (const file of files) {
         const dataUrl = await compressImage(file);
-        if (step.key === "pool") draft.photos.pool = dataUrl;
+        if (step.key === "pool") {
+          if (!Array.isArray(draft.photos.pool)) draft.photos.pool = draft.photos.pool ? [draft.photos.pool] : [];
+          draft.photos.pool.push(dataUrl);
+        }
         else draft.photos[step.key].push(dataUrl);
       }
       input.value = "";
