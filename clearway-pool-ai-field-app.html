@@ -308,6 +308,13 @@
       color: var(--charcoal);
     }
 
+    .home-status-svg {
+      width: 44px;
+      height: 44px;
+      color: var(--charcoal);
+      display: block;
+    }
+
     .filter-icon {
       border: 4px solid currentColor;
       border-radius: 10px;
@@ -336,23 +343,6 @@
       width: 4px;
       height: 31px;
     }
-
-    .water-icon,
-    .water-icon::before,
-    .water-icon::after {
-      content: "";
-      position: absolute;
-      left: 2px;
-      width: 38px;
-      height: 8px;
-      border: solid currentColor;
-      border-width: 0 0 4px 0;
-      border-radius: 50%;
-    }
-
-    .water-icon { top: 8px; }
-    .water-icon::before { top: 10px; }
-    .water-icon::after { top: 20px; }
 
     .salt-icon {
       width: 25px;
@@ -834,7 +824,11 @@
               <strong data-home-filter-state>Not logged</strong>
             </button>
             <button class="home-maint gray" data-home-maintenance="waterLevel">
-              <i class="home-status-icon water-icon" aria-hidden="true"></i>
+              <svg class="home-status-svg" aria-hidden="true" viewBox="0 0 48 48" fill="none">
+                <path d="M6 15c4 0 4-3 8-3s4 3 8 3 4-3 8-3 4 3 8 3 4-3 8-3" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+                <path d="M6 24c4 0 4-3 8-3s4 3 8 3 4-3 8-3 4 3 8 3 4-3 8-3" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+                <path d="M6 33c4 0 4-3 8-3s4 3 8 3 4-3 8-3 4 3 8 3 4-3 8-3" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+              </svg>
               <span>Water</span>
               <strong data-home-water-state>Check level</strong>
               <small>Half skimmer</small>
