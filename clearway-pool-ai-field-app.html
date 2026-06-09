@@ -446,6 +446,39 @@
       margin-bottom: 6px;
     }
 
+    .mini-status-row {
+      display: flex;
+      gap: 7px;
+      margin-top: 8px;
+    }
+
+    .mini-status {
+      border: 0;
+      border-radius: 999px;
+      padding: 7px 9px;
+      color: var(--white);
+      font-size: 11px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .mini-status.green { background: #159b62; }
+    .mini-status.red { background: #c64235; }
+    .mini-status.gray { background: #7a8a90; }
+
+    .maintenance-detail {
+      display: none;
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 16px;
+      background: var(--seafoam-soft);
+      color: var(--charcoal);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .maintenance-detail.active { display: block; }
+
     .guide-card {
       color: var(--white);
       background:
@@ -732,6 +765,7 @@
                 <button class="btn full" data-log-maintenance="saltCell" style="margin-top: 10px;">Cleaned Salt Cell</button>
               </div>
             </div>
+            <div class="maintenance-detail" data-maintenance-detail-box></div>
           </section>
 
           <section class="card">
@@ -1068,6 +1102,10 @@
             <div>
               <strong>${item.poolName}</strong>
               <p class="muted">${item.poolType} Â· Heater: ${item.heater} Â· Filter: ${item.filter}</p>
+              <div class="mini-status-row">
+                ${maintenanceButton(item, "filter")}
+                ${maintenanceButton(item, "saltCell")}
+              </div>
             </div>
             <span class="status">${item.id === selectedPoolId ? "Using" : "Use"}</span>
           </div>
@@ -1079,12 +1117,62 @@
       return value ? new Date(value).toLocaleDateString() : "Not logged";
     }
 
+    function daysBetween(a, b) {
+      return Math.floor((b.getTime() - a.getTime()) / 86400000);
+    }
+
+    function maintenanceInfo(pool, type) {
+      const isSalt = pool?.poolType === "Salt pool";
+      const key = type === "filter" ? "filterCleanedAt" : "saltCellCleanedAt";
+      const label = type === "filter" ? "Filter" : "Salt Cell";
+      const interval = type === "filter" ? 60 : 90;
+      if (type === "saltCell" && !isSalt) {
+        return { label, short: "SC", color: "gray", last: "Not a salt pool", next: "Not needed", detail: "Salt cell tracking is mainly for salt pools." };
+      }
+      if (!pool?.[key]) {
+        return { label, short: type === "filter" ? "F" : "SC", color: "red", last: "Not logged", next: "Log when cleaned", detail: `${label} has not been logged yet.` };
+      }
+      const lastDate = new Date(pool[key]);
+      const nextDate = new Date(lastDate);
+      nextDate.setDate(nextDate.getDate() + interval);
+      const daysPast = daysBetween(nextDate, new Date());
+      const overdue = daysPast > 0;
+      return {
+        label,
+        short: type === "filter" ? "F" : "SC",
+        color: overdue ? "red" : "green",
+        last: formatDate(pool[key]),
+        next: nextDate.toLocaleDateString(),
+        detail: overdue
+          ? `${label} is ${daysPast} day${daysPast === 1 ? "" : "s"} past due.`
+          : `${label} is on track. Next check around ${nextDate.toLocaleDateString()}.`
+      };
+    }
+
+    function maintenanceButton(pool, type) {
+      const info = maintenanceInfo(pool, type);
+      return `<button class="mini-status ${info.color}" data-maintenance-detail="${type}" data-pool-id="${pool.id}">${info.short}</button>`;
+    }
+
+    function showMaintenanceDetail(poolId, type) {
+      const pool = localPools().find((item) => item.id === poolId) || selectedPool();
+      const info = maintenanceInfo(pool, type);
+      alert(`${info.label}\nLast: ${info.last}\nNext: ${info.next}\n${info.detail}`);
+    }
+
     function renderMaintenanceDates() {
       const pool = selectedPool();
       const filterDate = document.querySelector("[data-filter-date]");
       const saltCellDate = document.querySelector("[data-saltcell-date]");
       if (filterDate) filterDate.textContent = formatDate(pool?.filterCleanedAt);
       if (saltCellDate) saltCellDate.textContent = formatDate(pool?.saltCellCleanedAt);
+      const detail = document.querySelector("[data-maintenance-detail-box]");
+      if (detail && pool) {
+        const filter = maintenanceInfo(pool, "filter");
+        const salt = maintenanceInfo(pool, "saltCell");
+        detail.innerHTML = `<strong>Quick status</strong><br>Filter: ${filter.detail}<br>Salt Cell: ${salt.detail}`;
+        detail.classList.add("active");
+      }
     }
 
     function logMaintenance(type) {
@@ -1514,6 +1602,13 @@
 
       if (event.target.closest("[data-edit-pool]")) {
         await openEditPool();
+        return;
+      }
+
+      const maintenanceDetail = event.target.closest("[data-maintenance-detail]");
+      if (maintenanceDetail) {
+        event.stopPropagation();
+        showMaintenanceDetail(maintenanceDetail.dataset.poolId, maintenanceDetail.dataset.maintenanceDetail);
         return;
       }
 
