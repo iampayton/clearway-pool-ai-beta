@@ -469,7 +469,10 @@
     }
 
     .home-pool-line {
-      display: none;
+      margin: 0;
+      text-align: center;
+      cursor: pointer;
+      font-weight: 800;
     }
 
     .home-status-row {
@@ -976,32 +979,6 @@
       line-height: 1;
     }
 
-    .customer-report {
-      border-color: rgba(26, 169, 152, 0.34);
-      background: linear-gradient(180deg, #ffffff, var(--seafoam-soft));
-    }
-
-    .report-alert {
-      border-radius: 22px;
-      padding: 16px;
-      color: var(--charcoal);
-      background: #dff9ef;
-      font-size: 24px;
-      font-weight: 950;
-      line-height: 0.98;
-    }
-
-    .report-alert.warn { background: #fff4c2; }
-    .report-alert.red { background: #ffe9df; }
-
-    .report-body {
-      margin-top: 14px;
-      color: var(--charcoal-soft);
-      font-size: 15px;
-      line-height: 1.45;
-      font-weight: 750;
-    }
-
     .guide-icons {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -1182,15 +1159,15 @@
           <div class="brand">ClearWay Pool AI</div>
           <div class="top-icons">
             <button class="icon-btn" data-go="history" aria-label="History">H</button>
-            <button class="icon-btn" data-edit-pool aria-label="Pool settings">âš™</button>
+            <button class="icon-btn" data-edit-pool aria-label="Pool settings">⚙</button>
           </div>
         </div>
         <div class="content home-content">
           <button class="btn primary full start-cta" data-start-check>
-            <strong>Start<br>Pool Check</strong>
+            <strong>Start<br>Quick Check</strong>
             <span></span>
           </button>
-          <p class="muted home-pool-line" data-selected-pool-text>New Pool / Not sure / Heater: Not sure</p>
+          <p class="muted home-pool-line" data-selected-pool-text title="Tap to change pool">New Pool · Tap to change</p>
           <div class="home-status-row" aria-label="Maintenance status">
             <button class="home-maint gray" data-home-maintenance="filter">
               <i class="home-status-icon filter-icon" aria-hidden="true"></i>
@@ -1225,7 +1202,7 @@
           <section class="hero">
             <p class="eyebrow">Add Pool</p>
             <h1>Save the basics now. Add details later.</h1>
-            <p class="hero-copy">Trinity can add a pool fast today, then return later for measurements or missing setup info.</p>
+            <p class="hero-copy">Add the basics now. Come back later for the rest.</p>
           </section>
 
           <section class="card">
@@ -1268,6 +1245,14 @@
               </label>
               <label>Measurements Later <textarea data-pool-field="measurements" placeholder="Gallons, surface, pump, equipment notes can be added later"></textarea></label>
             </div>
+          </section>
+
+          <section class="card">
+            <h3>Products</h3>
+            <p class="muted" style="margin-top: 6px;">One photo of the products you have. ClearWay uses it to plan Do Next.</p>
+            <div class="thumb-grid" data-pool-chem-thumbs></div>
+            <button class="btn full" type="button" data-pool-chem-add style="margin-top: 12px;">Add / Update Product Photo</button>
+            <input class="hidden-file" data-pool-chem-input type="file" accept="image/*" multiple />
           </section>
 
           <button class="btn primary full" data-save-pool>Save Pool</button>
@@ -1324,7 +1309,7 @@
                 <path d="M21 10v28M31 17h6M31 25h6" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
               </svg>
             </button>
-            <button class="icon-action" data-manual-input aria-label="Manual input" title="Manual input">
+            <button class="icon-action" data-manual-input aria-label="Skip to note" title="Skip to note">
               <svg aria-hidden="true" viewBox="0 0 48 48" fill="none">
                 <circle cx="21" cy="21" r="12" stroke="currentColor" stroke-width="4"/>
                 <path d="M31 31l10 10" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
@@ -1347,13 +1332,13 @@
           <button class="btn" data-go="home">Home</button>
         </div>
         <div class="content">
-          <button class="brain-cta" data-dictate-target="brainInput" aria-label="Dictate pool service note">
+          <button class="brain-cta" data-dictate-target="brainInput" aria-label="Talk note">
             <svg aria-hidden="true" viewBox="0 0 64 64" fill="none">
               <rect x="22" y="8" width="20" height="34" rx="10" stroke="currentColor" stroke-width="5"/>
               <path d="M14 30c0 10 8 18 18 18s18-8 18-18M32 48v8M24 56h16" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
             </svg>
             <strong>What did you do?<br>What next?</strong>
-            <span>Say what you saw, test numbers if needed, what you did, and what happens next.</span>
+            <span>Say what you saw. Say what you did. Say test numbers if you have them.</span>
           </button>
 
           <textarea class="brain-note" data-check-field="brainInput" placeholder="ex: Routine check. Water clear. Chlorine looked low on strip. Cleaned filter, brushed steps, added product by label. Retest later today."></textarea>
@@ -1370,7 +1355,7 @@
                 <path d="M14 14l20 20M34 14 14 34" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
               </svg>
             </button>
-            <button class="icon-action primary" data-create-guide aria-label="Create Do Next Guide" title="Create guide">
+            <button class="icon-action primary" data-create-guide aria-label="Get Do Next" title="Do Next">
               <svg aria-hidden="true" viewBox="0 0 48 48" fill="none">
                 <path d="M8 12l12 12L8 36" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
                 <path d="M20 12l12 12-12 12" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -1389,28 +1374,28 @@
         <div class="content">
           <section class="card pool-id-card">
             <h1 data-guide-pool>Unnamed Pool</h1>
+            <p class="muted" data-guide-date style="margin-top: 7px;"></p>
           </section>
 
           <section class="card guide-card">
-            <div class="big-step" data-next-step>Confirm values before adding chemicals.</div>
+            <p class="setup-label">Do Next</p>
+            <div class="big-step" data-next-step style="margin-top: 4px;">Retest before you add more.</div>
             <div class="summary-list" data-step-guide-list style="margin-top: 14px;"></div>
           </section>
 
-          <section class="card">
-            <h3>Pool Status</h3>
-            <div class="home-status-row" data-guide-status-pills style="margin-top: 12px;"></div>
-          </section>
-
-          <section class="card customer-report">
-            <p class="muted">Homeowner update</p>
-            <div class="report-alert" data-homeowner-alert>Pool check saved.</div>
-            <p class="report-body" data-homeowner-copy>ClearWay made a simple service summary for this pool.</p>
-            <div class="summary-list" data-homeowner-list style="margin-top: 12px;"></div>
-            <button class="btn primary full" data-copy-homeowner-report style="margin-top: 14px;">Copy Homeowner Update</button>
+          <section class="card warning">
+            <h3>Remember</h3>
+            <ul>
+              <li>Follow the product label.</li>
+              <li>Do not mix chemicals.</li>
+              <li>Add one product at a time.</li>
+              <li>Retest before swimming or adding more.</li>
+            </ul>
+            <p class="muted" data-salt-heater-line style="display: none; margin-top: 10px;">Salt pool or heater: go slow. Make small changes. Retest.</p>
           </section>
 
           <section class="card">
-            <h3>Photos & Notes</h3>
+            <h3>Photos & Note</h3>
             <div class="thumb-grid" data-guide-photos></div>
             <div class="summary-list" data-guide-notes style="margin-top: 12px;"></div>
           </section>
@@ -1419,49 +1404,13 @@
             <div class="row">
               <div>
                 <h3>Saved to History</h3>
-                <p class="muted">This pool check is saved.</p>
+                <p class="muted">This check is saved.</p>
               </div>
               <button class="btn primary" data-go="history">View History</button>
             </div>
           </section>
 
-          <section class="card" data-learning-card>
-            <div class="row">
-              <div>
-                <h3>Learning Signal</h3>
-                <p class="muted" data-learning-copy>This check needs more proof before ClearWay should learn from it.</p>
-              </div>
-              <span class="status" data-learning-status>Needs proof</span>
-            </div>
-            <div class="summary-list" data-learning-list style="margin-top: 12px;"></div>
-          </section>
-
-          <section class="card" data-values-card>
-            <h3>Confirmed Values</h3>
-            <div class="summary-list" data-values-summary></div>
-          </section>
-
-          <section class="card" data-outside-card>
-            <h3>Outside Target Range</h3>
-            <div class="summary-list" data-outside-summary></div>
-          </section>
-
-          <section class="card warning" data-caution-card>
-            <h3>Salt / Heater Caution</h3>
-            <p class="muted">Salt systems and heaters can be sensitive to rapid chemical changes. Confirm values, follow labels, add products separately, and retest before adding more.</p>
-          </section>
-
-          <section class="card warning">
-            <h3>Do Not</h3>
-            <ul>
-              <li>Do not mix chemicals directly.</li>
-              <li>Do not add multiple products at once.</li>
-              <li>Do not add random chemicals without confirming values.</li>
-              <li>Retest before swimming or adding more.</li>
-            </ul>
-          </section>
-
-          <button class="btn full" data-start-timer>Start Timer</button>
+          <button class="btn full" data-start-timer>Start Retest Timer</button>
         </div>
       </div>
 
@@ -1489,13 +1438,12 @@
     </section>
 
     <aside class="desktop-panel">
-      <div class="pill" style="display: inline-flex;">Greenlit Trinity Flow</div>
       <h2>ClearWay Pool AI</h2>
-      <p>One simple loop: giant start button, one-time setup, pool photo, test photo, talk, get the Do Next Guide, and save history.</p>
+      <p>One loop: tap Start, take photos, talk, get Do Next, save to History.</p>
       <div class="screen-picker" aria-label="Screen picker">
         <button class="picker-button active" data-go="home"><strong>Home</strong><span class="muted">Big start button</span></button>
         <button class="picker-button" data-go="add-pool"><strong>Add Pool</strong><span class="muted">Fast now, details later</span></button>
-        <button class="picker-button" data-go="rules"><strong>Rules</strong><span class="muted">Three photo types</span></button>
+        <button class="picker-button" data-go="rules"><strong>Setup</strong><span class="muted">One-time questions</span></button>
         <button class="picker-button" data-go="history"><strong>History</strong><span class="muted">Saved checks</span></button>
       </div>
     </aside>
@@ -1540,7 +1488,7 @@
       { key: "hasSpa", question: "Spa too?", help: "If yes, ClearWay asks for pool and spa photos.", options: ["Yes", "No", "Not sure"] },
       { key: "heater", question: "Heater?", help: "Heaters need extra caution with chemistry.", options: ["No heater", "Gas heater", "Heat pump", "Solar heater", "Not sure"] },
       { key: "filter", question: "Filter type?", help: "This helps the filter reminder make sense.", options: ["Cartridge", "Sand", "DE", "Not sure"] },
-      { key: "chemInventory", question: "Chem setup", help: "One-time photo of products on hand. Pool tech? Mark stocked.", photo: true },
+      { key: "chemInventory", question: "Products", help: "Take one photo of the products you have. You can update it later in settings.", photo: true },
       { key: "filterCleanedAt", question: "Last filter clean?", help: "Tap the closest answer.", options: ["Today", "This week", "This month", "Not sure"], date: true },
       { key: "waterLevelCheckedAt", question: "Last water check?", help: "Normal target is around halfway up the skimmer.", options: ["Today", "This week", "Not sure"], date: true },
       { key: "saltCellCleanedAt", question: "Last salt cell clean?", help: "Skip if this is not a salt pool.", options: ["Today", "This month", "Not sure"], date: true, saltOnly: true }
@@ -1617,11 +1565,6 @@
       return pools.find((pool) => pool.id === selectedPoolId) || pools[0] || null;
     }
 
-    function poolNeedsSetup(pool) {
-      if (!pool) return true;
-      return !pool.profileComplete;
-    }
-
     function visibleSetupQuestions() {
       return setupQuestions.filter((question) => {
         if (!question.saltOnly) return true;
@@ -1649,8 +1592,8 @@
       const photos = setupDraft.chemInventoryPhotos || [];
       thumbs.classList.toggle("active", Boolean(activeSetupQuestion()?.photo));
       thumbs.innerHTML = photos.length
-        ? photos.map((src, index) => `<div class="thumb"><img alt="Chem setup ${index + 1}" src="${src}"><span>Chem ${index + 1}</span></div>`).join("")
-        : '<div class="empty" style="grid-column: 1 / -1;">No chem photo yet.</div>';
+        ? photos.map((src, index) => `<div class="thumb"><img alt="Products ${index + 1}" src="${src}"><span>Products</span></div>`).join("")
+        : '<div class="empty" style="grid-column: 1 / -1;">No product photo yet.</div>';
     }
 
     async function startSetupWizard() {
@@ -1683,11 +1626,11 @@
       document.querySelector("[data-setup-talk]").textContent = "Talk";
       document.querySelector("[data-setup-label]").textContent = "Quick Check";
       document.querySelector("[data-setup-question]").textContent = "Anything to note?";
-      document.querySelector("[data-setup-help]").textContent = "Concern, customer note, or normal visit.";
+      document.querySelector("[data-setup-help]").textContent = "Concern, other note, or normal visit.";
       answer.value = "";
       answer.placeholder = "Say concern or tap one";
       answer.style.display = "block";
-      options.innerHTML = ["Normal visit", "Water", "Filter", "Customer note"].map((option) => `<button class="setup-option" data-setup-option="${option}">${option}</button>`).join("");
+      options.innerHTML = ["Normal visit", "Water", "Filter", "Other note"].map((option) => `<button class="setup-option" data-setup-option="${option}">${option}</button>`).join("");
       await showScreen("rules");
       answer.focus();
     }
@@ -1712,7 +1655,7 @@
       options.innerHTML = question.photo
         ? `
           <button class="setup-option wide" data-setup-chem-camera>Take Photo</button>
-          <button class="setup-option" data-setup-option="Pool tech stocked">Pool Tech Stocked</button>
+          <button class="setup-option" data-setup-option="Products stocked">Products stocked</button>
           <button class="setup-option" data-setup-option="Skip">Skip</button>
         `
         : question.options
@@ -1784,7 +1727,7 @@
         } else if (raw) {
           setupDraft.chemInventoryNote = raw;
         } else if ((setupDraft.chemInventoryPhotos || []).length) {
-          setupDraft.chemInventoryNote = "Chem photo saved";
+          setupDraft.chemInventoryNote = "Product photo saved";
         }
         if ((setupDraft.chemInventoryPhotos || []).length) setupDraft.chemInventoryUpdatedAt = new Date().toISOString();
       } else {
@@ -1863,31 +1806,12 @@
 
     function renderHome() {
       ensureStarterPool();
-      const pools = localPools();
       const pool = selectedPool();
       const selectedText = document.querySelector("[data-selected-pool-text]");
       if (selectedText) {
-        selectedText.textContent = pool ? `${pool.poolName} Â· ${pool.poolType} Â· Heater: ${pool.heater}` : "No pool selected yet.";
+        selectedText.textContent = pool ? `${pool.poolName} · Tap to change` : "No pool yet. Tap to add.";
       }
-      if (selectedText && pool) selectedText.textContent = `${pool.poolName} / ${pool.poolType} / Heater: ${pool.heater}`;
       renderHomeMaintenance(pool);
-      const poolList = document.querySelector("[data-pool-list]");
-      if (!poolList) return;
-      poolList.innerHTML = pools.map((item) => `
-        <button class="pool-item ${item.id === selectedPoolId ? "selected-pool" : ""}" data-select-pool="${item.id}">
-          <div class="row">
-            <div>
-              <strong>${item.poolName}</strong>
-              <p class="muted">${item.poolType} Â· Heater: ${item.heater} Â· Filter: ${item.filter}</p>
-              <div class="mini-status-row">
-                ${maintenanceButton(item, "filter")}
-                ${maintenanceButton(item, "saltCell")}
-              </div>
-            </div>
-            <span class="status">${item.id === selectedPoolId ? "Using" : "Use"}</span>
-          </div>
-        </button>
-      `).join("");
     }
 
     function renderHomeMaintenance(pool) {
@@ -1957,43 +1881,16 @@
       };
     }
 
-    function maintenanceButton(pool, type) {
-      const info = maintenanceInfo(pool, type);
-      return `<button class="mini-status ${info.color}" data-maintenance-detail="${type}" data-pool-id="${pool.id}">${info.short}</button>`;
-    }
-
-    function statusIcon(type) {
-      if (type === "filter") return '<i class="home-status-icon filter-icon" aria-hidden="true"></i>';
-      if (type === "saltCell") return '<i class="home-status-icon salt-icon" aria-hidden="true"></i>';
-      return `<svg class="home-status-svg" aria-hidden="true" viewBox="0 0 48 48" fill="none">
-        <path d="M6 15c4 0 4-3 8-3s4 3 8 3 4-3 8-3 4 3 8 3 4-3 8-3" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
-        <path d="M6 24c4 0 4-3 8-3s4 3 8 3 4-3 8-3 4 3 8 3 4-3 8-3" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
-        <path d="M6 33c4 0 4-3 8-3s4 3 8 3 4-3 8-3 4 3 8 3 4-3 8-3" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
-      </svg>`;
-    }
-
     function showMaintenanceDetail(poolId, type) {
       const pool = localPools().find((item) => item.id === poolId) || selectedPool();
       const info = maintenanceInfo(pool, type);
-      alert(`${info.label}\nLast: ${info.last}\nNext: ${info.next}\n${info.detail}`);
-    }
-
-    function renderMaintenanceDates() {
-      const pool = selectedPool();
-      const filterDate = document.querySelector("[data-filter-date]");
-      const waterDate = document.querySelector("[data-water-date]");
-      const saltCellDate = document.querySelector("[data-saltcell-date]");
-      if (filterDate) filterDate.textContent = formatDate(pool?.filterCleanedAt);
-      if (waterDate) waterDate.textContent = formatDate(pool?.waterLevelCheckedAt);
-      if (saltCellDate) saltCellDate.textContent = formatDate(pool?.saltCellCleanedAt);
-      const detail = document.querySelector("[data-maintenance-detail-box]");
-      if (detail && pool) {
-        const filter = maintenanceInfo(pool, "filter");
-        const water = maintenanceInfo(pool, "waterLevel");
-        const salt = maintenanceInfo(pool, "saltCell");
-        detail.innerHTML = `<strong>Quick status</strong><br>Filter: ${filter.detail}<br>Water: ${water.detail}<br>Salt Cell: ${salt.detail}`;
-        detail.classList.add("active");
+      if (type === "saltCell" && pool?.poolType !== "Salt pool") {
+        alert(`${info.label}\n${info.detail}`);
+        return;
       }
+      const verb = type === "waterLevel" ? "Checked today?" : "Done today?";
+      const ok = confirm(`${info.label}\nLast: ${info.last}\nNext: ${info.next}\n${info.detail}\n\n${verb} OK marks it done.`);
+      if (ok) logMaintenance(type);
     }
 
     function logMaintenance(type) {
@@ -2004,14 +1901,26 @@
       const updated = { ...pool, [key]: new Date().toISOString(), updatedAt: new Date().toISOString() };
       saveLocalPools([updated, ...pools.filter((item) => item.id !== updated.id)]);
       selectedPoolId = updated.id;
-      renderMaintenanceDates();
       renderHome();
+    }
+
+    let editPoolChemPhotos = null;
+    let editPoolChemChanged = false;
+
+    function renderPoolChemThumbs() {
+      const thumbs = document.querySelector("[data-pool-chem-thumbs]");
+      if (!thumbs) return;
+      const photos = editPoolChemPhotos || [];
+      thumbs.innerHTML = photos.length
+        ? photos.map((src, index) => `<div class="thumb"><img alt="Products ${index + 1}" src="${src}"><span>Products</span></div>`).join("")
+        : '<div class="empty" style="grid-column: 1 / -1;">No product photo yet.</div>';
     }
 
     function savePoolFromForm() {
       const get = (name) => document.querySelector(`[data-pool-field="${name}"]`)?.value.trim() || "";
       const pools = localPools();
       const existingPool = pools.find((item) => item.id === editingPoolId);
+      const chemPhotos = editPoolChemPhotos !== null ? editPoolChemPhotos : (existingPool?.chemInventoryPhotos || []);
       const pool = {
         id: editingPoolId || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())),
         poolName: get("poolName") || "Unnamed Pool",
@@ -2024,60 +1933,15 @@
         filterCleanedAt: existingPool?.filterCleanedAt || "",
         waterLevelCheckedAt: existingPool?.waterLevelCheckedAt || "",
         saltCellCleanedAt: existingPool?.saltCellCleanedAt || "",
-        chemInventoryNote: existingPool?.chemInventoryNote || "",
-        chemInventoryPhotos: existingPool?.chemInventoryPhotos || [],
-        chemInventoryUpdatedAt: existingPool?.chemInventoryUpdatedAt || "",
+        chemInventoryNote: editPoolChemChanged && chemPhotos.length ? "Product photo saved" : (existingPool?.chemInventoryNote || ""),
+        chemInventoryPhotos: chemPhotos,
+        chemInventoryUpdatedAt: editPoolChemChanged ? new Date().toISOString() : (existingPool?.chemInventoryUpdatedAt || ""),
         profileComplete: true,
         updatedAt: new Date().toISOString()
       };
       saveLocalPools([pool, ...pools.filter((item) => item.id !== pool.id)]);
       selectedPoolId = pool.id;
       editingPoolId = pool.id;
-      renderHome();
-    }
-
-    function saveFastPoolFromForm() {
-      const get = (name) => document.querySelector(`[data-fast-pool-field="${name}"]`)?.value.trim() || "";
-      const chosenId = document.querySelector("[data-fast-pool-select]")?.value || "";
-      const hasAnyInfo = ["poolName", "poolType", "heater", "filter"].some((name) => {
-        const value = get(name);
-        return value && value !== "Not sure";
-      });
-      const pools = localPools();
-      if (chosenId && chosenId !== "__new") {
-        const current = pools.find((item) => item.id === chosenId);
-        if (current) {
-          const updated = {
-            ...current,
-            poolName: get("poolName") || current.poolName,
-            poolType: get("poolType") || current.poolType,
-            heater: get("heater") || current.heater,
-            filter: get("filter") || current.filter,
-            updatedAt: new Date().toISOString()
-          };
-          saveLocalPools([updated, ...pools.filter((item) => item.id !== updated.id)]);
-          selectedPoolId = updated.id;
-          renderHome();
-          return;
-        }
-      }
-      if (!hasAnyInfo) return;
-      const pool = {
-        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
-        poolName: get("poolName") || `Pool ${pools.length + 1}`,
-        address: "",
-        poolType: get("poolType") || "Not sure",
-        heater: get("heater") || "Not sure",
-        filter: get("filter") || "Not sure",
-        measurements: "",
-        waterLevelCheckedAt: "",
-        chemInventoryNote: "",
-        chemInventoryPhotos: [],
-        chemInventoryUpdatedAt: "",
-        updatedAt: new Date().toISOString()
-      };
-      saveLocalPools([pool, ...pools]);
-      selectedPoolId = pool.id;
       renderHome();
     }
 
@@ -2103,34 +1967,12 @@
       });
     }
 
-    function setFastPoolForm(pool) {
-      const fields = {
-        poolName: pool?.poolName || "",
-        poolType: pool?.poolType || "Not sure",
-        heater: pool?.heater || "Not sure",
-        filter: pool?.filter || "Not sure"
-      };
-      Object.entries(fields).forEach(([key, value]) => {
-        const field = document.querySelector(`[data-fast-pool-field="${key}"]`);
-        if (field) field.value = value;
-      });
-    }
-
-    function renderFastPoolSelect() {
-      const select = document.querySelector("[data-fast-pool-select]");
-      if (!select) return;
-      const pools = localPools();
-      select.innerHTML = [
-        '<option value="__new">Add new pool now</option>',
-        ...pools.map((pool) => `<option value="${pool.id}">${escapeHtml(pool.poolName)} / ${escapeHtml(pool.poolType)}</option>`)
-      ].join("");
-      select.value = selectedPoolId || "__new";
-      setFastPoolForm(selectedPool());
-    }
-
     async function openAddPool() {
       editingPoolId = null;
       setPoolForm(null);
+      editPoolChemPhotos = [];
+      editPoolChemChanged = false;
+      renderPoolChemThumbs();
       await showScreen("add-pool");
     }
 
@@ -2138,6 +1980,9 @@
       const pool = selectedPool();
       editingPoolId = pool?.id || null;
       setPoolForm(pool);
+      editPoolChemPhotos = [...(pool?.chemInventoryPhotos || [])];
+      editPoolChemChanged = false;
+      renderPoolChemThumbs();
       await showScreen("add-pool");
     }
 
@@ -2169,7 +2014,7 @@
       const items = currentPhotoArray();
       document.querySelector("[data-photo-thumbs]").innerHTML = items.length
         ? items.map((src, index) => `<div class="thumb"><img alt="${step.label} ${index + 1}" src="${src}"><span>${step.label}</span></div>`).join("")
-        : '<div class="empty" style="grid-column: 1 / -1;">No photo added yet. Skip if unavailable.</div>';
+        : '<div class="empty" style="grid-column: 1 / -1;">No photo yet. Skip if you need to.</div>';
     }
 
     function compressImage(file) {
@@ -2273,18 +2118,24 @@
       return normalizePhotoList(draft.photos.tests).length ? "Test photo" : "Not stated";
     }
 
-    function buildStepGuide(check) {
-      const steps = [];
+    function buildDoNext(check) {
       const text = `${check.brainInput || ""} ${check.nextStep || ""}`.toLowerCase();
-      steps.push("Check the photos.");
-      if (text.includes("filter")) steps.push("Check the filter.");
-      if (text.includes("water level") || text.includes("low water")) steps.push("Check the water level.");
-      if (text.includes("green") || text.includes("algae")) steps.push("Check chlorine and pH first.");
-      if (text.includes("cloudy")) steps.push("Run the pump.");
-      if (check.brainInput) steps.push("Follow the tech note.");
-      steps.push("Do not mix chemicals.");
-      steps.push("Retest before more.");
-      return [...new Set(steps)];
+      const steps = [];
+      const add = (step) => {
+        const lower = step.toLowerCase();
+        const dupe = steps.some((item) => {
+          const existing = item.toLowerCase();
+          return existing === lower || existing.includes(lower) || lower.includes(existing);
+        });
+        if (!dupe) steps.push(step);
+      };
+      if (check.nextStep) add(check.nextStep);
+      if (text.includes("green") || text.includes("algae")) add("Check chlorine and pH first.");
+      if (text.includes("cloudy") || text.includes("hazy")) add("Run the pump.");
+      if (text.includes("filter")) add("Check the filter.");
+      if (text.includes("water level") || text.includes("low water")) add("Fill water to about half the skimmer.");
+      add("Retest before you add more.");
+      return steps.slice(0, 4);
     }
 
     function buildNextStep(values, issue) {
@@ -2302,6 +2153,31 @@
       return `${outside[0].label} needs attention. Follow the label. Retest before more.`;
     }
 
+    async function quietWeatherLog() {
+      try {
+        if (!navigator.geolocation) return null;
+        const position = await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: false, timeout: 4000, maximumAge: 1800000 });
+        });
+        const { latitude, longitude } = position.coords;
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,precipitation,wind_speed_10m&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=auto&forecast_days=1`;
+        const response = await fetch(url);
+        if (!response.ok) return null;
+        const data = await response.json();
+        const current = data.current || {};
+        return {
+          at: new Date().toISOString(),
+          tempF: current.temperature_2m ?? null,
+          rainIn: current.precipitation ?? null,
+          windMph: current.wind_speed_10m ?? null,
+          lat: Math.round(latitude * 100) / 100,
+          lon: Math.round(longitude * 100) / 100
+        };
+      } catch {
+        return null;
+      }
+    }
+
     async function createCheck() {
       const pool = selectedPool() || { poolName: "Unnamed Pool", poolType: "Not sure", heater: "Not sure", filter: "Not sure" };
       const checkId = crypto.randomUUID ? crypto.randomUUID() : String(Date.now());
@@ -2309,8 +2185,8 @@
       const concern = draft.visitConcern ? `Visit concern: ${draft.visitConcern}. ` : "";
       const brain = `${concern}${brainText()}`.trim();
       const mainIssue = inferIssueFromText(brain);
-      const photos = await uploadPhotos(checkId);
-      return {
+      const [photos, weatherLog] = await Promise.all([uploadPhotos(checkId), quietWeatherLog()]);
+      const check = {
         id: checkId,
         createdAt: new Date().toISOString(),
         poolId: pool.id || "",
@@ -2333,10 +2209,14 @@
         whatChanged: brain,
         whatAdded: brain,
         notes: brain,
+        weatherLog,
         photos,
         values,
         nextStep: buildNextStep(values, mainIssue)
       };
+      check.report = homeownerReport(check);
+      check.learning = learningQuality(check);
+      return check;
     }
 
     function toDb(check) {
@@ -2363,7 +2243,10 @@
           waterLevelCheckedAt: check.waterLevelCheckedAt || "",
           saltCellCleanedAt: check.saltCellCleanedAt || "",
           chemInventoryNote: check.chemInventoryNote || "",
-          chemInventoryUpdatedAt: check.chemInventoryUpdatedAt || ""
+          chemInventoryUpdatedAt: check.chemInventoryUpdatedAt || "",
+          weatherLog: check.weatherLog || null,
+          report: check.report || null,
+          learning: check.learning || null
         }),
         photos: check.photos || {},
         confirmed_values: check.values || [],
@@ -2389,6 +2272,9 @@
         saltCellCleanedAt: noteData.saltCellCleanedAt || "",
         chemInventoryNote: noteData.chemInventoryNote || "",
         chemInventoryUpdatedAt: noteData.chemInventoryUpdatedAt || "",
+        weatherLog: noteData.weatherLog || null,
+        report: noteData.report || null,
+        learning: noteData.learning || null,
         mainIssue: row.main_issue,
         testType: row.test_type,
         brainInput: noteData.brainInput || noteData.notes || "",
@@ -2447,7 +2333,7 @@
       const score = signals.filter((item) => item.ok).length;
       if (score >= 5) return { status: "Strong", copy: "Good check. ClearWay can learn from this with more history.", signals };
       if (score >= 3) return { status: "Useful", copy: "Useful check. Better after one more proof point or retest.", signals };
-      return { status: "Needs proof", copy: "Do not teach the brain much from this yet. Add photos, values, or Trinity's next step.", signals };
+      return { status: "Needs more", copy: "Needs more info. Add photos, values, or a next step.", signals };
     }
 
     function homeownerReport(check) {
@@ -2472,104 +2358,78 @@
       return { headline, tone, copy, list };
     }
 
+    let retestTimer = null;
+
+    function resetRetestTimerButton() {
+      const button = document.querySelector("[data-start-timer]");
+      if (!button) return;
+      clearInterval(retestTimer);
+      retestTimer = null;
+      button.disabled = false;
+      button.textContent = "Start Retest Timer";
+    }
+
+    function startRetestTimer() {
+      const button = document.querySelector("[data-start-timer]");
+      if (!button || retestTimer) return;
+      const end = Date.now() + 30 * 60000;
+      const tick = () => {
+        const left = end - Date.now();
+        if (left <= 0) {
+          clearInterval(retestTimer);
+          retestTimer = null;
+          button.disabled = false;
+          button.textContent = "Time to retest";
+          alert("Timer done. Retest now. Do not add more until you retest.");
+          return;
+        }
+        const minutes = Math.floor(left / 60000);
+        const seconds = Math.floor((left % 60000) / 1000);
+        button.textContent = `Retest in ${minutes}:${String(seconds).padStart(2, "0")}`;
+      };
+      button.disabled = true;
+      retestTimer = setInterval(tick, 1000);
+      tick();
+    }
+
     function renderGuide(check) {
       activeCheck = check;
+      resetRetestTimerButton();
       document.querySelector("[data-guide-pool]").textContent = check.poolName;
-      document.querySelector("[data-next-step]").textContent = check.nextStep;
-      const stepGuide = buildStepGuide(check);
+      const dateTarget = document.querySelector("[data-guide-date]");
+      if (dateTarget) dateTarget.textContent = check.createdAt ? new Date(check.createdAt).toLocaleString() : "";
+
+      const steps = buildDoNext(check);
+      document.querySelector("[data-next-step]").textContent = steps[0] || "Retest before you add more.";
       const stepList = document.querySelector("[data-step-guide-list]");
       if (stepList) {
-        stepList.innerHTML = stepGuide.map((step, index) => `
-          <div class="step-row"><span class="step-num">${index + 1}</span><strong>${escapeHtml(step)}</strong></div>
+        stepList.innerHTML = steps.slice(1).map((step, index) => `
+          <div class="step-row"><span class="step-num">${index + 2}</span><strong>${escapeHtml(step)}</strong></div>
         `).join("");
       }
+
+      const saltLine = document.querySelector("[data-salt-heater-line]");
+      if (saltLine) {
+        const needsCaution = check.poolType === "Salt pool" || (check.heater && check.heater !== "No heater" && check.heater !== "Not sure");
+        saltLine.style.display = needsCaution ? "block" : "none";
+      }
+
       const noteRows = [
-        ["Brain note", check.brainInput || check.notes || check.firstImpression],
-        ["Weather / water", check.weatherNote],
-        ["Chem setup", check.chemInventoryNote],
-        ["Water level checked", check.waterLevelCheckedAt ? new Date(check.waterLevelCheckedAt).toLocaleDateString() : ""],
-        ["Test type", check.testType],
+        ["Note", check.brainInput || check.notes || check.firstImpression],
+        ["Weather", check.weatherNote],
         ["Issue", check.mainIssue]
       ].filter((item) => item[1]);
       document.querySelector("[data-guide-notes]").innerHTML = noteRows.length
         ? noteRows.map(([label, value]) => `<div class="summary-item"><span>${label}</span><strong>${escapeHtml(value)}</strong></div>`).join("")
-        : '<div class="empty">No notes added.</div>';
-
-      const quality = learningQuality(check);
-      document.querySelector("[data-learning-status]").textContent = quality.status;
-      document.querySelector("[data-learning-copy]").textContent = quality.copy;
-      document.querySelector("[data-learning-list]").innerHTML = quality.signals.map((item) => `
-        <div class="summary-item"><span>${item.label}</span><strong>${item.ok ? "Yes" : "No"}</strong></div>
-      `).join("");
-
-      const guideStatus = document.querySelector("[data-guide-status-pills]");
-      if (guideStatus) {
-        guideStatus.innerHTML = ["filter", "waterLevel", "saltCell"].map((type) => {
-          const info = maintenanceInfo(check, type);
-          return `<button class="home-maint ${info.color}" title="${info.detail}">${statusIcon(type)}</button>`;
-        }).join("");
-      }
-
-      const report = homeownerReport(check);
-      const homeownerAlert = document.querySelector("[data-homeowner-alert]");
-      homeownerAlert.className = `report-alert ${report.tone}`;
-      homeownerAlert.textContent = report.headline;
-      document.querySelector("[data-homeowner-copy]").textContent = report.copy;
-      document.querySelector("[data-homeowner-list]").innerHTML = report.list.map((item) => `
-        <div class="summary-item"><span>Note</span><strong>${escapeHtml(item)}</strong></div>
-      `).join("");
+        : '<div class="empty">No note added.</div>';
 
       const photoItems = [
         ...normalizePhotoList(check.photos?.pool).map((src, index) => [`Pool/Spa ${index + 1}`, src]),
-        ...(check.photos?.tests || []).map((src, index) => [`Test ${index + 1}`, src]),
-        ...(check.photos?.products || []).map((src, index) => [`Product ${index + 1}`, src])
+        ...(check.photos?.tests || []).map((src, index) => [`Test ${index + 1}`, src])
       ].filter((item) => item[1]);
       document.querySelector("[data-guide-photos]").innerHTML = photoItems.length
         ? photoItems.map(([label, src]) => `<div class="thumb"><img alt="${label}" src="${src}"><span>${label}</span></div>`).join("")
         : '<div class="empty" style="grid-column: 1 / -1;">No photos saved for this check.</div>';
-
-      const enteredValues = (check.values || []).filter((item) => item.current);
-      const valuesCard = document.querySelector("[data-values-card]");
-      if (valuesCard) valuesCard.style.display = enteredValues.length ? "block" : "none";
-      document.querySelector("[data-values-summary]").innerHTML = enteredValues.map((item) => `
-        <div class="summary-item"><span>${item.label}</span><strong>${item.current} / ${item.target}</strong></div>
-      `).join("");
-
-      const outside = (check.values || []).filter((item) => item.status === "low" || item.status === "high");
-      const outsideCard = document.querySelector("[data-outside-card]");
-      if (outsideCard) outsideCard.style.display = outside.length ? "block" : "none";
-      document.querySelector("[data-outside-summary]").innerHTML = outside.length
-        ? `<div class="empty">Some confirmed values appear outside target range.</div>${outside.map((item) => `
-          <div class="summary-item"><span>${item.label} is ${item.status}</span><strong>${item.product}</strong></div>
-        `).join("")}`
-        : '<div class="empty">No entered values appear outside the target ranges. Retest before swimming.</div>';
-
-      document.querySelector("[data-caution-card]").style.display =
-        check.poolType === "Salt pool" || (check.heater && check.heater !== "No heater" && check.heater !== "Not sure")
-          ? "block"
-          : "none";
-    }
-
-    async function renderHistoryLegacy() {
-      const saved = await checks();
-      document.querySelector("[data-history-count]").textContent = saved.length;
-      document.querySelector("[data-history-list]").innerHTML = saved.length
-        ? saved.map((item) => `
-          <button class="history-item" data-open-check="${item.id}">
-            <div class="row">
-              ${normalizePhotoList(item.photos?.pool)[0] ? `<img class="history-thumb" alt="Pool thumbnail" src="${normalizePhotoList(item.photos?.pool)[0]}">` : '<div class="history-thumb"></div>'}
-              <div>
-                <strong>${item.poolName}</strong>
-                <p class="muted">${new Date(item.createdAt).toLocaleString()}</p>
-                <p class="muted">${item.mainIssue} Â· ${item.poolType}</p>
-              </div>
-              <span class="status">Saved</span>
-            </div>
-          </button>
-        `).join("")
-        : '<div class="empty">No saved checks yet. Tap Start Pool Check.</div>';
-      const historyList = document.querySelector("[data-history-list]");
-      historyList.innerHTML = historyList.innerHTML.replaceAll("Ã‚Â·", "/");
     }
 
     function historyPhotoCount(check) {
@@ -2629,7 +2489,7 @@
         }).join("")
         : (saved.length
           ? '<div class="empty">No checks match that search.</div>'
-          : '<div class="empty">No saved checks yet. Tap Start Pool Check.</div>');
+          : '<div class="empty">No saved checks yet. Tap Start Quick Check.</div>');
     }
 
     async function copyText(text) {
@@ -2640,63 +2500,6 @@
       area.select();
       document.execCommand("copy");
       area.remove();
-    }
-
-    async function shareSummary() {
-      if (!activeCheck) return;
-      const body = [
-        "ClearWay Pool Check",
-        "",
-        "Pool:",
-        activeCheck.poolName,
-        "",
-        "Issue:",
-        activeCheck.mainIssue,
-        "",
-        "Confirmed values:",
-        ...(activeCheck.values || []).map((item) => `${item.label}: ${item.current || "Unknown / Not Tested"} (target ${item.target})`),
-        "",
-        "First look:",
-        activeCheck.firstImpression || "Not added",
-        "",
-        "Changed / added:",
-        activeCheck.whatChanged || activeCheck.whatAdded ? [activeCheck.whatChanged, activeCheck.whatAdded].filter(Boolean).join(" / ") : "Not added",
-        "",
-        "Weather / water:",
-        activeCheck.weatherNote || "Not added",
-        "",
-        "Water level checked:",
-        activeCheck.waterLevelCheckedAt ? new Date(activeCheck.waterLevelCheckedAt).toLocaleDateString() : "Not logged",
-        "",
-        "Next step:",
-        activeCheck.nextStep,
-        "",
-        "Do not:",
-        "Do not mix chemicals directly. Do not add random chemicals without confirming values.",
-        "",
-        "Reminder:",
-        "Retest before swimming or adding more."
-      ].join("\n");
-      await copyText(body);
-      alert("ClearWay summary copied to clipboard.");
-    }
-
-    async function shareHomeownerReport() {
-      if (!activeCheck) return;
-      const report = homeownerReport(activeCheck);
-      const body = [
-        "ClearWay Pool Update",
-        "",
-        activeCheck.poolName,
-        "",
-        report.headline,
-        "",
-        report.copy,
-        "",
-        ...report.list.map((item) => `- ${item}`)
-      ].join("\n");
-      await copyText(body);
-      alert("Homeowner update copied.");
     }
 
     async function exportHistory() {
@@ -2766,17 +2569,16 @@
     }
 
     document.addEventListener("change", async (event) => {
-      const fastPoolSelect = event.target.closest("[data-fast-pool-select]");
-      if (fastPoolSelect) {
-        if (fastPoolSelect.value === "__new") {
-          selectedPoolId = null;
-          setFastPoolForm(null);
-          return;
+      const poolChemInput = event.target.closest("[data-pool-chem-input]");
+      if (poolChemInput && poolChemInput.files[0]) {
+        const files = [...poolChemInput.files];
+        editPoolChemPhotos = editPoolChemPhotos || [];
+        for (const file of files) {
+          editPoolChemPhotos.push(await compressImage(file));
         }
-        selectedPoolId = fastPoolSelect.value || selectedPoolId;
-        setFastPoolForm(selectedPool());
-        renderMaintenanceDates();
-        renderHome();
+        editPoolChemChanged = true;
+        poolChemInput.value = "";
+        renderPoolChemThumbs();
         return;
       }
 
@@ -2787,7 +2589,7 @@
         for (const file of files) {
           setupDraft.chemInventoryPhotos.push(await compressImage(file));
         }
-        setupDraft.chemInventoryNote = "Chem photo saved";
+        setupDraft.chemInventoryNote = "Product photo saved";
         setupDraft.chemInventoryUpdatedAt = new Date().toISOString();
         setupChemInput.value = "";
         renderSetupPhotoThumbs();
@@ -2893,17 +2695,15 @@
         return;
       }
 
-      const maintenanceDetail = event.target.closest("[data-maintenance-detail]");
-      if (maintenanceDetail) {
-        event.stopPropagation();
-        showMaintenanceDetail(maintenanceDetail.dataset.poolId, maintenanceDetail.dataset.maintenanceDetail);
+      if (event.target.closest("[data-pool-chem-add]")) {
+        document.querySelector("[data-pool-chem-input]")?.click();
         return;
       }
 
-      const selectPool = event.target.closest("[data-select-pool]");
-      if (selectPool) {
-        selectedPoolId = selectPool.dataset.selectPool;
-        renderHome();
+      if (event.target.closest("[data-selected-pool-text]")) {
+        ensureStarterPool();
+        resetDraft();
+        await startSetupWizard();
         return;
       }
 
@@ -2916,29 +2716,12 @@
       if (event.target.closest("[data-start-check]")) {
         ensureStarterPool();
         resetDraft();
-        await startSetupWizard();
-        return;
-      }
-
-      const maintenance = event.target.closest("[data-log-maintenance]");
-      if (maintenance) {
-        logMaintenance(maintenance.dataset.logMaintenance);
-        return;
-      }
-
-      if (event.target.closest("[data-save-fast-pool]")) {
-        saveFastPoolFromForm();
-        await startPhotoFlow();
-        return;
-      }
-
-      if (event.target.closest("[data-skip-pool-info]")) {
-        await startPhotoFlow();
-        return;
-      }
-
-      if (event.target.closest("[data-start-photos]")) {
-        await startPhotoFlow();
+        const pool = selectedPool();
+        if (pool && pool.profileComplete) {
+          await startPhotoFlow();
+        } else {
+          await startSetupWizard();
+        }
         return;
       }
 
@@ -2959,7 +2742,7 @@
         return;
       }
 
-      if (event.target.closest("[data-skip-photo]") || event.target.closest("[data-next-photo-step]")) {
+      if (event.target.closest("[data-next-photo-step]")) {
         if (activePhotoStep < photoSteps.length - 1) {
           activePhotoStep += 1;
           renderPhotoStep();
@@ -2992,13 +2775,8 @@
         return;
       }
 
-      if (event.target.closest("[data-copy-homeowner-report]")) {
-        await shareHomeownerReport();
-        return;
-      }
-
       if (event.target.closest("[data-start-timer]")) {
-        alert("Retest timer started. V1 reminder: retest before swimming or adding more.");
+        startRetestTimer();
         return;
       }
 
