@@ -2721,8 +2721,11 @@
       if (text.includes("cloudy") || text.includes("hazy")) add("note-pump", "Run the pump.");
       if (text.includes("filter") && !hasEngine) add("note-filter", "Check the filter.");
       if (text.includes("water level") || text.includes("low water")) add("note-water", "Fill water to about half the skimmer.");
-      add("retest", "Retest before you add more.");
-      return steps.slice(0, 6);
+      // Retest ALWAYS survives, even on a crowded card
+      const sliced = steps.slice(0, 5);
+      const hasRetest = sliced.some((step) => step.text.toLowerCase().includes("retest"));
+      if (!hasRetest) sliced.push({ id: "retest", text: "Retest before you add more." });
+      return sliced;
     }
 
     function buildNextStep(values, issue) {
@@ -3122,7 +3125,7 @@
     }
 
     function historyPhotoCount(check) {
-      return normalizePhotoList(check.photos?.pool).length + (check.photos?.tests || []).length + (check.photos?.products || []).length;
+      return normalizePhotoList(check.photos?.pool).length + (check.photos?.tests || []).length + (check.photos?.products || []).length + (check.photos?.equipment || []).length;
     }
 
     function historyStatus(check) {
