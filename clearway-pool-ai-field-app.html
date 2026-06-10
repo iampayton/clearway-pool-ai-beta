@@ -1348,6 +1348,7 @@
             <div class="summary-list" data-step-guide-list style="margin-top: 14px;"></div>
             <p class="muted" data-flag-hint hidden style="margin-top: 10px;">Wrong step? Tap it to flag it red.</p>
             <button class="why-link" type="button" data-why-button hidden>Why these steps?</button>
+            <button class="btn full" type="button" data-fix-exact hidden style="margin-top: 12px;">Want exact amounts? Set pool size</button>
           </section>
 
           <section class="card warning">
@@ -1683,6 +1684,7 @@
       const cautions = [];
       const rulesFired = [];
       const exactAllowed = gallons > 0;
+      let productsMissing = false;
       const estTag = confidence === "estimated" ? ` (for your estimated ${gallons.toLocaleString()} gal)` : "";
 
       const fc = readingNumber(values, "free_chlorine");
@@ -1707,6 +1709,7 @@
           const r = doseFor("baking_soda", deficit, gallons);
           steps.push({ id: "ta-raise", text: `Add ${r.dose.text} of baking soda${estTag}. ${CHEM_PRODUCTS.baking_soda.note}${r.capped ? " That is today's max - retest before more." : ""}` });
         } else {
+          if (exactAllowed) productsMissing = true;
           steps.push({ id: "ta-raise", text: "Alkalinity is low. Raise it with baking soda - follow the label for your pool size." });
         }
       }
@@ -1719,6 +1722,7 @@
           const r = acidDose(ph, ta, gallons);
           steps.push({ id: "ph-lower", text: `Add ${r.dose.text} of muriatic acid${estTag}.${phMemory} ${CHEM_PRODUCTS.muriatic_acid.note}${r.capped ? " That is today's max - retest before more." : ""}` });
         } else {
+          if (exactAllowed) productsMissing = true;
           steps.push({ id: "ph-lower", text: `pH is high.${phMemory} Lower it with muriatic acid or pH decreaser - follow the label.` });
         }
         if (hasHeater) {
@@ -1732,6 +1736,7 @@
           const r = roundDose(ozPer10k * (gallons / 10000), "oz");
           steps.push({ id: "ph-raise", text: `Add ${r.text} of soda ash${estTag}. ${CHEM_PRODUCTS.soda_ash.note}` });
         } else {
+          if (exactAllowed) productsMissing = true;
           steps.push({ id: "ph-raise", text: "pH is low. Raise it with soda ash / pH increaser - follow the label." });
         }
         if (hasHeater) cautions.push("Low pH can damage heaters. Bring pH up before running the heater hard.");
@@ -1751,6 +1756,7 @@
             cautions.push("Stabilizer is already high - prefer liquid chlorine or cal-hypo over dichlor.");
           }
         } else {
+          if (exactAllowed && !productKey) productsMissing = true;
           steps.push({ id: "fc-raise", text: greenish ? "Chlorine is low and the pool shows algae signs. Shock per the product label, pump on." : "Chlorine is low. Add sanitizer per the product label." });
         }
         if (greenish) steps.push({ id: "algae-brush", text: "Brush walls and floor, then run the pump 24 hours." });
@@ -1766,6 +1772,7 @@
           const r = doseFor("stabilizer", CHEM_TARGETS.cya.ideal - cya, gallons);
           steps.push({ id: "cya-raise", text: `Add ${r.dose.text} of stabilizer${estTag}. ${CHEM_PRODUCTS.stabilizer.note}` });
         } else {
+          if (exactAllowed) productsMissing = true;
           steps.push({ id: "cya-raise", text: "Stabilizer is low - sun burns chlorine off fast. Add stabilizer per the label." });
         }
       }
@@ -1777,6 +1784,7 @@
           const r = doseFor("calcium_chloride", CHEM_TARGETS.calcium.ideal - ch, gallons);
           steps.push({ id: "ch-raise", text: `Add ${r.dose.text} of calcium increaser${estTag}. ${CHEM_PRODUCTS.calcium_chloride.note}` });
         } else {
+          if (exactAllowed) productsMissing = true;
           steps.push({ id: "ch-raise", text: "Calcium hardness is low. Raise it with calcium increaser per the label." });
         }
       }
@@ -1856,6 +1864,10 @@
         cautions.push("Spa attached: treat the spa separately per label - small water changes fast.");
       }
 
+      const exactBlockers = [];
+      if (!exactAllowed && chemSteps.length) exactBlockers.push("size");
+      if (productsMissing) exactBlockers.push("products");
+
       return {
         version: ENGINE_VERSION,
         gallons,
@@ -1864,6 +1876,7 @@
         steps,
         cautions,
         rulesFired,
+        exactBlockers,
         retestMinutes: chemSteps.length ? 30 : 0
       };
     }
@@ -3047,6 +3060,17 @@
       if (hintTarget) hintTarget.hidden = !steps.length;
       const whyButton = document.querySelector("[data-why-button]");
       if (whyButton) whyButton.hidden = !(check.engine?.rulesFired || []).length;
+      const fixExact = document.querySelector("[data-fix-exact]");
+      if (fixExact) {
+        const blockers = check.engine?.exactBlockers || [];
+        fixExact.hidden = !blockers.length;
+        if (blockers.length) {
+          const what = blockers.includes("size") && blockers.includes("products")
+            ? "pool size + your products"
+            : (blockers.includes("size") ? "pool size" : "your products");
+          fixExact.textContent = `Want exact amounts? Set ${what}`;
+        }
+      }
       const cautionTarget = document.querySelector("[data-engine-cautions]");
       if (cautionTarget) {
         const cautions = check.engine?.cautions || [];
@@ -3581,6 +3605,11 @@
 
       if (event.target.closest("[data-why-button]") && activeCheck) {
         openSheet("Why these steps", whyText(activeCheck), "");
+        return;
+      }
+
+      if (event.target.closest("[data-fix-exact]")) {
+        await openEditPool();
         return;
       }
 
