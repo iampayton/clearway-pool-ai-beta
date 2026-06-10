@@ -1041,7 +1041,7 @@
               <path d="M18 24h8l4-6h10l4 6h8a6 6 0 0 1 6 6v20a6 6 0 0 1-6 6H18a6 6 0 0 1-6-6V30a6 6 0 0 1 6-6Z" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>
               <circle cx="35" cy="40" r="10" stroke="currentColor" stroke-width="4"/>
             </svg>
-            <strong>Start<br>Quick Check</strong>
+            <strong>Scan<br>My Pool</strong>
             <span>Takes about a minute.</span>
           </button>
           <p class="muted home-pool-line" data-selected-pool-text title="Tap to change pool">New Pool · Tap to change</p>
@@ -1287,7 +1287,7 @@
             <div class="row">
               <div>
                 <h3>Saved to History</h3>
-                <p class="muted">This check is saved.</p>
+                <p class="muted">This scan is saved.</p>
               </div>
               <button class="btn primary" data-go="history">View History</button>
             </div>
@@ -1305,8 +1305,8 @@
         <div class="content">
           <section class="history-head">
             <p class="setup-label">History</p>
-            <h1>Saved Checks</h1>
-            <p class="muted">Tap a check to reopen photos, notes, and the guide.</p>
+            <h1>Pool History</h1>
+            <p class="muted">Tap a scan to reopen it.</p>
           </section>
           <section class="card">
             <div class="history-toolbar">
@@ -1333,12 +1333,12 @@
 
     <aside class="desktop-panel">
       <h2>ClearWay Pool AI</h2>
-      <p>One loop: tap Start, take photos, talk, get Do Next, save to History.</p>
+      <p>One loop: scan the pool, talk, get Do Next. Every scan saves to Pool History.</p>
       <div class="screen-picker" aria-label="Screen picker">
         <button class="picker-button active" data-go="home"><strong>Home</strong><span class="muted">Big start button</span></button>
         <button class="picker-button" data-go="add-pool"><strong>Add Pool</strong><span class="muted">Fast now, details later</span></button>
         <button class="picker-button" data-go="rules"><strong>Setup</strong><span class="muted">One-time questions</span></button>
-        <button class="picker-button" data-go="history"><strong>History</strong><span class="muted">Saved checks</span></button>
+        <button class="picker-button" data-go="history"><strong>History</strong><span class="muted">Past scans</span></button>
       </div>
     </aside>
   </main>
@@ -1349,6 +1349,7 @@
     const poolStorageKey = "clearwayPoolsV2";
     const checkStorageKey = "clearwayPoolChecksV2";
     const retestStorageKey = "clearwayRetestV1";
+    const householdStorageKey = "clearwayHouseholdV1";
     const supabaseUrl = "https://wwhbwhgnwmmlpvrjkjek.supabase.co";
     const supabaseAnonKey = "sb_publishable_CN_Z7T4c3zN66C7xKVuJ8g_rQe9FJNX";
     const photoBucket = "pool-check-photos";
@@ -1401,6 +1402,16 @@
         photos: { pool: [], tests: [], products: [] },
         visitConcern: ""
       };
+    }
+
+    function householdId() {
+      let id = "";
+      try { id = localStorage.getItem(householdStorageKey) || ""; } catch { id = ""; }
+      if (!id) {
+        id = crypto.randomUUID ? crypto.randomUUID() : `hh-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+        try { localStorage.setItem(householdStorageKey, id); } catch { /* keep in-memory */ }
+      }
+      return id;
     }
 
     function localPools() {
@@ -1519,7 +1530,7 @@
       const answer = document.querySelector("[data-setup-answer]");
       const options = document.querySelector("[data-setup-options]");
       document.querySelector("[data-setup-talk]").textContent = "Talk";
-      document.querySelector("[data-setup-label]").textContent = "Quick Check";
+      document.querySelector("[data-setup-label]").textContent = "Pool Scan";
       document.querySelector("[data-setup-question]").textContent = "Anything to note?";
       document.querySelector("[data-setup-help]").textContent = "Concern, other note, or normal visit.";
       answer.value = "";
@@ -1722,7 +1733,7 @@
           const days = Math.floor((Date.now() - last.getTime()) / 86400000);
           const when = days === 0 ? "today" : (days === 1 ? "yesterday" : `${days} days ago`);
           stats.hidden = false;
-          stats.textContent = `${saved.length} check${saved.length === 1 ? "" : "s"} saved · Last ${when}`;
+          stats.textContent = `${saved.length} scan${saved.length === 1 ? "" : "s"} · Last ${when}`;
         }
       }
     }
@@ -2009,7 +2020,7 @@
 
     async function uploadOne(checkId, label, dataUrl, index) {
       if (!supabase || !dataUrl || dataUrl.startsWith("http")) return dataUrl;
-      const path = `${checkId}/${label}-${index}-${Date.now()}.jpg`;
+      const path = `${householdId()}/${checkId}/${label}-${index}-${Date.now()}.jpg`;
       const file = dataUrlToFile(dataUrl, `${label}.jpg`);
       const { error } = await supabase.storage.from(photoBucket).upload(path, file, { contentType: "image/jpeg", upsert: true });
       if (error) throw error;
@@ -2065,7 +2076,7 @@
       if (/\bp ?h\b/.test(lower)) return "pH Concern";
       if (lower.includes("filter")) return "Filter Check";
       if (lower.includes("water level") || lower.includes("low water")) return "Water Level Check";
-      return "Routine Check";
+      return "Routine Scan";
     }
 
     function inferProductCategories(text) {
@@ -2165,6 +2176,7 @@
       const check = {
         id: checkId,
         createdAt: new Date().toISOString(),
+        householdId: householdId(),
         poolId: pool.id || "",
         poolName: pool.poolName,
         address: pool.address || "",
@@ -2206,6 +2218,7 @@
         main_issue: check.mainIssue,
         test_type: check.testType,
         notes: JSON.stringify({
+          householdId: check.householdId || householdId(),
           notes: check.notes || "",
           brainInput: check.brainInput || "",
           firstImpression: check.firstImpression || "",
@@ -2240,6 +2253,7 @@
       return {
         id: row.id,
         createdAt: row.created_at,
+        householdId: noteData.householdId || "",
         poolId: noteData.poolId || "",
         poolName: row.pool_name,
         address: noteData.address || "",
@@ -2277,13 +2291,31 @@
         if (!supabase) throw new Error("Supabase unavailable");
         const { data, error } = await supabase.from("pool_checks").select("*").order("created_at", { ascending: false });
         if (error) throw error;
-        const shared = (data || []).map(fromDb);
+        const mine = householdId();
+        const shared = (data || []).map(fromDb).filter((check) => check.householdId === mine);
         const merged = mergeChecks(shared, local);
         saveLocalChecks(merged);
         return merged;
       } catch (error) {
         console.warn("Using local fallback checks", error);
         return local;
+      }
+    }
+
+    async function migrateLegacyChecks() {
+      const mine = householdId();
+      const local = localChecks();
+      const legacyIds = local.filter((check) => !check.householdId).map((check) => check.id);
+      if (!legacyIds.length) return;
+      const stamped = local.map((check) => check.householdId ? check : { ...check, householdId: mine });
+      saveLocalChecks(stamped);
+      if (!supabase) return;
+      for (const check of stamped.filter((item) => legacyIds.includes(item.id))) {
+        try {
+          await supabase.from("pool_checks").upsert(toDb(check), { onConflict: "id" });
+        } catch (error) {
+          console.warn("Legacy check claim skipped", error);
+        }
       }
     }
 
@@ -2460,7 +2492,7 @@
                   <strong>${escapeHtml(item.poolName || "Unnamed Pool")}</strong>
                   <p class="muted">${new Date(item.createdAt).toLocaleString()}</p>
                   <div class="history-badges">
-                    <span class="history-badge">${escapeHtml(item.mainIssue || "Routine Check")}</span>
+                    <span class="history-badge">${escapeHtml(item.mainIssue || "Routine Scan")}</span>
                     <span class="history-badge">${escapeHtml(item.poolType || "Pool")}</span>
                     <span class="history-badge">${photoCount} photo${photoCount === 1 ? "" : "s"}</span>
                   </div>
@@ -2474,8 +2506,8 @@
           `;
         }).join("")
         : (saved.length
-          ? '<div class="empty">No checks match that search.</div>'
-          : '<div class="empty">No saved checks yet. Tap Start Quick Check.</div>');
+          ? '<div class="empty">Nothing matches that search.</div>'
+          : '<div class="empty">No scans yet. Tap Scan My Pool.</div>');
     }
 
     async function copyText(text) {
@@ -2831,6 +2863,7 @@
 
     ensureStarterPool();
     renderHome();
+    migrateLegacyChecks();
     setInterval(() => {
       if (document.querySelector(".screen.active")?.dataset.screen === "home") renderRetestBanner();
     }, 60000);
