@@ -882,7 +882,7 @@
 
     .step-row {
       display: grid;
-      grid-template-columns: 38px 1fr;
+      grid-template-columns: 38px 1fr auto;
       gap: 10px;
       align-items: center;
       padding: 13px;
@@ -892,6 +892,75 @@
       font-size: 15px;
       font-weight: 900;
       line-height: 1.25;
+      cursor: pointer;
+    }
+
+    .step-row.flagged {
+      background: #ffe9df;
+      border-color: rgba(198, 66, 53, 0.55);
+    }
+
+    .step-row.flagged .step-num {
+      background: #c64235;
+      color: var(--white);
+    }
+
+    .big-step.flagged {
+      color: #c64235;
+      text-decoration: line-through;
+      text-decoration-thickness: 3px;
+      cursor: pointer;
+    }
+
+    .why-link {
+      border: 0;
+      background: none;
+      padding: 0;
+      margin-top: 12px;
+      color: var(--seafoam-dark);
+      font-size: 13px;
+      font-weight: 850;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    .status-flagged {
+      background: #ffe9df;
+      color: #c64235;
+    }
+
+    .why-btn {
+      border: 0;
+      border-radius: 12px;
+      padding: 8px 10px;
+      background: #c64235;
+      color: var(--white);
+      font-size: 11px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .chip {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 9px 13px;
+      background: var(--white);
+      color: var(--charcoal);
+      font-size: 12.5px;
+      font-weight: 850;
+      cursor: pointer;
+    }
+
+    .chip.on {
+      background: var(--seafoam);
+      border-color: var(--seafoam-dark);
     }
 
     .step-num {
@@ -1127,13 +1196,26 @@
                   <option>DE</option>
                 </select>
               </label>
+              <label>Pool Size
+                <select data-pool-field="volumeBracket">
+                  <option>Not sure</option>
+                  <option>Under 10,000 gal</option>
+                  <option>10,000-15,000 gal</option>
+                  <option>15,000-20,000 gal</option>
+                  <option>Over 20,000 gal</option>
+                  <option>Custom</option>
+                </select>
+              </label>
+              <label>Exact Gallons (optional) <input data-pool-field="volumeGallons" type="number" inputmode="numeric" min="0" placeholder="ex: 12000" /></label>
               <label>Notes (optional) <textarea data-pool-field="measurements" placeholder="Gallons, equipment, anything else."></textarea></label>
             </div>
           </section>
 
           <section class="card">
             <h3>Products</h3>
-            <p class="muted" style="margin-top: 6px;">One photo of what you have. ClearWay uses it for Do Next.</p>
+            <p class="muted" style="margin-top: 6px;">Tap what you have. Exact doses use these.</p>
+            <div class="chip-row" data-product-chips></div>
+            <p class="muted" style="margin-top: 14px;">Optional: one photo of your shelf.</p>
             <div class="thumb-grid" data-pool-chem-thumbs></div>
             <button class="btn full" type="button" data-pool-chem-add style="margin-top: 12px;">Add / Update Product Photo</button>
             <input class="hidden-file" data-pool-chem-input type="file" accept="image/*" multiple />
@@ -1264,16 +1346,19 @@
             <p class="setup-label">Do Next</p>
             <div class="big-step" data-next-step style="margin-top: 4px;">Retest before you add more.</div>
             <div class="summary-list" data-step-guide-list style="margin-top: 14px;"></div>
+            <p class="muted" data-flag-hint hidden style="margin-top: 10px;">Wrong step? Tap it to flag it red.</p>
+            <button class="why-link" type="button" data-why-button hidden>Why these steps?</button>
           </section>
 
           <section class="card warning">
             <h3>Remember</h3>
             <ul>
-              <li>Follow the product label.</li>
+              <li>These are recommendations - always read and follow the product label.</li>
               <li>Do not mix chemicals.</li>
               <li>Add one product at a time.</li>
               <li>Retest before swimming or adding more.</li>
             </ul>
+            <p class="muted" data-engine-cautions hidden style="margin-top: 10px;"></p>
             <p class="muted" data-salt-heater-line style="display: none; margin-top: 10px;">Salt pool or heater: go slow. Make small changes. Retest.</p>
           </section>
 
@@ -1293,7 +1378,9 @@
             </div>
           </section>
 
-          <button class="btn primary full" data-start-timer>Start Retest Timer</button>
+          <p class="muted" data-close-hint hidden style="text-align: center;"></p>
+          <button class="btn primary full do-next-btn" data-close-loop>Finish & Submit</button>
+          <input class="hidden-file" data-evidence-input type="file" accept="image/*" capture="environment" />
         </div>
       </div>
 
@@ -1370,6 +1457,450 @@
       { key: "tests", label: "Test", title: "Take Test Photo", copy: "Strip, dye kit, or report.", multi: true }
     ];
 
+    // ===== ClearWay Deterministic Chemistry Engine v1 =====
+    // The engine owns ALL numbers. Doses come from industry-standard tables,
+    // never from language guesses. Outputs are recommendations: always follow the product label.
+    const ENGINE_VERSION = "chem-v1.0";
+
+    const VOLUME_BRACKETS = {
+      "Under 10,000 gal": { gallons: 8000, confidence: "estimated" },
+      "10,000-15,000 gal": { gallons: 12500, confidence: "estimated" },
+      "15,000-20,000 gal": { gallons: 17500, confidence: "estimated" },
+      "Over 20,000 gal": { gallons: 25000, confidence: "estimated" },
+      "Not sure": { gallons: 0, confidence: "unknown" }
+    };
+
+    const CHEM_TARGETS = {
+      free_chlorine: { min: 1, max: 4, ideal: 3, name: "Chlorine" },
+      ph: { min: 7.2, max: 7.8, ideal: 7.5, name: "pH" },
+      alkalinity: { min: 80, max: 120, ideal: 100, name: "Alkalinity" },
+      cya: { min: 30, max: 50, ideal: 40, name: "Stabilizer" },
+      calcium: { min: 200, max: 400, ideal: 300, name: "Hardness" },
+      salt: { min: 2700, max: 3400, ideal: 3200, name: "Salt" }
+    };
+
+    // Dose factors: amount of product per 10,000 gallons. Sources: standard industry dosing
+    // tables (Taylor/label-consistent). Rounded conservative. maxPer10k = hard cap per application.
+    const CHEM_PRODUCTS = {
+      liquid_chlorine: { label: "liquid chlorine (12.5%)", chip: "Liquid chlorine", fixes: "free_chlorine", perPpm10k: 10, unit: "fl oz", maxPer10k: 80, note: "Pour around the pool edge with the pump running." },
+      cal_hypo: { label: "cal-hypo shock (65-73%)", chip: "Shock (cal-hypo)", fixes: "free_chlorine", perPpm10k: 2, unit: "oz", maxPer10k: 16, note: "Pre-dissolve if the label says to. Adds calcium over time." },
+      dichlor: { label: "dichlor granular (56%)", chip: "Dichlor granular", fixes: "free_chlorine", perPpm10k: 2.4, unit: "oz", maxPer10k: 16, note: "Also raises stabilizer (about 0.9 ppm per 1 ppm chlorine)." },
+      trichlor_tabs: { label: "chlorine tabs (trichlor)", chip: "Chlorine tabs", fixes: "free_chlorine", slow: true, note: "Tabs feed slowly. Use the feeder or floater per label - not for a fast raise." },
+      muriatic_acid: { label: "muriatic acid (31.45%)", chip: "Muriatic acid", fixes: "ph_high", unit: "fl oz", maxPer10k: 32, note: "Pump ON. Pour slowly into the deep end. Never mix with chlorine." },
+      soda_ash: { label: "soda ash", chip: "Soda ash", fixes: "ph_low", unit: "oz", maxPer10k: 16, note: "Pre-dissolve in a bucket of water. Also nudges alkalinity up." },
+      baking_soda: { label: "baking soda", chip: "Baking soda", fixes: "alkalinity", per10ppm10k: 1.4, unit: "lb", maxPer10k: 8, note: "Broadcast over the surface with the pump running." },
+      stabilizer: { label: "stabilizer (CYA)", chip: "Stabilizer", fixes: "cya", per10ppm10k: 13, unit: "oz", maxPer10k: 26, note: "Dissolves slowly - follow the label (often via skimmer sock)." },
+      calcium_chloride: { label: "calcium chloride (77%)", chip: "Calcium increaser", fixes: "calcium", per10ppm10k: 1.25, unit: "lb", maxPer10k: 10, note: "Pre-dissolve. Add in stages, never with other chemicals." },
+      pool_salt: { label: "pool salt", chip: "Pool salt", fixes: "salt", per1000ppm10k: 83, unit: "lb", note: "Broadcast in shallow end, brush to dissolve, run pump 24h." }
+    };
+
+    function poolGallons(pool) {
+      if (pool?.volumeGallons && Number(pool.volumeGallons) > 0) {
+        return { gallons: Number(pool.volumeGallons), confidence: pool.volumeConfidence || "estimated" };
+      }
+      const bracket = VOLUME_BRACKETS[pool?.volumeBracket || "Not sure"] || VOLUME_BRACKETS["Not sure"];
+      return { gallons: bracket.gallons, confidence: bracket.confidence };
+    }
+
+    function hasProduct(pool, key) {
+      const list = pool?.productsOnHand || [];
+      return list.includes(key);
+    }
+
+    function pickChlorineProduct(pool) {
+      if (hasProduct(pool, "liquid_chlorine")) return "liquid_chlorine";
+      if (hasProduct(pool, "cal_hypo")) return "cal_hypo";
+      if (hasProduct(pool, "dichlor")) return "dichlor";
+      return null;
+    }
+
+    function roundDose(amount, unit) {
+      if (unit === "fl oz") {
+        const rounded = Math.max(2, Math.floor(amount / 2) * 2);
+        if (rounded >= 32) {
+          const quarts = Math.floor((rounded / 32) * 4) / 4;
+          return { text: `${quarts} quart${quarts === 1 ? "" : "s"}`, amount: rounded };
+        }
+        return { text: `${rounded} fl oz`, amount: rounded };
+      }
+      if (unit === "oz") {
+        const rounded = Math.max(1, Math.floor(amount / 1) * 1);
+        if (rounded >= 16) {
+          const lbs = Math.floor((rounded / 16) * 4) / 4;
+          return { text: `${lbs} lb`, amount: rounded };
+        }
+        return { text: `${rounded} oz`, amount: rounded };
+      }
+      const rounded = Math.max(0.25, Math.floor(amount * 4) / 4);
+      return { text: `${rounded} ${unit}`, amount: rounded };
+    }
+
+    function doseFor(productKey, deficit, gallons) {
+      const product = CHEM_PRODUCTS[productKey];
+      if (!product || !gallons) return null;
+      const scale = gallons / 10000;
+      let raw = 0;
+      if (product.perPpm10k) raw = product.perPpm10k * deficit * scale;
+      else if (product.per10ppm10k) raw = product.per10ppm10k * (deficit / 10) * scale;
+      else if (product.per1000ppm10k) raw = product.per1000ppm10k * (deficit / 1000) * scale;
+      else return null;
+      const cap = product.maxPer10k ? product.maxPer10k * scale : Infinity;
+      const capped = raw > cap;
+      const dose = roundDose(Math.min(raw, cap), product.unit);
+      return { dose, capped, product };
+    }
+
+    function acidDose(ph, alkalinity, gallons) {
+      // Conservative muriatic acid (31.45%) chart, scaled by TA. Cap 1 quart per 10k per visit.
+      const over = Math.max(0, ph - 7.5);
+      let ozPer10k = Math.min(32, Math.max(8, Math.round((over / 0.1) * 6)));
+      const taFactor = alkalinity ? Math.min(1.3, Math.max(0.7, alkalinity / 100)) : 1;
+      ozPer10k = Math.round(ozPer10k * taFactor / 2) * 2;
+      const raw = ozPer10k * (gallons / 10000);
+      const cap = 32 * (gallons / 10000);
+      return { dose: roundDose(Math.min(raw, cap), "fl oz"), capped: raw > cap };
+    }
+
+    function readingNumber(values, key) {
+      const item = (values || []).find((v) => v.key === key && v.current !== "");
+      if (!item) return null;
+      const n = Number(item.current);
+      return Number.isFinite(n) ? n : null;
+    }
+
+    // Hears test numbers in natural speech: "chlorine is 2, pH 7.8, alk 90"
+    function extractReadingsFromText(text) {
+      const lower = (text || "").toLowerCase().replace(/,(\d{3})\b/g, "$1");
+      const found = {};
+      const grab = (key, regex, min, max) => {
+        if (found[key] != null) return;
+        const match = lower.match(regex);
+        if (!match) return;
+        const value = Number(match[1]);
+        if (Number.isFinite(value) && value >= min && value <= max) found[key] = value;
+      };
+      grab("ph", /\bp\.?\s?h\.?\s*(?:is|at|was|of|reads?|reading)?\s*(\d(?:\.\d+)?)/, 6, 9.5);
+      grab("free_chlorine", /\b(?:free\s*)?chlorine\s*(?:is|at|was|of|reads?|reading|level)?\s*(\d+(?:\.\d+)?)/, 0, 30);
+      grab("alkalinity", /\b(?:total\s*)?alk(?:alinity)?\s*(?:is|at|was|of|reads?|reading)?\s*(\d{1,3})/, 0, 400);
+      grab("cya", /\b(?:cya|stabilizer|cyanuric(?:\s*acid)?)\s*(?:is|at|was|of|reads?|reading)?\s*(\d{1,3})/, 0, 300);
+      grab("calcium", /\b(?:calcium|hardness)\s*(?:hardness)?\s*(?:is|at|was|of|reads?|reading)?\s*(\d{2,4})/, 0, 1200);
+      grab("salt", /\bsalt\s*(?:is|at|was|of|reads?|reading|level)?\s*(\d{3,4})/, 100, 8000);
+      return found;
+    }
+
+    function readingStatus(meta, raw) {
+      const value = Number(raw);
+      let status = "Unknown / Not Tested";
+      let product = "Retest / confirm value";
+      if (raw !== "" && Number.isFinite(value)) {
+        if (value < meta.min) { status = "low"; product = meta.low; }
+        else if (value > meta.max) { status = "high"; product = meta.high; }
+        else { status = "in range"; product = "No product category flagged"; }
+      }
+      return { status, product };
+    }
+
+    function mergeSpokenReadings(values, noteText) {
+      const spoken = extractReadingsFromText(noteText);
+      return values.map((item) => {
+        if (item.current !== "") return { ...item, source: "manual" };
+        if (spoken[item.key] != null) {
+          const raw = String(spoken[item.key]);
+          const meta = testMeta[item.key];
+          const judged = readingStatus(meta, raw);
+          return { ...item, current: raw, status: judged.status, product: judged.product, source: "spoken" };
+        }
+        return item;
+      });
+    }
+
+    // Per-pool memory: what this specific pool usually does
+    function buildPoolMemory(poolId) {
+      if (!poolId) return {};
+      const history = localChecks()
+        .filter((check) => check.poolId === poolId && (check.values || []).some((v) => v.current !== "" && v.current != null))
+        .slice(0, 8);
+      const memory = {};
+      Object.keys(CHEM_TARGETS).forEach((key) => {
+        const series = history.map((check) => {
+          const item = (check.values || []).find((v) => v.key === key && v.current !== "");
+          const n = item ? Number(item.current) : NaN;
+          return Number.isFinite(n) ? n : null;
+        }).filter((n) => n !== null);
+        if (!series.length) return;
+        const sorted = [...series].sort((a, b) => a - b);
+        const target = CHEM_TARGETS[key];
+        let highStreak = 0;
+        for (const v of series) { if (v > target.max) highStreak += 1; else break; }
+        let lowStreak = 0;
+        for (const v of series) { if (v < target.min) lowStreak += 1; else break; }
+        memory[key] = {
+          usual: sorted[Math.floor(sorted.length / 2)],
+          count: series.length,
+          highStreak,
+          lowStreak
+        };
+      });
+      return memory;
+    }
+
+    function memoryNote(memory, key, kind) {
+      const m = memory?.[key];
+      if (!m || m.count < 2) return "";
+      if (kind === "high" && m.highStreak >= 1) return ` This pool ran high ${m.highStreak + 1} visits in a row now.`;
+      if (kind === "low" && m.lowStreak >= 1) return ` This pool ran low ${m.lowStreak + 1} visits in a row now.`;
+      return "";
+    }
+
+    // LSI (Langelier Saturation Index) factor tables - standard industry values
+    function lsiTempFactor(tempF) {
+      const table = [[32, 0.0], [37, 0.1], [46, 0.2], [53, 0.3], [60, 0.4], [66, 0.5], [76, 0.6], [84, 0.7], [94, 0.8], [105, 0.9]];
+      let factor = 0;
+      for (const [t, f] of table) if (tempF >= t) factor = f;
+      return factor;
+    }
+
+    function lsiCalciumFactor(ch) {
+      const table = [[25, 1.0], [50, 1.3], [75, 1.5], [100, 1.6], [125, 1.7], [150, 1.8], [200, 1.9], [250, 2.0], [300, 2.1], [400, 2.2], [600, 2.35], [800, 2.5]];
+      let factor = 1.0;
+      for (const [c, f] of table) if (ch >= c) factor = f;
+      return factor;
+    }
+
+    function lsiAlkFactor(ta) {
+      const table = [[25, 1.4], [50, 1.7], [75, 1.9], [100, 2.0], [125, 2.1], [150, 2.2], [200, 2.3], [300, 2.5], [400, 2.6]];
+      let factor = 1.4;
+      for (const [a, f] of table) if (ta >= a) factor = f;
+      return factor;
+    }
+
+    function chemEngine(pool, values, noteText, memory = {}, weather = null) {
+      const { gallons, confidence } = poolGallons(pool);
+      const lower = (noteText || "").toLowerCase();
+      const isSalt = pool?.poolType === "Salt pool";
+      const hasHeater = pool?.heater && pool.heater !== "No heater" && pool.heater !== "Not sure";
+      const steps = [];
+      const cautions = [];
+      const rulesFired = [];
+      const exactAllowed = gallons > 0;
+      const estTag = confidence === "estimated" ? ` (for your estimated ${gallons.toLocaleString()} gal)` : "";
+
+      const fc = readingNumber(values, "free_chlorine");
+      const ph = readingNumber(values, "ph");
+      const ta = readingNumber(values, "alkalinity");
+      const cya = readingNumber(values, "cya");
+      const ch = readingNumber(values, "calcium");
+      const salt = readingNumber(values, "salt");
+      const greenish = /green|algae/.test(lower);
+
+      // Hard blocks first
+      if (ph !== null && (ph < 6.8 || ph > 8.4)) {
+        rulesFired.push("ph-extreme");
+        cautions.push("pH reading is far out of range. Fix pH first and retest before any other chemical.");
+      }
+
+      // 1) Alkalinity low (fix before pH)
+      if (ta !== null && ta < CHEM_TARGETS.alkalinity.min) {
+        rulesFired.push("ta-low");
+        const deficit = CHEM_TARGETS.alkalinity.ideal - ta;
+        if (exactAllowed && hasProduct(pool, "baking_soda")) {
+          const r = doseFor("baking_soda", deficit, gallons);
+          steps.push({ id: "ta-raise", text: `Add ${r.dose.text} of baking soda${estTag}. ${CHEM_PRODUCTS.baking_soda.note}${r.capped ? " That is today's max - retest before more." : ""}` });
+        } else {
+          steps.push({ id: "ta-raise", text: "Alkalinity is low. Raise it with baking soda - follow the label for your pool size." });
+        }
+      }
+
+      // 2) pH
+      if (ph !== null && ph > CHEM_TARGETS.ph.max && ph <= 8.4) {
+        rulesFired.push("ph-high");
+        const phMemory = memoryNote(memory, "ph", "high");
+        if (exactAllowed && hasProduct(pool, "muriatic_acid")) {
+          const r = acidDose(ph, ta, gallons);
+          steps.push({ id: "ph-lower", text: `Add ${r.dose.text} of muriatic acid${estTag}.${phMemory} ${CHEM_PRODUCTS.muriatic_acid.note}${r.capped ? " That is today's max - retest before more." : ""}` });
+        } else {
+          steps.push({ id: "ph-lower", text: `pH is high.${phMemory} Lower it with muriatic acid or pH decreaser - follow the label.` });
+        }
+        if (hasHeater) {
+          rulesFired.push("heater-ph");
+          cautions.push("Heater present: keep pH in range to protect the heat exchanger.");
+        }
+      } else if (ph !== null && ph < CHEM_TARGETS.ph.min) {
+        rulesFired.push("ph-low");
+        if (exactAllowed && hasProduct(pool, "soda_ash")) {
+          const ozPer10k = Math.min(16, Math.round(((CHEM_TARGETS.ph.ideal - ph) / 0.2) * 6));
+          const r = roundDose(ozPer10k * (gallons / 10000), "oz");
+          steps.push({ id: "ph-raise", text: `Add ${r.text} of soda ash${estTag}. ${CHEM_PRODUCTS.soda_ash.note}` });
+        } else {
+          steps.push({ id: "ph-raise", text: "pH is low. Raise it with soda ash / pH increaser - follow the label." });
+        }
+        if (hasHeater) cautions.push("Low pH can damage heaters. Bring pH up before running the heater hard.");
+      }
+
+      // 3) Chlorine (raise at or below the minimum - one sunny day from zero)
+      if (fc !== null && fc <= CHEM_TARGETS.free_chlorine.min) {
+        rulesFired.push(greenish ? "fc-low-algae" : "fc-low");
+        const target = greenish && cya ? Math.min(Math.round(cya * 0.4), 20) : CHEM_TARGETS.free_chlorine.ideal;
+        const deficit = Math.max(1, Math.min(target - fc, greenish ? 10 : 5));
+        const productKey = pickChlorineProduct(pool);
+        const fcMemory = memoryNote(memory, "free_chlorine", "low");
+        if (exactAllowed && productKey) {
+          const r = doseFor(productKey, deficit, gallons);
+          steps.push({ id: "fc-raise", text: `Add ${r.dose.text} of ${r.product.label}${estTag}.${fcMemory} ${r.product.note}${r.capped || greenish ? " Retest before adding more." : ""}` });
+          if (productKey === "dichlor" && cya !== null && cya > CHEM_TARGETS.cya.max) {
+            cautions.push("Stabilizer is already high - prefer liquid chlorine or cal-hypo over dichlor.");
+          }
+        } else {
+          steps.push({ id: "fc-raise", text: greenish ? "Chlorine is low and the pool shows algae signs. Shock per the product label, pump on." : "Chlorine is low. Add sanitizer per the product label." });
+        }
+        if (greenish) steps.push({ id: "algae-brush", text: "Brush walls and floor, then run the pump 24 hours." });
+      } else if (fc !== null && fc > 10) {
+        rulesFired.push("fc-very-high");
+        steps.push({ id: "fc-high", text: "Chlorine is very high. Add nothing. Keep the pump running and retest later - do not swim until it is back in range." });
+      }
+
+      // 4) Stabilizer
+      if (cya !== null && cya < CHEM_TARGETS.cya.min && !greenish) {
+        rulesFired.push("cya-low");
+        if (exactAllowed && hasProduct(pool, "stabilizer")) {
+          const r = doseFor("stabilizer", CHEM_TARGETS.cya.ideal - cya, gallons);
+          steps.push({ id: "cya-raise", text: `Add ${r.dose.text} of stabilizer${estTag}. ${CHEM_PRODUCTS.stabilizer.note}` });
+        } else {
+          steps.push({ id: "cya-raise", text: "Stabilizer is low - sun burns chlorine off fast. Add stabilizer per the label." });
+        }
+      }
+
+      // 5) Calcium
+      if (ch !== null && ch < CHEM_TARGETS.calcium.min) {
+        rulesFired.push("ch-low");
+        if (exactAllowed && hasProduct(pool, "calcium_chloride")) {
+          const r = doseFor("calcium_chloride", CHEM_TARGETS.calcium.ideal - ch, gallons);
+          steps.push({ id: "ch-raise", text: `Add ${r.dose.text} of calcium increaser${estTag}. ${CHEM_PRODUCTS.calcium_chloride.note}` });
+        } else {
+          steps.push({ id: "ch-raise", text: "Calcium hardness is low. Raise it with calcium increaser per the label." });
+        }
+      }
+
+      // 6) Salt
+      if (isSalt && salt !== null && salt < CHEM_TARGETS.salt.min) {
+        rulesFired.push("salt-low");
+        if (exactAllowed) {
+          const r = doseFor("pool_salt", CHEM_TARGETS.salt.ideal - salt, gallons);
+          steps.push({ id: "salt-raise", text: `Add ${r.dose.text} of pool salt${estTag}. ${CHEM_PRODUCTS.pool_salt.note}` });
+        } else {
+          steps.push({ id: "salt-raise", text: "Salt is low. Add pool salt per the label and your system's manual." });
+        }
+      }
+
+      // Sequencing + circulation
+      const chemSteps = steps.filter((s) => /^(ta|ph|fc|cya|ch|salt)-/.test(s.id) && !/brush|high/.test(s.id));
+      if (chemSteps.length > 1) {
+        rulesFired.push("sequence");
+        cautions.push("Add one product at a time, pump running, 30+ minutes apart. Never mix.");
+      }
+      if (!exactAllowed && (fc !== null || ph !== null)) {
+        rulesFired.push("volume-unknown");
+        cautions.push("Pool size not set - exact amounts are off. Set it in Pool Details for exact doses.");
+      }
+
+      // Pool memory: warn when a usually-bad reading was not tested today
+      const readingByKey = { free_chlorine: fc, ph, alkalinity: ta, cya, calcium: ch, salt };
+      Object.entries(memory || {}).forEach(([key, m]) => {
+        if (readingByKey[key] === null && m.count >= 2 && (m.highStreak >= 2 || m.lowStreak >= 2)) {
+          rulesFired.push(`memory-${key}`);
+          cautions.push(`No ${CHEM_TARGETS[key].name} reading today - this pool ran ${m.highStreak >= 2 ? "high" : "low"} the last ${Math.max(m.highStreak, m.lowStreak)} visits. Worth testing.`);
+        }
+      });
+
+      // LSI water balance (pro-grade): needs pH + alkalinity + calcium
+      let lsi = null;
+      if (ph !== null && ta !== null && ch !== null && ph >= 6 && ph <= 9) {
+        const waterTemp = weather?.tempF ? Math.min(92, Math.max(58, weather.tempF - 3)) : 78;
+        const carbonateAlk = cya !== null ? Math.max(10, ta - cya / 3) : ta;
+        lsi = Math.round((ph + lsiTempFactor(waterTemp) + lsiCalciumFactor(ch) + lsiAlkFactor(carbonateAlk) - 12.1) * 100) / 100;
+        if (lsi <= -0.31) {
+          rulesFired.push("lsi-low");
+          cautions.push(`Water balance (LSI ${lsi}) is in corrosive territory - hard on plaster and heaters. The steps above help correct it.`);
+        } else if (lsi >= 0.31) {
+          rulesFired.push("lsi-high");
+          cautions.push(`Water balance (LSI ${lsi}) is in scaling territory - watch for cloudiness and scale on the cell or heater.`);
+        }
+      }
+
+      // Weather-aware notes (quiet, only when it matters)
+      if (weather?.tempF >= 88) {
+        rulesFired.push("weather-heat");
+        cautions.push("Heat-wave water: chlorine burns off faster. Test more often this week.");
+      }
+      if (weather?.rainIn >= 0.3) {
+        rulesFired.push("weather-rain");
+        cautions.push("Recent rain shifts pH and alkalinity - today's readings matter.");
+      }
+
+      // Maintenance that is actually due folds into Do Next
+      ["filter", "waterLevel", "saltCell"].forEach((type) => {
+        const info = maintenanceInfo(pool, type);
+        if (info.color === "red") {
+          rulesFired.push(`maint-${type}`);
+          steps.push({
+            id: `maint-${type}`,
+            text: type === "waterLevel"
+              ? "Check the water level - aim for about half the skimmer."
+              : `${info.label} is past due. ${type === "filter" ? "Clean or check it." : "Inspect and clean it."}`
+          });
+        }
+      });
+
+      if (pool?.hasSpa === "Yes" && steps.some((s) => /^(ta|ph|fc|cya|ch|salt)-/.test(s.id))) {
+        rulesFired.push("spa-separate");
+        cautions.push("Spa attached: treat the spa separately per label - small water changes fast.");
+      }
+
+      return {
+        version: ENGINE_VERSION,
+        gallons,
+        gallonsConfidence: confidence,
+        lsi,
+        steps,
+        cautions,
+        rulesFired,
+        retestMinutes: chemSteps.length ? 30 : 0
+      };
+    }
+
+    const WHY_TEXT = {
+      "ta-low": "Low alkalinity lets pH swing all over.",
+      "ph-high": "High pH makes chlorine weak and scales heaters.",
+      "ph-low": "Low pH is harsh on equipment and skin.",
+      "ph-extreme": "pH that far out makes every other number unreliable.",
+      "fc-low": "Low chlorine lets things start growing.",
+      "fc-low-algae": "Algae needs a strong chlorine hit to die.",
+      "fc-very-high": "Very high chlorine needs time, not more product.",
+      "cya-low": "Stabilizer is sunscreen for chlorine.",
+      "ch-low": "Soft water pulls calcium out of plaster.",
+      "salt-low": "The cell needs enough salt to make chlorine.",
+      "sequence": "Order matters: alkalinity first, then pH, then chlorine.",
+      "heater-ph": "Heaters corrode fast outside the pH band.",
+      "lsi-low": "LSI below -0.3 means corrosive water.",
+      "lsi-high": "LSI above +0.3 means scale-forming water.",
+      "weather-heat": "Sun and heat eat chlorine quickly.",
+      "weather-rain": "Rain dilutes and shifts the water.",
+      "volume-unknown": "Without pool size, exact math is not safe to give.",
+      "maint-filter": "A dirty filter undoes good chemistry.",
+      "maint-waterLevel": "The skimmer needs water at half height to work.",
+      "maint-saltCell": "A scaled cell makes less chlorine.",
+      "spa-separate": "Spas are tiny - pool doses would overshoot them."
+    };
+
+    function whyText(check) {
+      const fired = check.engine?.rulesFired || [];
+      const lines = fired.map((rule) => WHY_TEXT[rule]).filter(Boolean);
+      const unique = [...new Set(lines)];
+      const lsiLine = check.engine?.lsi != null ? ` Water balance today: LSI ${check.engine.lsi}.` : "";
+      return unique.length ? unique.join(" ") + lsiLine : "Steps come from your readings, this pool's history, and standard pool care rules." + lsiLine;
+    }
+    // ===== end engine =====
+
     const testMeta = {
       free_chlorine: { label: "Free Chlorine", min: 1, max: 4, unit: "ppm", low: "Sanitizer / chlorine product", high: "Retest and let level drift down" },
       ph: { label: "pH", min: 7.2, max: 7.8, unit: "", low: "pH increaser", high: "pH decreaser" },
@@ -1383,6 +1914,7 @@
       { key: "address", question: "Find pool", help: "Type it or say it. New pool? Just type a name.", placeholder: "Address or pool name" },
       { key: "poolName", question: "Pool name?", help: "Optional. Name it so you can find it fast.", placeholder: "Maple Pool" },
       { key: "poolType", question: "Pool type?", help: "Pick the closest one.", options: ["Chlorine pool", "Salt pool", "Above-ground pool", "Not sure"] },
+      { key: "volumeBracket", question: "How big is the pool?", help: "Tap one - or say or type the gallons if you know them.", options: ["Under 10,000 gal", "10,000-15,000 gal", "15,000-20,000 gal", "Over 20,000 gal", "Not sure"], allowInput: true, placeholder: "Or type gallons, ex: 12000" },
       { key: "hasSpa", question: "Spa too?", help: "If yes, ClearWay asks for pool and spa photos.", options: ["Yes", "No", "Not sure"] },
       { key: "heater", question: "Heater?", help: "Heaters need extra caution with chemistry.", options: ["No heater", "Gas heater", "Heat pump", "Solar heater", "Not sure"] },
       { key: "filter", question: "Filter type?", help: "This helps the filter reminder make sense.", options: ["Cartridge", "Sand", "DE", "Not sure"] },
@@ -1466,6 +1998,9 @@
         poolType: "Not sure",
         heater: "Not sure",
         filter: "Not sure",
+        volumeBracket: "Not sure",
+        volumeGallons: 0,
+        productsOnHand: [],
         measurements: "",
         hasSpa: "Not sure",
         waterLevelCheckedAt: "",
@@ -1523,6 +2058,7 @@
         address: pool.address || "",
         poolName: pool.poolName && pool.poolName !== "New Pool" ? pool.poolName : "",
         poolType: pool.poolType || "Not sure",
+        volumeBracket: pool.volumeBracket || "Not sure",
         hasSpa: pool.hasSpa || "Not sure",
         heater: pool.heater || "Not sure",
         filter: pool.filter || "Not sure",
@@ -1568,9 +2104,9 @@
       document.querySelector("[data-setup-label]").textContent = "One-Time Setup";
       document.querySelector("[data-setup-question]").textContent = question.question;
       document.querySelector("[data-setup-help]").textContent = question.help;
-      answer.value = question.date ? "" : (setupDraft[question.key] || "");
+      answer.value = question.date ? "" : (question.allowInput ? "" : (setupDraft[question.key] || ""));
       answer.placeholder = question.placeholder || "Say it or tap one";
-      answer.style.display = question.options || question.photo ? "none" : "block";
+      answer.style.display = (question.options && !question.allowInput) || question.photo ? "none" : "block";
       options.innerHTML = question.photo
         ? `
           <button class="setup-option wide" data-setup-chem-camera>Take Photo</button>
@@ -1640,7 +2176,16 @@
           };
         }
       }
-      if (question.photo) {
+      if (question.key === "volumeBracket" && !skip) {
+        const digits = raw.replace(/[^\d]/g, "");
+        const numeric = Number(digits);
+        if (digits.length >= 3 && Number.isFinite(numeric) && numeric >= 500 && numeric <= 200000 && !(question.options || []).includes(raw)) {
+          setupDraft.volumeGallons = numeric;
+          setupDraft.volumeBracket = "Custom";
+        } else if (raw) {
+          setupDraft.volumeBracket = raw;
+        }
+      } else if (question.photo) {
         if (skip || raw === "Skip") {
           setupDraft.chemInventoryNote = setupDraft.chemInventoryNote || "";
         } else if (raw) {
@@ -1670,6 +2215,10 @@
         poolName,
         address: setupDraft.address || current.address || "",
         poolType: setupDraft.poolType || current.poolType || "Not sure",
+        volumeBracket: setupDraft.volumeBracket || current.volumeBracket || "Not sure",
+        volumeGallons: setupDraft.volumeGallons || current.volumeGallons || 0,
+        volumeConfidence: "estimated",
+        productsOnHand: current.productsOnHand || [],
         hasSpa: setupDraft.hasSpa || current.hasSpa || "Not sure",
         heater: setupDraft.heater || current.heater || "Not sure",
         filter: setupDraft.filter || current.filter || "Not sure",
@@ -1891,6 +2440,16 @@
 
     let editPoolChemPhotos = null;
     let editPoolChemChanged = false;
+    let editPoolProducts = null;
+
+    function renderProductChips() {
+      const row = document.querySelector("[data-product-chips]");
+      if (!row) return;
+      const selected = editPoolProducts || [];
+      row.innerHTML = Object.entries(CHEM_PRODUCTS).map(([key, product]) => `
+        <button type="button" class="chip ${selected.includes(key) ? "on" : ""}" data-product-chip="${key}">${product.chip}</button>
+      `).join("");
+    }
 
     function renderPoolChemThumbs() {
       const thumbs = document.querySelector("[data-pool-chem-thumbs]");
@@ -1914,6 +2473,10 @@
         hasSpa: get("hasSpa") || "Not sure",
         heater: get("heater") || "Not sure",
         filter: get("filter") || "Not sure",
+        volumeBracket: get("volumeBracket") || "Not sure",
+        volumeGallons: Number(get("volumeGallons")) > 0 ? Number(get("volumeGallons")) : (existingPool?.volumeGallons || 0),
+        volumeConfidence: Number(get("volumeGallons")) > 0 ? "estimated" : (existingPool?.volumeConfidence || "estimated"),
+        productsOnHand: editPoolProducts !== null ? editPoolProducts : (existingPool?.productsOnHand || []),
         measurements: get("measurements"),
         filterCleanedAt: existingPool?.filterCleanedAt || "",
         waterLevelCheckedAt: existingPool?.waterLevelCheckedAt || "",
@@ -1944,6 +2507,8 @@
         hasSpa: pool?.hasSpa || "Not sure",
         heater: pool?.heater || "Not sure",
         filter: pool?.filter || "Not sure",
+        volumeBracket: pool?.volumeBracket || "Not sure",
+        volumeGallons: pool?.volumeGallons || "",
         measurements: pool?.measurements || ""
       };
       Object.entries(fields).forEach(([key, value]) => {
@@ -1957,7 +2522,9 @@
       setPoolForm(null);
       editPoolChemPhotos = [];
       editPoolChemChanged = false;
+      editPoolProducts = [];
       renderPoolChemThumbs();
+      renderProductChips();
       await showScreen("add-pool");
     }
 
@@ -1967,7 +2534,9 @@
       setPoolForm(pool);
       editPoolChemPhotos = [...(pool?.chemInventoryPhotos || [])];
       editPoolChemChanged = false;
+      editPoolProducts = [...(pool?.productsOnHand || [])];
       renderPoolChemThumbs();
+      renderProductChips();
       await showScreen("add-pool");
     }
 
@@ -2123,21 +2692,24 @@
     function buildDoNext(check) {
       const text = `${check.brainInput || ""} ${check.nextStep || ""}`.toLowerCase();
       const steps = [];
-      const add = (step) => {
-        const lower = step.toLowerCase();
+      const add = (id, stepText) => {
+        const lower = stepText.toLowerCase();
         const dupe = steps.some((item) => {
-          const existing = item.toLowerCase();
+          const existing = item.text.toLowerCase();
           return existing === lower || existing.includes(lower) || lower.includes(existing);
         });
-        if (!dupe) steps.push(step);
+        if (!dupe) steps.push({ id, text: stepText });
       };
-      if (check.nextStep) add(check.nextStep);
-      if (text.includes("green") || text.includes("algae")) add("Check chlorine and pH first.");
-      if (text.includes("cloudy") || text.includes("hazy")) add("Run the pump.");
-      if (text.includes("filter")) add("Check the filter.");
-      if (text.includes("water level") || text.includes("low water")) add("Fill water to about half the skimmer.");
-      add("Retest before you add more.");
-      return steps.slice(0, 4);
+      const engineSteps = check.engine?.steps || [];
+      engineSteps.forEach((step) => add(step.id, step.text));
+      const hasEngine = engineSteps.length > 0;
+      if (!hasEngine && check.nextStep) add("note-next", check.nextStep);
+      if (!hasEngine && (text.includes("green") || text.includes("algae"))) add("note-algae", "Check chlorine and pH first.");
+      if (text.includes("cloudy") || text.includes("hazy")) add("note-pump", "Run the pump.");
+      if (text.includes("filter") && !hasEngine) add("note-filter", "Check the filter.");
+      if (text.includes("water level") || text.includes("low water")) add("note-water", "Fill water to about half the skimmer.");
+      add("retest", "Retest before you add more.");
+      return steps.slice(0, 6);
     }
 
     function buildNextStep(values, issue) {
@@ -2183,12 +2755,15 @@
     async function createCheck() {
       const pool = selectedPool() || { poolName: "Unnamed Pool", poolType: "Not sure", heater: "Not sure", filter: "Not sure" };
       const checkId = crypto.randomUUID ? crypto.randomUUID() : String(Date.now());
-      const values = readValues();
       const concern = draft.visitConcern ? `Visit concern: ${draft.visitConcern}. ` : "";
       const brain = `${concern}${brainText()}`.trim();
+      const values = mergeSpokenReadings(readValues(), brain);
       const mainIssue = inferIssueFromText(brain);
       const previous = localChecks().find((item) => item.poolId && item.poolId === (pool.id || "") && (Date.now() - new Date(item.createdAt).getTime()) < 172800000);
-      const [photos, weatherLog] = await Promise.all([uploadPhotos(checkId), quietWeatherLog()]);
+      const memory = buildPoolMemory(pool.id || "");
+      const weatherLog = await quietWeatherLog();
+      const engine = chemEngine(pool, values, brain, memory, weatherLog);
+      const photos = await uploadPhotos(checkId);
       const check = {
         id: checkId,
         createdAt: new Date().toISOString(),
@@ -2216,9 +2791,11 @@
         weatherLog,
         productCategories: inferProductCategories(brain),
         followUpOf: previous ? previous.id : "",
+        engine,
+        stepFlags: {},
         photos,
         values,
-        nextStep: buildNextStep(values, mainIssue)
+        nextStep: engine.steps.length ? engine.steps[0].text : buildNextStep(values, mainIssue)
       };
       check.report = homeownerReport(check);
       check.learning = learningQuality(check);
@@ -2255,6 +2832,9 @@
           weatherLog: check.weatherLog || null,
           productCategories: check.productCategories || [],
           followUpOf: check.followUpOf || "",
+          engine: check.engine || null,
+          stepFlags: check.stepFlags || {},
+          closedAt: check.closedAt || "",
           report: check.report || null,
           learning: check.learning || null
         }),
@@ -2286,6 +2866,9 @@
         weatherLog: noteData.weatherLog || null,
         productCategories: noteData.productCategories || [],
         followUpOf: noteData.followUpOf || "",
+        engine: noteData.engine || null,
+        stepFlags: noteData.stepFlags || {},
+        closedAt: noteData.closedAt || "",
         report: noteData.report || null,
         learning: noteData.learning || null,
         mainIssue: row.main_issue,
@@ -2396,55 +2979,79 @@
       return { headline, tone, copy, list };
     }
 
-    let retestTimer = null;
-
-    function resetRetestTimerButton() {
-      const button = document.querySelector("[data-start-timer]");
-      if (!button) return;
-      clearInterval(retestTimer);
-      retestTimer = null;
-      button.disabled = false;
-      button.textContent = "Start Retest Timer";
+    function setRetestReminder(check, minutes) {
+      const end = Date.now() + Math.max(minutes, 5) * 60000;
+      try {
+        localStorage.setItem(retestStorageKey, JSON.stringify({ poolName: check?.poolName || "", checkId: check?.id || "", endsAt: end }));
+      } catch { /* reminder is best-effort */ }
     }
 
-    function startRetestTimer() {
-      const button = document.querySelector("[data-start-timer]");
-      if (!button || retestTimer) return;
-      const end = Date.now() + 30 * 60000;
-      localStorage.setItem(retestStorageKey, JSON.stringify({ poolName: activeCheck?.poolName || "", checkId: activeCheck?.id || "", endsAt: end }));
-      const tick = () => {
-        const left = end - Date.now();
-        if (left <= 0) {
-          clearInterval(retestTimer);
-          retestTimer = null;
-          button.disabled = false;
-          button.textContent = "Time to retest";
-          alert("Timer done. Retest now. Do not add more until you retest.");
-          return;
-        }
-        const minutes = Math.floor(left / 60000);
-        const seconds = Math.floor((left % 60000) / 1000);
-        button.textContent = `Retest in ${minutes}:${String(seconds).padStart(2, "0")}`;
-      };
-      button.disabled = true;
-      retestTimer = setInterval(tick, 1000);
-      tick();
+    function needsEvidence(check) {
+      const note = `${check.brainInput || ""}`.toLowerCase();
+      const equipmentTalk = /(pump|heater|motor|filter|salt cell|equipment)[^.!?]{0,40}(nois|sound|leak|broken|weird|issue|problem|grind|squeal|drip|smell)|(nois|leak|broken|grind|squeal)[^.!?]{0,40}(pump|heater|motor|filter|equipment)/.test(note);
+      const equipmentPhotos = (check.photos?.equipment || []).length;
+      if (equipmentTalk && !equipmentPhotos) {
+        return { key: "equipment", label: "Take Photo: Pool Equipment", reason: "You mentioned the equipment. One photo closes the loop." };
+      }
+      if (!normalizePhotoList(check.photos?.pool).length) {
+        return { key: "pool", label: "Take Photo: The Pool", reason: "No pool photo yet. One photo closes the loop." };
+      }
+      return null;
+    }
+
+    function closeLoopState(check) {
+      if (check.closedAt) return { mode: "done", label: "Visit closed", hint: "" };
+      const evidence = needsEvidence(check);
+      if (evidence) return { mode: "photo", label: evidence.label, hint: evidence.reason, evidenceKey: evidence.key };
+      if ((check.engine?.retestMinutes || 0) > 0) {
+        return { mode: "pump", label: "Start Pump & Submit", hint: "Chemicals need to circulate. Retest reminder will be set." };
+      }
+      return { mode: "finish", label: "Finish & Submit", hint: "" };
+    }
+
+    async function closeVisit(check, withPump) {
+      check.closedAt = new Date().toISOString();
+      if (withPump) setRetestReminder(check, check.engine?.retestMinutes || 30);
+      await saveCheck(check);
+      await showScreen("home");
+      openSheet("Done", withPump ? "Visit closed. Pump circulating - the retest reminder is set on Home." : "Visit closed and saved to pool history.", "");
     }
 
     function renderGuide(check) {
       activeCheck = check;
-      resetRetestTimerButton();
       document.querySelector("[data-guide-pool]").textContent = check.poolName;
       const dateTarget = document.querySelector("[data-guide-date]");
       if (dateTarget) dateTarget.textContent = check.createdAt ? new Date(check.createdAt).toLocaleString() : "";
 
       const steps = buildDoNext(check);
-      document.querySelector("[data-next-step]").textContent = steps[0] || "Retest before you add more.";
+      const flags = check.stepFlags || {};
+      const first = steps[0];
+      const bigStep = document.querySelector("[data-next-step]");
+      bigStep.textContent = first ? first.text : "Retest before you add more.";
+      bigStep.classList.toggle("flagged", Boolean(first && flags[first.id]?.flagged));
+      if (first) bigStep.setAttribute("data-flag-step", first.id);
       const stepList = document.querySelector("[data-step-guide-list]");
       if (stepList) {
-        stepList.innerHTML = steps.slice(1).map((step, index) => `
-          <div class="step-row"><span class="step-num">${index + 2}</span><strong>${escapeHtml(step)}</strong></div>
-        `).join("");
+        stepList.innerHTML = steps.slice(1).map((step, index) => {
+          const flag = flags[step.id];
+          const isFlagged = Boolean(flag?.flagged);
+          return `
+          <div class="step-row ${isFlagged ? "flagged" : ""}" data-flag-step="${step.id}">
+            <span class="step-num">${index + 2}</span>
+            <strong>${escapeHtml(step.text)}</strong>
+            ${isFlagged ? `<button class="why-btn" data-flag-why="${step.id}">${flag?.reason ? "Why saved" : "Say why"}</button>` : ""}
+          </div>`;
+        }).join("");
+      }
+      const hintTarget = document.querySelector("[data-flag-hint]");
+      if (hintTarget) hintTarget.hidden = !steps.length;
+      const whyButton = document.querySelector("[data-why-button]");
+      if (whyButton) whyButton.hidden = !(check.engine?.rulesFired || []).length;
+      const cautionTarget = document.querySelector("[data-engine-cautions]");
+      if (cautionTarget) {
+        const cautions = check.engine?.cautions || [];
+        cautionTarget.hidden = !cautions.length;
+        cautionTarget.textContent = cautions.join(" ");
       }
 
       const saltLine = document.querySelector("[data-salt-heater-line]");
@@ -2454,7 +3061,9 @@
       }
 
       const shortTestNames = { free_chlorine: "Cl", ph: "pH", alkalinity: "Alk", cya: "CYA", calcium: "Hard", salt: "Salt" };
-      const enteredTests = (check.values || []).filter((item) => item.current).map((item) => `${shortTestNames[item.key] || item.label} ${item.current}`).join(" · ");
+      const enteredItems = (check.values || []).filter((item) => item.current);
+      const anySpoken = enteredItems.some((item) => item.source === "spoken");
+      const enteredTests = enteredItems.map((item) => `${shortTestNames[item.key] || item.label} ${item.current}`).join(" · ") + (anySpoken ? " · heard from your note" : "");
       const noteRows = [
         ["Note", check.brainInput || check.notes || check.firstImpression],
         ["Tests", enteredTests],
@@ -2467,11 +3076,25 @@
 
       const photoItems = [
         ...normalizePhotoList(check.photos?.pool).map((src, index) => [`Pool/Spa ${index + 1}`, src]),
-        ...(check.photos?.tests || []).map((src, index) => [`Test ${index + 1}`, src])
+        ...(check.photos?.tests || []).map((src, index) => [`Test ${index + 1}`, src]),
+        ...(check.photos?.equipment || []).map((src, index) => [`Equipment ${index + 1}`, src])
       ].filter((item) => item[1]);
       document.querySelector("[data-guide-photos]").innerHTML = photoItems.length
         ? photoItems.map(([label, src]) => `<div class="thumb"><img alt="${label}" src="${src}"><span>${label}</span></div>`).join("")
         : '<div class="empty" style="grid-column: 1 / -1;">No photos saved for this check.</div>';
+
+      const closeButton = document.querySelector("[data-close-loop]");
+      const closeHint = document.querySelector("[data-close-hint]");
+      if (closeButton) {
+        const state = closeLoopState(check);
+        closeButton.textContent = state.label;
+        closeButton.disabled = state.mode === "done";
+        closeButton.dataset.closeMode = state.mode;
+        if (closeHint) {
+          closeHint.hidden = !state.hint;
+          closeHint.textContent = state.hint || "";
+        }
+      }
     }
 
     function historyPhotoCount(check) {
@@ -2479,6 +3102,7 @@
     }
 
     function historyStatus(check) {
+      if (Object.values(check.stepFlags || {}).some((flag) => flag?.flagged)) return "Flagged";
       const text = `${check.nextStep || ""} ${check.brainInput || ""}`.toLowerCase();
       if (text.includes("retest") || text.includes("follow up") || text.includes("follow-up")) return "Retest";
       return "Saved";
@@ -2522,7 +3146,7 @@
                   </div>
                 </div>
                 <div>
-                  <span class="status">${status}</span>
+                  <span class="status ${status === "Flagged" ? "status-flagged" : ""}">${status}</span>
                   <span class="history-arrow" aria-hidden="true">&gt;</span>
                 </div>
               </div>
@@ -2578,6 +3202,29 @@
       dictateInto(document.querySelector(`[data-check-field="${fieldName}"]`));
     }
 
+    function dictateFlagReason(stepId) {
+      if (!activeCheck || !stepId) return;
+      const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!Speech) {
+        alert("Dictation is not supported here. The flag is saved - you can tell Payton why later.");
+        return;
+      }
+      const recognition = new Speech();
+      recognition.lang = "en-US";
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+      recognition.onresult = async (event) => {
+        const said = event.results?.[0]?.[0]?.transcript || "";
+        if (!said) return;
+        activeCheck.stepFlags = activeCheck.stepFlags || {};
+        activeCheck.stepFlags[stepId] = { ...(activeCheck.stepFlags[stepId] || { flagged: true }), reason: said, at: new Date().toISOString() };
+        await saveCheck(activeCheck);
+        renderGuide(activeCheck);
+      };
+      recognition.onerror = () => alert("Did not catch that. Tap Say why again.");
+      recognition.start();
+    }
+
     document.addEventListener("change", async (event) => {
       const poolChemInput = event.target.closest("[data-pool-chem-input]");
       if (poolChemInput && poolChemInput.files[0]) {
@@ -2589,6 +3236,31 @@
         editPoolChemChanged = true;
         poolChemInput.value = "";
         renderPoolChemThumbs();
+        return;
+      }
+
+      const evidenceInput = event.target.closest("[data-evidence-input]");
+      if (evidenceInput && evidenceInput.files[0] && activeCheck) {
+        const evidence = needsEvidence(activeCheck);
+        const slot = evidence?.key === "equipment" ? "equipment" : "pool";
+        const files = [...evidenceInput.files];
+        for (const file of files) {
+          let dataUrl = await compressImage(file);
+          try {
+            dataUrl = await uploadOne(activeCheck.id, slot, dataUrl, (activeCheck.photos?.[slot] || []).length);
+          } catch (error) {
+            console.warn("Evidence photo stays local for now", error);
+          }
+          activeCheck.photos = activeCheck.photos || {};
+          if (slot === "pool" && !Array.isArray(activeCheck.photos.pool)) {
+            activeCheck.photos.pool = activeCheck.photos.pool ? [activeCheck.photos.pool] : [];
+          }
+          activeCheck.photos[slot] = activeCheck.photos[slot] || [];
+          activeCheck.photos[slot].push(dataUrl);
+        }
+        evidenceInput.value = "";
+        await saveCheck(activeCheck);
+        renderGuide(activeCheck);
         return;
       }
 
@@ -2637,6 +3309,25 @@
 
       if (event.target.closest("[data-sheet-close]") || event.target.matches(".sheet-backdrop")) {
         closeSheet();
+        return;
+      }
+
+      const flagWhy = event.target.closest("[data-flag-why]");
+      if (flagWhy && activeCheck) {
+        dictateFlagReason(flagWhy.dataset.flagWhy);
+        return;
+      }
+
+      const flagStep = event.target.closest("[data-flag-step]");
+      if (flagStep && activeCheck) {
+        const stepId = flagStep.getAttribute("data-flag-step");
+        if (stepId) {
+          activeCheck.stepFlags = activeCheck.stepFlags || {};
+          const wasFlagged = Boolean(activeCheck.stepFlags[stepId]?.flagged);
+          activeCheck.stepFlags[stepId] = { ...(activeCheck.stepFlags[stepId] || {}), flagged: !wasFlagged, at: new Date().toISOString() };
+          await saveCheck(activeCheck);
+          renderGuide(activeCheck);
+        }
         return;
       }
 
@@ -2766,6 +3457,19 @@
         return;
       }
 
+      const productChip = event.target.closest("[data-product-chip]");
+      if (productChip) {
+        const key = productChip.dataset.productChip;
+        editPoolProducts = editPoolProducts || [];
+        if (editPoolProducts.includes(key)) {
+          editPoolProducts = editPoolProducts.filter((item) => item !== key);
+        } else {
+          editPoolProducts.push(key);
+        }
+        renderProductChips();
+        return;
+      }
+
       if (event.target.closest("[data-selected-pool-text]")) {
         ensureStarterPool();
         const pool = selectedPool();
@@ -2875,8 +3579,21 @@
         return;
       }
 
-      if (event.target.closest("[data-start-timer]")) {
-        startRetestTimer();
+      if (event.target.closest("[data-why-button]") && activeCheck) {
+        openSheet("Why these steps", whyText(activeCheck), "");
+        return;
+      }
+
+      const closeLoop = event.target.closest("[data-close-loop]");
+      if (closeLoop && activeCheck) {
+        const mode = closeLoop.dataset.closeMode || "finish";
+        if (mode === "photo") {
+          document.querySelector("[data-evidence-input]")?.click();
+        } else if (mode === "pump") {
+          await closeVisit(activeCheck, true);
+        } else if (mode === "finish") {
+          await closeVisit(activeCheck, false);
+        }
         return;
       }
 
