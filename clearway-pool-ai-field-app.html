@@ -1350,6 +1350,8 @@
     const checkStorageKey = "clearwayPoolChecksV2";
     const retestStorageKey = "clearwayRetestV1";
     const householdStorageKey = "clearwayHouseholdV1";
+    const claimStorageKey = "clearwayUserClaimV1";
+    let authUserId = "";
     const supabaseUrl = "https://wwhbwhgnwmmlpvrjkjek.supabase.co";
     const supabaseAnonKey = "sb_publishable_CN_Z7T4c3zN66C7xKVuJ8g_rQe9FJNX";
     const photoBucket = "pool-check-photos";
@@ -1390,12 +1392,23 @@
       { key: "saltCellCleanedAt", question: "Last salt cell clean?", help: "Skip if this is not a salt pool.", options: ["Today", "This month", "Not sure"], date: true, saltOnly: true }
     ];
 
-    try {
-      const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
-      supabase = createClient(supabaseUrl, supabaseAnonKey);
-    } catch (error) {
-      console.warn("Supabase unavailable, using local fallback", error);
-    }
+    import("https://esm.sh/@supabase/supabase-js@2")
+      .then(async ({ createClient }) => {
+        supabase = createClient(supabaseUrl, supabaseAnonKey);
+        try {
+          const { data: sessionData } = await supabase.auth.getSession();
+          if (sessionData?.session) {
+            authUserId = sessionData.session.user.id;
+          } else {
+            const { data, error } = await supabase.auth.signInAnonymously();
+            if (!error) authUserId = data?.user?.id || "";
+          }
+        } catch (error) {
+          console.warn("Anonymous sign-in unavailable", error);
+        }
+        migrateLegacyChecks();
+      })
+      .catch((error) => console.warn("Supabase unavailable, using local fallback", error));
 
     function freshDraft() {
       return {
@@ -1719,7 +1732,9 @@
       const pool = selectedPool();
       const selectedText = document.querySelector("[data-selected-pool-text]");
       if (selectedText) {
-        selectedText.textContent = pool ? `${pool.poolName} · Tap to change` : "No pool yet. Tap to add.";
+        selectedText.textContent = !pool
+          ? "No pool yet. Tap to add."
+          : (pool.profileComplete ? `${pool.poolName} · Tap to change` : "Add pool details · Tap here");
       }
       renderHomeMaintenance(pool);
       renderRetestBanner();
@@ -2024,8 +2039,9 @@
       const file = dataUrlToFile(dataUrl, `${label}.jpg`);
       const { error } = await supabase.storage.from(photoBucket).upload(path, file, { contentType: "image/jpeg", upsert: true });
       if (error) throw error;
-      const { data } = supabase.storage.from(photoBucket).getPublicUrl(path);
-      return data.publicUrl;
+      const { data, error: signError } = await supabase.storage.from(photoBucket).createSignedUrl(path, 31536000);
+      if (signError || !data?.signedUrl) throw signError || new Error("Could not sign photo URL");
+      return data.signedUrl;
     }
 
     async function uploadPhotos(checkId) {
@@ -2212,6 +2228,7 @@
     function toDb(check) {
       return {
         id: check.id,
+        user_id: authUserId || null,
         created_at: check.createdAt,
         pool_name: check.poolName,
         pool_type: check.poolType,
@@ -2306,17 +2323,24 @@
       const mine = householdId();
       const local = localChecks();
       const legacyIds = local.filter((check) => !check.householdId).map((check) => check.id);
-      if (!legacyIds.length) return;
-      const stamped = local.map((check) => check.householdId ? check : { ...check, householdId: mine });
-      saveLocalChecks(stamped);
-      if (!supabase) return;
-      for (const check of stamped.filter((item) => legacyIds.includes(item.id))) {
+      if (legacyIds.length) {
+        const stamped = local.map((check) => check.householdId ? check : { ...check, householdId: mine });
+        saveLocalChecks(stamped);
+      }
+      if (!supabase || !authUserId) return;
+      let claimed = false;
+      try { claimed = localStorage.getItem(claimStorageKey) === authUserId; } catch { claimed = false; }
+      if (claimed) return;
+      for (const check of localChecks()) {
         try {
-          await supabase.from("pool_checks").upsert(toDb(check), { onConflict: "id" });
+          const { error } = await supabase.from("pool_checks").upsert(toDb(check), { onConflict: "id" });
+          if (error) throw error;
         } catch (error) {
-          console.warn("Legacy check claim skipped", error);
+          console.warn("Claim pass will retry next open", error);
+          return;
         }
       }
+      try { localStorage.setItem(claimStorageKey, authUserId); } catch { /* in-memory only */ }
     }
 
     async function saveCheck(check) {
@@ -2744,8 +2768,13 @@
 
       if (event.target.closest("[data-selected-pool-text]")) {
         ensureStarterPool();
-        resetDraft();
-        await startSetupWizard();
+        const pool = selectedPool();
+        if (pool && !pool.profileComplete) {
+          await openEditPool();
+        } else {
+          resetDraft();
+          await startSetupWizard();
+        }
         return;
       }
 
@@ -2781,12 +2810,7 @@
       if (event.target.closest("[data-start-check]")) {
         ensureStarterPool();
         resetDraft();
-        const pool = selectedPool();
-        if (pool && pool.profileComplete) {
-          await startPhotoFlow();
-        } else {
-          await startSetupWizard();
-        }
+        await startPhotoFlow();
         return;
       }
 
@@ -2863,7 +2887,6 @@
 
     ensureStarterPool();
     renderHome();
-    migrateLegacyChecks();
     setInterval(() => {
       if (document.querySelector(".screen.active")?.dataset.screen === "home") renderRetestBanner();
     }, 60000);
