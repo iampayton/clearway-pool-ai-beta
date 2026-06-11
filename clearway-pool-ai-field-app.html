@@ -1521,6 +1521,7 @@
             <p class="muted" data-flag-hint hidden style="margin-top: 10px;">Wrong step? Tap it to flag it red.</p>
             <div class="summary-list" data-missing-list style="margin-top: 10px;"></div>
             <button class="btn full" type="button" data-missing-step style="margin-top: 12px;">Missing step? Say it</button>
+            <button class="gps-suggest" data-nameplate-ask hidden type="button">One-time: snap the pump/filter label. ClearWay learns this pool's gear. Tap here.</button>
             <button class="why-link" type="button" data-why-button hidden>Why these steps?</button>
             <button class="btn full" type="button" data-fix-exact hidden style="margin-top: 12px;">Want exact amounts? Set pool size</button>
           </section>
@@ -1632,6 +1633,7 @@
     let editingPoolId = null;
     let activePhotoStep = 0;
     let activeCheck = null;
+    let evidenceSlotOverride = "";
     let setupIndex = 0;
     let setupDraft = {};
     let visitConcernMode = false;
@@ -1754,6 +1756,20 @@
     }
 
     // Hears test numbers in natural speech: "chlorine is 2, pH 7.8, alk 90"
+    // Hears field facts beyond chemistry: filter PSI, pump hours, water temp, fill-water.
+    function extractExtras(text) {
+      const lower = (text || "").toLowerCase().replace(/,(\d{3})\b/g, "$1");
+      const extras = {};
+      const psi = lower.match(/(?:filter|pressure)[^.!?\d]{0,25}(\d{1,2}(?:\.\d)?)\s*(?:psi)?/) || lower.match(/(\d{1,2}(?:\.\d)?)\s*psi\b/);
+      if (psi) { const v = Number(psi[1]); if (v >= 2 && v <= 50) extras.psi = v; }
+      const pump = lower.match(/pump[^.!?\d]{0,30}(\d{1,2})\s*(?:hours|hrs|hour)\b/);
+      if (pump) { const v = Number(pump[1]); if (v >= 1 && v <= 24) extras.pumpHours = v; }
+      const temp = lower.match(/water\s*(?:temp(?:erature)?)?\s*(?:is|at|reads?|'s)?\s*(\d{2,3})\s*(?:degrees|deg|°|f\b)/) || lower.match(/water temp[^.!?\d]{0,10}(\d{2,3})/);
+      if (temp) { const v = Number(temp[1]); if (v >= 50 && v <= 104) extras.waterTempF = v; }
+      if (/(topp?ed (?:off|up)|fill(?:ed|ing)? (?:the )?(?:pool|water)|added water|hose (?:in|running)|auto.?fill)/.test(lower)) extras.waterAdded = true;
+      return extras;
+    }
+
     function extractReadingsFromText(text) {
       const lower = (text || "").toLowerCase().replace(/,(\d{3})\b/g, "$1");
       const found = {};
@@ -1862,6 +1878,7 @@
     function chemEngine(pool, values, noteText, memory = {}, weather = null) {
       const { gallons, confidence } = poolGallons(pool);
       const lower = (noteText || "").toLowerCase();
+      const spokenExtras = extractExtras(noteText);
       const isSalt = pool?.poolType === "Salt pool";
       const hasHeater = pool?.heater && pool.heater !== "No heater" && pool.heater !== "Not sure";
       const steps = [];
@@ -1990,6 +2007,9 @@
         rulesFired.push("sequence");
         cautions.push("Add one product at a time, pump running, 30+ minutes apart. Never mix.");
       }
+      if (spokenExtras.psi && spokenExtras.psi >= 25) {
+        cautions.push(`Filter pressure ${spokenExtras.psi} psi reads higher than typical - a filter clean or backwash may be due.`);
+      }
       if (!exactAllowed && (fc !== null || ph !== null)) {
         rulesFired.push("volume-unknown");
         cautions.push("Pool size not set - exact amounts are off. Set it in Pool Details for exact doses.");
@@ -2007,7 +2027,9 @@
       // LSI water balance (pro-grade): needs pH + alkalinity + calcium
       let lsi = null;
       if (ph !== null && ta !== null && ch !== null && ph >= 6 && ph <= 9) {
-        const waterTemp = weather?.tempF ? Math.min(92, Math.max(58, weather.tempF - 3)) : 78;
+        const waterTemp = spokenExtras.waterTempF
+          ? Math.min(104, Math.max(50, spokenExtras.waterTempF))
+          : (weather?.tempF ? Math.min(92, Math.max(58, weather.tempF - 3)) : 78);
         const carbonateAlk = cya !== null ? Math.max(10, ta - cya / 3) : ta;
         lsi = Math.round((ph + lsiTempFactor(waterTemp) + lsiCalciumFactor(ch) + lsiAlkFactor(carbonateAlk) - 12.1) * 100) / 100;
         if (lsi <= -0.31) {
@@ -3186,6 +3208,7 @@
       const concern = draft.visitConcern ? `Visit concern: ${draft.visitConcern}. ` : "";
       const brain = `${concern}${brainText()}`.trim();
       const values = mergeSpokenReadings(readValues(), brain);
+      const extras = extractExtras(brain);
       const mainIssue = inferIssueFromText(brain);
       const previous = localChecks().find((item) => item.poolId && item.poolId === (pool.id || "") && (Date.now() - new Date(item.createdAt).getTime()) < 172800000);
       const memory = buildPoolMemory(pool.id || "");
@@ -3228,6 +3251,7 @@
         followUpOf: previous ? previous.id : "",
         engine,
         gps,
+        extras,
         aiCents: 0,
         stepFlags: {},
         photos,
@@ -3274,8 +3298,10 @@
           stepFlags: check.stepFlags || {},
           missingSteps: check.missingSteps || [],
           gps: check.gps || null,
+          extras: check.extras || null,
           aiCents: check.aiCents || 0,
           closedAt: check.closedAt || "",
+          closeSnapshot: check.closeSnapshot || null,
           report: check.report || null,
           learning: check.learning || null
         }),
@@ -3311,8 +3337,10 @@
         stepFlags: noteData.stepFlags || {},
         missingSteps: noteData.missingSteps || [],
         gps: noteData.gps || null,
+        extras: noteData.extras || null,
         aiCents: noteData.aiCents || 0,
         closedAt: noteData.closedAt || "",
+        closeSnapshot: noteData.closeSnapshot || null,
         report: noteData.report || null,
         learning: noteData.learning || null,
         mainIssue: row.main_issue,
@@ -3459,6 +3487,16 @@
 
     async function closeVisit(check, withPump) {
       check.closedAt = new Date().toISOString();
+      // All-knowing snapshot: what was shown, what was confirmed-by-silence, what was corrected.
+      const engineSteps = check.engine?.steps || [];
+      check.closeSnapshot = {
+        shownStepIds: engineSteps.map((step) => step.id),
+        doneStepIds: engineSteps.filter((step) => !(check.stepFlags?.[step.id]?.flagged)).map((step) => step.id),
+        flaggedCount: Object.values(check.stepFlags || {}).filter((flag) => flag.flagged).length,
+        missingCount: (check.missingSteps || []).length,
+        closedVia: withPump ? "pump" : "finish",
+        visitSeconds: Math.max(0, Math.round((Date.now() - new Date(check.createdAt).getTime()) / 1000))
+      };
       if (withPump) setRetestReminder(check, check.engine?.retestMinutes || 30);
       await saveCheck(check);
       await showScreen("home");
@@ -3468,6 +3506,12 @@
     function renderGuide(check) {
       activeCheck = check;
       document.querySelector("[data-guide-pool]").textContent = check.poolName;
+      const nameplate = document.querySelector("[data-nameplate-ask]");
+      if (nameplate) {
+        const poolScans = localChecks().filter((item) => item.poolId && item.poolId === check.poolId);
+        const hasEquipPhoto = poolScans.some((item) => (item.photos?.equipment || []).length) || (check.photos?.equipment || []).length;
+        nameplate.hidden = Boolean(hasEquipPhoto || poolScans.length < 2);
+      }
       const dateTarget = document.querySelector("[data-guide-date]");
       if (dateTarget) dateTarget.textContent = check.createdAt ? new Date(check.createdAt).toLocaleString() : "";
 
@@ -3731,7 +3775,8 @@
       const evidenceInput = event.target.closest("[data-evidence-input]");
       if (evidenceInput && evidenceInput.files[0] && activeCheck) {
         const evidence = needsEvidence(activeCheck);
-        const slot = evidence?.key === "equipment" ? "equipment" : "pool";
+        const slot = evidenceSlotOverride || (evidence?.key === "equipment" ? "equipment" : "pool");
+        evidenceSlotOverride = "";
         const files = [...evidenceInput.files];
         for (const file of files) {
           let dataUrl = await compressImage(file);
@@ -4093,6 +4138,12 @@
 
       if (event.target.closest("[data-missing-step]") && activeCheck) {
         dictateMissingStep();
+        return;
+      }
+
+      if (event.target.closest("[data-nameplate-ask]") && activeCheck) {
+        evidenceSlotOverride = "equipment";
+        document.querySelector("[data-evidence-input]")?.click();
         return;
       }
 
