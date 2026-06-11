@@ -935,6 +935,32 @@
       color: #c64235;
     }
 
+    .missing-item {
+      border-color: rgba(247, 185, 85, 0.6);
+      background: var(--warn);
+    }
+
+    .gps-suggest {
+      display: block;
+      width: 100%;
+      margin: 10px 0 0;
+      border: 1px solid rgba(46, 107, 102, 0.35);
+      border-radius: 12px;
+      padding: 10px 12px;
+      background: #eaf6f3;
+      color: var(--charcoal);
+      font-size: 0.92rem;
+      font-weight: 600;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    body.party .gps-suggest {
+      background: #15211d;
+      border-color: rgba(57, 255, 140, 0.45);
+      color: #d7ffe9;
+    }
+
     .why-btn {
       border: 0;
       border-radius: 12px;
@@ -1059,6 +1085,142 @@
       margin-bottom: 7px;
     }
 
+    .theme-pill {
+      width: auto;
+      padding: 0 13px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    /* ===== Party mode: same job, more energy. Pool done. Party on. ===== */
+    body.party {
+      background:
+        radial-gradient(circle at 12% 8%, rgba(57, 255, 140, 0.1), transparent 32%),
+        linear-gradient(135deg, #0b0f12 0%, #131a1f 55%, #0d1114 100%);
+      color: #f2fbf8;
+    }
+
+    body.party .phone { background: #05080a; }
+    body.party .screen { background: #0e1418; scrollbar-color: rgba(57, 255, 140, 0.4) transparent; }
+    body.party .brand, body.party h1, body.party h2, body.party h3 { color: #f2fbf8; }
+    body.party .desktop-panel p, body.party .muted { color: #9fb4ae; }
+    body.party .home-pool-line { color: #9fb4ae; }
+    body.party .card, body.party .setup-card, body.party .history-head, body.party .history-item, body.party .picker-button, body.party .sheet {
+      background: #161d22;
+      border-color: #243239;
+      color: #e9f7f2;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.5);
+    }
+    body.party .guide-card { background: linear-gradient(180deg, #161d22, #122019); border-color: rgba(57, 255, 140, 0.35); }
+    body.party .guide-card .muted { color: #39ff8c; }
+    body.party .pool-id-card { background: #161d22; border-color: rgba(99, 215, 198, 0.35); }
+    body.party .warning { background: #251f0c; border-color: rgba(255, 229, 61, 0.45); }
+    body.party .warning ul { color: #e8e3c8; }
+    body.party .btn, body.party .icon-btn, body.party .icon-action {
+      background: #1b2329;
+      color: #eafff5;
+      box-shadow: inset 0 0 0 1px #2c3a42;
+    }
+    body.party .btn.primary, body.party .icon-action.primary {
+      background: var(--seafoam);
+      color: #07140f;
+      box-shadow: 0 0 18px rgba(99, 215, 198, 0.45);
+    }
+    body.party .btn.danger { background: #ff4d6d; color: #1a0509; }
+    body.party .home-maint { background: #161d22; box-shadow: inset 0 0 0 1px #243239; color: #eafff5; }
+    body.party .home-maint span { color: #9fb4ae; }
+    body.party .home-maint.green { background: #0f2a1c; box-shadow: inset 0 0 0 2px #39ff8c; }
+    body.party .home-maint.yellow { background: #2a250b; box-shadow: inset 0 0 0 2px #ffe53d; }
+    body.party .home-maint.red { background: #2d1014; box-shadow: inset 0 0 0 2px #ff4d6d; }
+    body.party .home-maint.gray { background: #1a2126; }
+    body.party .home-status-svg { color: #eafff5; }
+    body.party input, body.party select, body.party textarea { background: #11181d; color: #eafff5; border-color: #2c3a42; }
+    body.party .test-grid label { background: #11181d; border-color: #2c3a42; color: #9fb4ae; }
+    body.party .test-grid input { color: #eafff5; }
+    body.party .setup-option { background: #122019; color: #eafff5; }
+    body.party .setup-option.wide { background: var(--seafoam); color: #07140f; }
+    body.party .summary-item, body.party .step-row { background: #11181d; border-color: #243239; color: #eafff5; }
+    body.party .step-row.flagged { background: #2d1014; border-color: #ff4d6d; }
+    body.party .step-row.flagged .step-num { background: #ff4d6d; color: #1a0509; }
+    body.party .big-step { color: #f2fbf8; }
+    body.party .big-step.flagged { color: #ff4d6d; }
+    body.party .empty { background: #122019; border-color: rgba(57, 255, 140, 0.35); color: #9fb4ae; }
+    body.party .thumb { background: #122019; border-color: #243239; }
+    body.party .history-badge { background: #122019; color: #39ff8c; }
+    body.party .status { background: #2a250b; color: #ffe53d; }
+    body.party .status-flagged { background: #2d1014; color: #ff4d6d; }
+    body.party .history-arrow { background: var(--seafoam); color: #07140f; }
+    body.party .retest-banner { background: #1b2329; color: #eafff5; box-shadow: inset 0 0 0 1px #39ff8c; }
+    body.party .retest-banner.due { background: #ff4d6d; color: #1a0509; box-shadow: 0 0 20px rgba(255, 77, 109, 0.5); }
+    body.party .sheet-backdrop { background: rgba(0, 0, 0, 0.66); }
+    body.party .why-link { color: #39ff8c; }
+    body.party .chip { background: #11181d; color: #eafff5; border-color: #2c3a42; }
+    body.party .chip.on { background: #39ff8c; color: #07140f; border-color: #39ff8c; }
+    body.party .brand-dot { box-shadow: 0 0 14px rgba(57, 255, 140, 0.7); }
+    body.party .home-stats { color: #9fb4ae; }
+
+    /* Leopard: the Home CTA */
+    body.party .start-cta {
+      color: #07140f;
+      background:
+        radial-gradient(ellipse 16px 12px at 22% 28%, rgba(7, 15, 10, 0.92) 42%, transparent 48%),
+        radial-gradient(ellipse 13px 10px at 64% 16%, rgba(7, 15, 10, 0.92) 42%, transparent 48%),
+        radial-gradient(ellipse 15px 11px at 84% 62%, rgba(7, 15, 10, 0.92) 42%, transparent 48%),
+        radial-gradient(ellipse 12px 9px at 38% 74%, rgba(7, 15, 10, 0.92) 42%, transparent 48%),
+        radial-gradient(ellipse 14px 10px at 10% 58%, rgba(7, 15, 10, 0.92) 42%, transparent 48%),
+        linear-gradient(150deg, #d9ff3d, #39ff8c 55%, #63d7c6);
+      background-size: 150px 130px, 170px 150px, 160px 140px, 140px 120px, 155px 135px, 100% 100%;
+      box-shadow: 0 0 28px rgba(217, 255, 61, 0.35);
+    }
+    body.party .start-cta strong, body.party .start-cta span {
+      background: rgba(5, 10, 7, 0.82);
+      color: #eafff5;
+      padding: 8px 18px;
+      border-radius: 16px;
+    }
+    body.party .start-cta svg { color: #07140f; }
+
+    /* Zebra: the pool/spa photo CTA */
+    body.party .photo-cta {
+      color: #07140f;
+      background: repeating-linear-gradient(112deg, #0b1014 0 16px, #ecfdf6 16px 34px);
+      box-shadow: 0 0 24px rgba(99, 215, 198, 0.3);
+    }
+    body.party .photo-cta strong, body.party .photo-cta span {
+      background: rgba(5, 10, 7, 0.85);
+      color: #eafff5;
+      padding: 8px 18px;
+      border-radius: 16px;
+    }
+    body.party .photo-cta svg {
+      color: #39ff8c;
+      background: rgba(5, 10, 7, 0.85);
+      border-radius: 18px;
+      padding: 10px;
+    }
+
+    /* Neon snakeskin: the test/chemistry photo CTA */
+    body.party .photo-cta.test-step {
+      background:
+        radial-gradient(circle at 7px 7px, rgba(57, 255, 140, 0.55) 4px, transparent 5px),
+        radial-gradient(circle at 21px 21px, rgba(20, 110, 60, 0.85) 4px, transparent 5px),
+        linear-gradient(135deg, #0d2114, #17402a 60%, #0e2a1a);
+      background-size: 28px 28px, 28px 28px, 100% 100%;
+      box-shadow: 0 0 24px rgba(57, 255, 140, 0.35);
+    }
+
+    /* Talk CTA: dark neon */
+    body.party .brain-cta {
+      background:
+        radial-gradient(circle at 74% 12%, rgba(217, 255, 61, 0.3), transparent 36%),
+        linear-gradient(150deg, #0a0e11, #15212a);
+      box-shadow: 0 0 26px rgba(57, 255, 140, 0.25);
+    }
+    body.party .brain-cta svg { color: #39ff8c; }
+    body.party .brain-cta span { color: #9fb4ae; }
+    /* ===== end Party mode ===== */
+
     @media (max-width: 900px) {
       .shell { grid-template-columns: 1fr; }
       .phone {
@@ -1096,6 +1258,7 @@
         <div class="app-top">
           <div class="brand"><span class="brand-dot" aria-hidden="true"></span>ClearWay Pool AI</div>
           <div class="top-icons">
+            <button class="icon-btn theme-pill" data-theme-toggle aria-label="Switch look">Party</button>
             <button class="icon-btn" data-go="history" aria-label="History">
               <svg aria-hidden="true" viewBox="0 0 48 48" fill="none">
                 <circle cx="24" cy="24" r="17" stroke="currentColor" stroke-width="4"/>
@@ -1120,6 +1283,7 @@
             <span>Takes about a minute.</span>
           </button>
           <p class="muted home-pool-line" data-selected-pool-text title="Tap to change pool">New Pool · Tap to change</p>
+          <p class="muted" data-sync-status hidden></p>
           <button class="retest-banner" data-retest-banner hidden>Retest reminder</button>
           <div class="home-status-row" aria-label="Maintenance status">
             <button class="home-maint gray" data-home-maintenance="filter">
@@ -1270,6 +1434,7 @@
             <strong data-photo-step-title>Take Pool Photo</strong>
             <span data-photo-step-copy>Tap to open camera.</span>
           </button>
+          <button class="gps-suggest" data-gps-suggest hidden type="button"></button>
           <input class="hidden-file" data-camera-input type="file" accept="image/*" capture="environment" />
           <input class="hidden-file" data-library-input type="file" accept="image/*" multiple />
           <div class="thumb-grid" data-photo-thumbs></div>
@@ -1354,6 +1519,8 @@
             <div class="big-step" data-next-step style="margin-top: 4px;">Retest before you add more.</div>
             <div class="summary-list" data-step-guide-list style="margin-top: 14px;"></div>
             <p class="muted" data-flag-hint hidden style="margin-top: 10px;">Wrong step? Tap it to flag it red.</p>
+            <div class="summary-list" data-missing-list style="margin-top: 10px;"></div>
+            <button class="btn full" type="button" data-missing-step style="margin-top: 12px;">Missing step? Say it</button>
             <button class="why-link" type="button" data-why-button hidden>Why these steps?</button>
             <button class="btn full" type="button" data-fix-exact hidden style="margin-top: 12px;">Want exact amounts? Set pool size</button>
           </section>
@@ -1446,6 +1613,16 @@
     const retestStorageKey = "clearwayRetestV1";
     const householdStorageKey = "clearwayHouseholdV1";
     const claimStorageKey = "clearwayUserClaimV1";
+    const themeStorageKey = "clearwayThemeV1";
+    const outboxStorageKey = "clearwayOutboxV1";
+    const costLedgerStorageKey = "clearwayCostLedgerV1";
+
+    function applyTheme(theme) {
+      document.body.classList.toggle("party", theme === "party");
+      const pill = document.querySelector("[data-theme-toggle]");
+      if (pill) pill.textContent = theme === "party" ? "Day" : "Party";
+      try { localStorage.setItem(themeStorageKey, theme); } catch { /* in-memory only */ }
+    }
     let authUserId = "";
     const supabaseUrl = "https://wwhbwhgnwmmlpvrjkjek.supabase.co";
     const supabaseAnonKey = "sb_publishable_CN_Z7T4c3zN66C7xKVuJ8g_rQe9FJNX";
@@ -1875,8 +2052,14 @@
       if (!exactAllowed && chemSteps.length) exactBlockers.push("size");
       if (productsMissing) exactBlockers.push("products");
 
+      // Capability state per BUILD-SPEC: observe_only | category_guidance | exact_action
+      const anyReading = Object.values(readingByKey).some((value) => value !== null);
+      const hasExactStep = steps.some((step) => /\d+(\.\d+)?\s*(fl oz|oz|lb|quart)/.test(step.text));
+      const capability = hasExactStep ? "exact_action" : (anyReading ? "category_guidance" : "observe_only");
+
       return {
         version: ENGINE_VERSION,
+        capability,
         gallons,
         gallonsConfidence: confidence,
         lsi,
@@ -1959,6 +2142,7 @@
           console.warn("Anonymous sign-in unavailable", error);
         }
         migrateLegacyChecks();
+        flushOutbox();
       })
       .catch((error) => console.warn("Supabase unavailable, using local fallback", error));
 
@@ -1994,7 +2178,116 @@
     }
 
     function saveLocalChecks(checks) {
-      localStorage.setItem(checkStorageKey, JSON.stringify(checks));
+      try {
+        localStorage.setItem(checkStorageKey, JSON.stringify(checks));
+      } catch (error) {
+        // Phone storage full: shed photo payloads from older already-sent scans
+        // (those live in Supabase). Never touch scans still waiting to send.
+        const waiting = new Set(readOutbox());
+        const slimmed = checks.map((check, index) => {
+          if (waiting.has(check.id) || index < 25) return check;
+          const photos = check.photos || {};
+          const slim = {};
+          Object.keys(photos).forEach((key) => {
+            slim[key] = normalizePhotoList(photos[key]).filter((src) => typeof src === "string" && !src.startsWith("data:"));
+          });
+          return { ...check, photos: slim };
+        });
+        try { localStorage.setItem(checkStorageKey, JSON.stringify(slimmed)); }
+        catch { localStorage.setItem(checkStorageKey, JSON.stringify(slimmed.slice(0, 40))); }
+      }
+    }
+
+    function readOutbox() {
+      try { return JSON.parse(localStorage.getItem(outboxStorageKey) || "[]"); }
+      catch { return []; }
+    }
+
+    function writeOutbox(ids) {
+      try { localStorage.setItem(outboxStorageKey, JSON.stringify([...new Set(ids)])); }
+      catch { /* best effort */ }
+    }
+
+    function addToOutbox(id) {
+      if (id) writeOutbox([...readOutbox(), id]);
+      renderSyncStatus();
+    }
+
+    function removeFromOutbox(id) {
+      writeOutbox(readOutbox().filter((item) => item !== id));
+      renderSyncStatus();
+    }
+
+    function hasPendingPhotos(check) {
+      const photos = check?.photos || {};
+      return Object.values(photos).some((value) => normalizePhotoList(value).some((src) => typeof src === "string" && src.startsWith("data:")));
+    }
+
+    async function reUploadCheckPhotos(check) {
+      const photos = check.photos || {};
+      const next = {};
+      for (const label of Object.keys(photos)) {
+        const list = normalizePhotoList(photos[label]);
+        next[label] = [];
+        for (let i = 0; i < list.length; i += 1) {
+          const src = list[i];
+          next[label].push(typeof src === "string" && src.startsWith("data:") ? await uploadOne(check.id, label, src, i) : src);
+        }
+      }
+      return next;
+    }
+
+    let outboxFlushing = false;
+    async function flushOutbox() {
+      if (outboxFlushing || !supabase || (typeof navigator !== "undefined" && navigator.onLine === false)) return;
+      const ids = readOutbox();
+      if (!ids.length) { renderSyncStatus(); return; }
+      outboxFlushing = true;
+      let sent = 0;
+      try {
+        for (const id of ids) {
+          const check = localChecks().find((item) => item.id === id);
+          if (!check) { removeFromOutbox(id); continue; }
+          try {
+            if (hasPendingPhotos(check)) {
+              check.photos = await reUploadCheckPhotos(check);
+              saveLocalChecks([check, ...localChecks().filter((item) => item.id !== check.id)]);
+            }
+            const { error } = await supabase.from("pool_checks").upsert(toDb(check), { onConflict: "id" });
+            if (error) throw error;
+            removeFromOutbox(id);
+            sent += 1;
+          } catch (error) {
+            console.warn("Outbox will retry when signal is steadier", error);
+            break;
+          }
+        }
+      } finally {
+        outboxFlushing = false;
+        renderSyncStatus(sent);
+      }
+    }
+
+    function renderSyncStatus(justSent = 0) {
+      const line = document.querySelector("[data-sync-status]");
+      if (!line) return;
+      const waiting = readOutbox().length;
+      const offline = typeof navigator !== "undefined" && navigator.onLine === false;
+      if (offline) {
+        line.hidden = false;
+        line.textContent = waiting
+          ? `No signal. ${waiting} scan${waiting === 1 ? "" : "s"} saved on this phone - they send when signal is back.`
+          : "No signal. Scans save to this phone and send later.";
+      } else if (waiting) {
+        line.hidden = false;
+        line.textContent = `${waiting} scan${waiting === 1 ? "" : "s"} waiting to send. Keep the app open a moment.`;
+      } else if (justSent) {
+        line.hidden = false;
+        line.textContent = "All scans sent.";
+        setTimeout(() => { if (!readOutbox().length) line.hidden = true; }, 4000);
+      } else {
+        line.hidden = true;
+      }
     }
 
     function mergeChecks(primary, secondary) {
@@ -2307,6 +2600,7 @@
       }
       renderHomeMaintenance(pool);
       renderRetestBanner();
+      renderSyncStatus();
       const stats = document.querySelector("[data-home-stats]");
       if (stats) {
         const saved = localChecks();
@@ -2518,6 +2812,23 @@
       activePhotoStep = 0;
       renderPhotoStep();
       await showScreen("photos");
+      offerNearestPool();
+    }
+
+    async function offerNearestPool() {
+      const chip = document.querySelector("[data-gps-suggest]");
+      if (!chip) return;
+      chip.hidden = true;
+      if (!localPools().some((pool) => pool.gps)) return;
+      const fix = gpsFromPosition(await getPositionFix(5000));
+      if (!fix) return;
+      const current = selectedPool();
+      const currentDistance = current?.gps ? haversineMeters(fix, current.gps) : Infinity;
+      const best = nearestPool(fix, current?.id || "");
+      if (!best || best.meters > 200 || best.meters >= currentDistance) return;
+      chip.dataset.poolId = best.pool.id;
+      chip.textContent = `You look closer to ${best.pool.poolName}. Tap to switch.`;
+      chip.hidden = false;
     }
 
     function setPoolForm(pool) {
@@ -2594,6 +2905,8 @@
       const copyTarget = document.querySelector("[data-photo-step-copy]");
       if (titleTarget) titleTarget.textContent = title;
       if (copyTarget) copyTarget.textContent = copy;
+      const photoCta = document.querySelector("[data-open-camera]");
+      if (photoCta) photoCta.classList.toggle("test-step", step.key === "tests");
       renderPhotoThumbs();
     }
 
@@ -2775,12 +3088,79 @@
       return `${outside[0].label} needs attention. Follow the label. Retest before more.`;
     }
 
-    async function quietWeatherLog() {
+    function haversineMeters(a, b) {
+      if (!a || !b || !Number.isFinite(a.lat) || !Number.isFinite(b.lat)) return Infinity;
+      const R = 6371000;
+      const dLat = (b.lat - a.lat) * Math.PI / 180;
+      const dLng = (b.lng - a.lng) * Math.PI / 180;
+      const s = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * Math.PI / 180) * Math.cos(b.lat * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+      return 2 * R * Math.asin(Math.sqrt(s));
+    }
+
+    async function getPositionFix(timeoutMs = 5000) {
       try {
         if (!navigator.geolocation) return null;
-        const position = await new Promise((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: false, timeout: 4000, maximumAge: 1800000 });
+        return await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: timeoutMs, maximumAge: 120000 });
         });
+      } catch { return null; }
+    }
+
+    function gpsFromPosition(position) {
+      if (!position?.coords) return null;
+      return {
+        lat: Math.round(position.coords.latitude * 100000) / 100000,
+        lng: Math.round(position.coords.longitude * 100000) / 100000,
+        acc: Math.round(position.coords.accuracy || 0),
+        at: new Date().toISOString()
+      };
+    }
+
+    function learnPoolGps(poolId, fix) {
+      if (!poolId || !fix || (fix.acc && fix.acc > 120)) return;
+      const pools = localPools();
+      const pool = pools.find((item) => item.id === poolId);
+      if (!pool) return;
+      if (!pool.gps) {
+        pool.gps = fix;
+      } else if (haversineMeters(pool.gps, fix) < 300) {
+        pool.gps = {
+          lat: Math.round((pool.gps.lat * 0.7 + fix.lat * 0.3) * 100000) / 100000,
+          lng: Math.round((pool.gps.lng * 0.7 + fix.lng * 0.3) * 100000) / 100000,
+          acc: Math.min(pool.gps.acc || 999, fix.acc || 999),
+          at: fix.at
+        };
+      } else {
+        return; // a single far-away fix never moves a pool's usual spot
+      }
+      pool.updatedAt = new Date().toISOString();
+      saveLocalPools([pool, ...pools.filter((item) => item.id !== pool.id)]);
+    }
+
+    function nearestPool(fix, excludeId = "") {
+      if (!fix) return null;
+      let best = null;
+      localPools().forEach((pool) => {
+        if (!pool.gps || pool.id === excludeId) return;
+        const meters = haversineMeters(fix, pool.gps);
+        if (!best || meters < best.meters) best = { pool, meters };
+      });
+      return best;
+    }
+
+    function logVisitCost(check) {
+      check.aiCents = check.aiCents || 0;
+      try {
+        const ledger = JSON.parse(localStorage.getItem(costLedgerStorageKey) || "[]");
+        ledger.unshift({ at: check.createdAt, checkId: check.id, engine: ENGINE_VERSION, aiCents: check.aiCents });
+        localStorage.setItem(costLedgerStorageKey, JSON.stringify(ledger.slice(0, 500)));
+      } catch { /* ledger is best effort */ }
+    }
+
+    async function quietWeatherLog(knownPosition = null) {
+      try {
+        const position = knownPosition || (await getPositionFix(4000));
+        if (!position) return null;
         const { latitude, longitude } = position.coords;
         const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,precipitation,wind_speed_10m&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=auto&forecast_days=1`;
         const response = await fetch(url);
@@ -2809,8 +3189,15 @@
       const mainIssue = inferIssueFromText(brain);
       const previous = localChecks().find((item) => item.poolId && item.poolId === (pool.id || "") && (Date.now() - new Date(item.createdAt).getTime()) < 172800000);
       const memory = buildPoolMemory(pool.id || "");
-      const weatherLog = await quietWeatherLog();
+      const positionFix = await getPositionFix(5000);
+      const gps = gpsFromPosition(positionFix);
+      const weatherLog = await quietWeatherLog(positionFix);
       const engine = chemEngine(pool, values, brain, memory, weatherLog);
+      if (gps && pool.gps && haversineMeters(gps, pool.gps) > 400) {
+        engine.cautions = engine.cautions || [];
+        engine.cautions.push(`This scan is far from ${pool.poolName}'s usual spot. Double-check the right pool is selected.`);
+      }
+      learnPoolGps(pool.id || "", gps);
       const photos = await uploadPhotos(checkId);
       const check = {
         id: checkId,
@@ -2840,6 +3227,8 @@
         productCategories: inferProductCategories(brain),
         followUpOf: previous ? previous.id : "",
         engine,
+        gps,
+        aiCents: 0,
         stepFlags: {},
         photos,
         values,
@@ -2847,6 +3236,7 @@
       };
       check.report = homeownerReport(check);
       check.learning = learningQuality(check);
+      logVisitCost(check);
       return check;
     }
 
@@ -2882,6 +3272,9 @@
           followUpOf: check.followUpOf || "",
           engine: check.engine || null,
           stepFlags: check.stepFlags || {},
+          missingSteps: check.missingSteps || [],
+          gps: check.gps || null,
+          aiCents: check.aiCents || 0,
           closedAt: check.closedAt || "",
           report: check.report || null,
           learning: check.learning || null
@@ -2916,6 +3309,9 @@
         followUpOf: noteData.followUpOf || "",
         engine: noteData.engine || null,
         stepFlags: noteData.stepFlags || {},
+        missingSteps: noteData.missingSteps || [],
+        gps: noteData.gps || null,
+        aiCents: noteData.aiCents || 0,
         closedAt: noteData.closedAt || "",
         report: noteData.report || null,
         learning: noteData.learning || null,
@@ -2941,7 +3337,8 @@
         if (error) throw error;
         const mine = householdId();
         const shared = (data || []).map(fromDb).filter((check) => check.householdId === mine);
-        const merged = mergeChecks(shared, local);
+        const waiting = new Set(readOutbox());
+        const merged = mergeChecks(local.filter((check) => waiting.has(check.id)), mergeChecks(shared, local));
         saveLocalChecks(merged);
         return merged;
       } catch (error) {
@@ -2981,8 +3378,11 @@
         if (!supabase) throw new Error("Supabase unavailable");
         const { error } = await supabase.from("pool_checks").upsert(toDb(check), { onConflict: "id" });
         if (error) throw error;
+        if (hasPendingPhotos(check)) addToOutbox(check.id);
+        else removeFromOutbox(check.id);
       } catch (error) {
-        console.warn("Saving local fallback check", error);
+        console.warn("Saved on this phone - sends when signal is back", error);
+        addToOutbox(check.id);
       }
     }
 
@@ -3095,6 +3495,13 @@
       if (hintTarget) hintTarget.hidden = !steps.length;
       const whyButton = document.querySelector("[data-why-button]");
       if (whyButton) whyButton.hidden = !(check.engine?.rulesFired || []).length;
+      const missingTarget = document.querySelector("[data-missing-list]");
+      if (missingTarget) {
+        const missing = check.missingSteps || [];
+        missingTarget.innerHTML = missing.map((item) => `
+          <div class="summary-item missing-item"><span>Missing</span><strong>${escapeHtml(item.text)}</strong></div>
+        `).join("");
+      }
       const fixExact = document.querySelector("[data-fix-exact]");
       if (fixExact) {
         const blockers = check.engine?.exactBlockers || [];
@@ -3259,6 +3666,29 @@
 
     function startDictation(fieldName) {
       dictateInto(document.querySelector(`[data-check-field="${fieldName}"]`));
+    }
+
+    function dictateMissingStep() {
+      if (!activeCheck) return;
+      const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!Speech) {
+        alert("Dictation is not supported here. Tell Payton the missing step at end of day.");
+        return;
+      }
+      const recognition = new Speech();
+      recognition.lang = "en-US";
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+      recognition.onresult = async (event) => {
+        const said = event.results?.[0]?.[0]?.transcript || "";
+        if (!said) return;
+        activeCheck.missingSteps = activeCheck.missingSteps || [];
+        activeCheck.missingSteps.push({ text: said, at: new Date().toISOString(), scope: "review" });
+        await saveCheck(activeCheck);
+        renderGuide(activeCheck);
+      };
+      recognition.onerror = () => alert("Did not catch that. Tap Missing step again.");
+      recognition.start();
     }
 
     function dictateFlagReason(stepId) {
@@ -3586,6 +4016,15 @@
         return;
       }
 
+      const gpsSuggest = event.target.closest("[data-gps-suggest]");
+      if (gpsSuggest) {
+        if (gpsSuggest.dataset.poolId) selectedPoolId = gpsSuggest.dataset.poolId;
+        gpsSuggest.hidden = true;
+        renderHome();
+        renderPhotoStep();
+        return;
+      }
+
       if (event.target.closest("[data-open-camera]")) {
         document.querySelector("[data-camera-input]").click();
         return;
@@ -3652,6 +4091,16 @@
         return;
       }
 
+      if (event.target.closest("[data-missing-step]") && activeCheck) {
+        dictateMissingStep();
+        return;
+      }
+
+      if (event.target.closest("[data-theme-toggle]")) {
+        applyTheme(document.body.classList.contains("party") ? "day" : "party");
+        return;
+      }
+
       if (event.target.closest("[data-fix-exact]")) {
         await openEditPool();
         return;
@@ -3676,7 +4125,13 @@
     });
 
     ensureStarterPool();
+    try { applyTheme(localStorage.getItem(themeStorageKey) || "day"); } catch { applyTheme("day"); }
     renderHome();
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("./sw.js").catch(() => { /* offline shell needs sw.js next to this file */ });
+    }
+    window.addEventListener("online", () => { renderSyncStatus(); flushOutbox(); });
+    window.addEventListener("offline", () => renderSyncStatus());
     setInterval(() => {
       if (document.querySelector(".screen.active")?.dataset.screen === "home") renderRetestBanner();
     }, 60000);
