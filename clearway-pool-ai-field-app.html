@@ -955,12 +955,6 @@
       cursor: pointer;
     }
 
-    body.party .gps-suggest {
-      background: #15211d;
-      border-color: rgba(57, 255, 140, 0.45);
-      color: #d7ffe9;
-    }
-
     .why-btn {
       border: 0;
       border-radius: 12px;
@@ -1093,132 +1087,251 @@
       font-weight: 900;
     }
 
-    /* ===== Party mode: same job, more energy. Pool done. Party on. ===== */
+    /* ===== Party mode — pool lights at night. Pool done. Party on. =====
+       Design system: blacked-out water surfaces + neon pool-light edges.
+       Hue map: hero Scan = electric cyan (animated) · pool photo = seafoam ·
+       test photo = violet · talk = soft cyan · alerts = amber/red.
+       SPECIFICITY RULE: the hero owns body.party .btn.primary.start-cta (0,4,1);
+       the blanket primary rule below excludes .start-cta so it can never win. */
+    @keyframes partyHeroGlow {
+      0%, 100% {
+        box-shadow:
+          0 0 0 2px rgba(46, 230, 255, 0.85),
+          0 0 18px rgba(46, 230, 255, 0.45),
+          0 0 52px rgba(46, 230, 255, 0.22),
+          inset 0 0 30px rgba(46, 230, 255, 0.16);
+      }
+      50% {
+        box-shadow:
+          0 0 0 2px rgba(46, 230, 255, 1),
+          0 0 26px rgba(46, 230, 255, 0.65),
+          0 0 84px rgba(46, 230, 255, 0.36),
+          inset 0 0 44px rgba(46, 230, 255, 0.26);
+      }
+    }
+
+    @keyframes partyCaustics {
+      from { background-position: 0% 0%, 0 0, 0 0, 0 0; }
+      to { background-position: 280% 160%, 0 0, 0 0, 0 0; }
+    }
+
     body.party {
+      color-scheme: dark;
       background:
-        radial-gradient(circle at 12% 8%, rgba(57, 255, 140, 0.1), transparent 32%),
-        linear-gradient(135deg, #0b0f12 0%, #131a1f 55%, #0d1114 100%);
-      color: #f2fbf8;
+        radial-gradient(circle at 16% 4%, rgba(46, 230, 255, 0.14), transparent 34%),
+        radial-gradient(circle at 88% 96%, rgba(122, 92, 255, 0.12), transparent 40%),
+        linear-gradient(165deg, #020a10 0%, #041824 55%, #020c13 100%);
+      color: #eafcff;
     }
 
-    body.party .phone { background: #05080a; }
-    body.party .screen { background: #0e1418; scrollbar-color: rgba(57, 255, 140, 0.4) transparent; }
-    body.party .brand, body.party h1, body.party h2, body.party h3 { color: #f2fbf8; }
-    body.party .desktop-panel p, body.party .muted { color: #9fb4ae; }
-    body.party .home-pool-line { color: #9fb4ae; }
-    body.party .card, body.party .setup-card, body.party .history-head, body.party .history-item, body.party .picker-button, body.party .sheet {
-      background: #161d22;
-      border-color: #243239;
-      color: #e9f7f2;
-      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.5);
+    body.party .phone {
+      background: #010507;
+      box-shadow: 0 0 0 1px rgba(46, 230, 255, 0.22), 0 0 44px rgba(46, 230, 255, 0.12), var(--shadow);
     }
-    body.party .guide-card { background: linear-gradient(180deg, #161d22, #122019); border-color: rgba(57, 255, 140, 0.35); }
-    body.party .guide-card .muted { color: #39ff8c; }
-    body.party .pool-id-card { background: #161d22; border-color: rgba(99, 215, 198, 0.35); }
-    body.party .warning { background: #251f0c; border-color: rgba(255, 229, 61, 0.45); }
-    body.party .warning ul { color: #e8e3c8; }
+    body.party .screen {
+      background: linear-gradient(180deg, #051722 0%, #030f17 60%, #02090f 100%);
+      scrollbar-color: rgba(46, 230, 255, 0.45) transparent;
+    }
+    body.party .brand, body.party h1, body.party h2, body.party h3 { color: #f4feff; }
+    body.party .desktop-panel p, body.party .muted { color: #93b8c4; }
+    body.party .home-pool-line, body.party .home-stats { color: #93b8c4; }
+    body.party .brand-dot { box-shadow: 0 0 16px rgba(46, 230, 255, 0.75); }
+    body.party label { color: #8fb6c2; }
+
+    body.party .card, body.party .setup-card, body.party .history-head,
+    body.party .history-item, body.party .picker-button, body.party .sheet {
+      background: rgba(6, 23, 32, 0.94);
+      border-color: rgba(46, 222, 255, 0.16);
+      color: #eafcff;
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.55);
+    }
+    body.party .setup-card-main, body.party .history-head {
+      background:
+        radial-gradient(circle at 90% 0%, rgba(46, 230, 255, 0.16), transparent 38%),
+        rgba(6, 23, 32, 0.94);
+    }
+    body.party .picker-button.active { border-color: rgba(77, 255, 210, 0.6); background: rgba(8, 32, 38, 0.95); }
+    body.party .setup-label { color: #4dffd2; }
+    body.party .guide-card {
+      background:
+        radial-gradient(circle at 92% 0%, rgba(46, 230, 255, 0.2), transparent 36%),
+        linear-gradient(180deg, rgba(6, 25, 34, 0.96), rgba(4, 18, 26, 0.96));
+      border-color: rgba(46, 230, 255, 0.4);
+      box-shadow: 0 0 26px rgba(46, 230, 255, 0.12), 0 14px 34px rgba(0, 0, 0, 0.55);
+    }
+    body.party .guide-card .muted { color: #4dffd2; }
+    body.party .pool-id-card {
+      background:
+        radial-gradient(circle at 94% 0%, rgba(122, 92, 255, 0.16), transparent 36%),
+        rgba(6, 23, 32, 0.94);
+      border-color: rgba(122, 92, 255, 0.35);
+    }
+    body.party .warning { background: rgba(34, 26, 6, 0.92); border-color: rgba(255, 201, 77, 0.45); }
+    body.party .warning h3 { color: #ffd34d; }
+    body.party .warning ul { color: #f3e7bd; }
+    body.party .missing-item { background: rgba(34, 26, 6, 0.92); border-color: rgba(255, 201, 77, 0.5); color: #f3e7bd; }
+
     body.party .btn, body.party .icon-btn, body.party .icon-action {
-      background: #1b2329;
-      color: #eafff5;
-      box-shadow: inset 0 0 0 1px #2c3a42;
+      background: rgba(9, 27, 37, 0.92);
+      color: #def7ff;
+      box-shadow: inset 0 0 0 1px rgba(125, 220, 240, 0.22);
     }
-    body.party .btn.primary, body.party .icon-action.primary {
-      background: var(--seafoam);
-      color: #07140f;
-      box-shadow: 0 0 18px rgba(99, 215, 198, 0.45);
+    body.party .btn.primary:not(.start-cta), body.party .icon-action.primary {
+      background: rgba(5, 30, 40, 0.95);
+      color: #aefaff;
+      box-shadow:
+        inset 0 0 0 2px rgba(46, 230, 255, 0.85),
+        0 0 16px rgba(46, 230, 255, 0.35),
+        inset 0 0 18px rgba(46, 230, 255, 0.14);
+      text-shadow: 0 0 12px rgba(46, 230, 255, 0.55);
     }
-    body.party .btn.danger { background: #ff4d6d; color: #1a0509; }
-    body.party .home-maint { background: #161d22; box-shadow: inset 0 0 0 1px #243239; color: #eafff5; }
-    body.party .home-maint span { color: #9fb4ae; }
-    body.party .home-maint.green { background: #0f2a1c; box-shadow: inset 0 0 0 2px #39ff8c; }
-    body.party .home-maint.yellow { background: #2a250b; box-shadow: inset 0 0 0 2px #ffe53d; }
-    body.party .home-maint.red { background: #2d1014; box-shadow: inset 0 0 0 2px #ff4d6d; }
-    body.party .home-maint.gray { background: #1a2126; }
-    body.party .home-status-svg { color: #eafff5; }
-    body.party input, body.party select, body.party textarea { background: #11181d; color: #eafff5; border-color: #2c3a42; }
-    body.party .test-grid label { background: #11181d; border-color: #2c3a42; color: #9fb4ae; }
-    body.party .test-grid input { color: #eafff5; }
-    body.party .setup-option { background: #122019; color: #eafff5; }
-    body.party .setup-option.wide { background: var(--seafoam); color: #07140f; }
-    body.party .summary-item, body.party .step-row { background: #11181d; border-color: #243239; color: #eafff5; }
-    body.party .step-row.flagged { background: #2d1014; border-color: #ff4d6d; }
-    body.party .step-row.flagged .step-num { background: #ff4d6d; color: #1a0509; }
-    body.party .big-step { color: #f2fbf8; }
-    body.party .big-step.flagged { color: #ff4d6d; }
-    body.party .empty { background: #122019; border-color: rgba(57, 255, 140, 0.35); color: #9fb4ae; }
-    body.party .thumb { background: #122019; border-color: #243239; }
-    body.party .history-badge { background: #122019; color: #39ff8c; }
-    body.party .status { background: #2a250b; color: #ffe53d; }
-    body.party .status-flagged { background: #2d1014; color: #ff4d6d; }
-    body.party .history-arrow { background: var(--seafoam); color: #07140f; }
-    body.party .retest-banner { background: #1b2329; color: #eafff5; box-shadow: inset 0 0 0 1px #39ff8c; }
-    body.party .retest-banner.due { background: #ff4d6d; color: #1a0509; box-shadow: 0 0 20px rgba(255, 77, 109, 0.5); }
-    body.party .sheet-backdrop { background: rgba(0, 0, 0, 0.66); }
-    body.party .why-link { color: #39ff8c; }
-    body.party .chip { background: #11181d; color: #eafff5; border-color: #2c3a42; }
-    body.party .chip.on { background: #39ff8c; color: #07140f; border-color: #39ff8c; }
-    body.party .brand-dot { box-shadow: 0 0 14px rgba(57, 255, 140, 0.7); }
-    body.party .home-stats { color: #9fb4ae; }
+    body.party .btn.danger {
+      background: rgba(40, 6, 14, 0.95);
+      color: #ff8298;
+      box-shadow: inset 0 0 0 2px rgba(255, 93, 115, 0.85), 0 0 16px rgba(255, 93, 115, 0.3);
+    }
+    body.party .icon-btn.theme-pill {
+      color: #aefaff;
+      box-shadow: inset 0 0 0 2px rgba(46, 230, 255, 0.8), 0 0 14px rgba(46, 230, 255, 0.35);
+      text-shadow: 0 0 10px rgba(46, 230, 255, 0.6);
+    }
 
-    /* Leopard: the Home CTA */
-    body.party .start-cta {
-      color: #07140f;
+    /* The hero: a lit pool at night. Zero doubt the mode switched. */
+    body.party .btn.primary.start-cta {
+      color: #f4feff;
       background:
-        radial-gradient(ellipse 16px 12px at 22% 28%, rgba(7, 15, 10, 0.92) 42%, transparent 48%),
-        radial-gradient(ellipse 13px 10px at 64% 16%, rgba(7, 15, 10, 0.92) 42%, transparent 48%),
-        radial-gradient(ellipse 15px 11px at 84% 62%, rgba(7, 15, 10, 0.92) 42%, transparent 48%),
-        radial-gradient(ellipse 12px 9px at 38% 74%, rgba(7, 15, 10, 0.92) 42%, transparent 48%),
-        radial-gradient(ellipse 14px 10px at 10% 58%, rgba(7, 15, 10, 0.92) 42%, transparent 48%),
-        linear-gradient(150deg, #d9ff3d, #39ff8c 55%, #63d7c6);
-      background-size: 150px 130px, 170px 150px, 160px 140px, 140px 120px, 155px 135px, 100% 100%;
-      box-shadow: 0 0 28px rgba(217, 255, 61, 0.35);
+        repeating-linear-gradient(112deg, transparent 0 26px, rgba(46, 230, 255, 0.08) 26px 30px, transparent 30px 58px),
+        radial-gradient(130% 95% at 50% 118%, rgba(46, 230, 255, 0.3), transparent 55%),
+        radial-gradient(80% 55% at 14% -8%, rgba(77, 255, 210, 0.16), transparent 60%),
+        linear-gradient(170deg, #03141d 0%, #062534 58%, #02101a 100%);
+      background-size: 340px 340px, 100% 100%, 100% 100%, 100% 100%;
+      box-shadow:
+        0 0 0 2px rgba(46, 230, 255, 0.85),
+        0 0 18px rgba(46, 230, 255, 0.45),
+        0 0 52px rgba(46, 230, 255, 0.22),
+        inset 0 0 30px rgba(46, 230, 255, 0.16);
+      animation: partyHeroGlow 2.8s ease-in-out infinite, partyCaustics 9s linear infinite;
     }
-    body.party .start-cta strong, body.party .start-cta span {
-      background: rgba(5, 10, 7, 0.82);
-      color: #eafff5;
-      padding: 8px 18px;
-      border-radius: 16px;
+    body.party .btn.primary.start-cta svg {
+      color: #2ee6ff;
+      filter: drop-shadow(0 0 10px rgba(46, 230, 255, 0.8));
     }
-    body.party .start-cta svg { color: #07140f; }
+    body.party .btn.primary.start-cta strong {
+      color: #ffffff;
+      text-shadow: 0 0 18px rgba(46, 230, 255, 0.6), 0 0 4px rgba(46, 230, 255, 0.4);
+    }
+    body.party .btn.primary.start-cta span { color: #9fd9e8; }
 
-    /* Zebra: the pool/spa photo CTA */
+    /* Step CTAs: each step gets its own pool-light hue. Light, not patterns. */
     body.party .photo-cta {
-      color: #07140f;
-      background: repeating-linear-gradient(112deg, #0b1014 0 16px, #ecfdf6 16px 34px);
-      box-shadow: 0 0 24px rgba(99, 215, 198, 0.3);
+      color: #f4feff;
+      background:
+        radial-gradient(120% 90% at 50% 115%, rgba(77, 255, 210, 0.24), transparent 55%),
+        linear-gradient(170deg, #03171a 0%, #06281f 60%, #021310 100%);
+      box-shadow:
+        0 0 0 2px rgba(77, 255, 210, 0.8),
+        0 0 20px rgba(77, 255, 210, 0.4),
+        inset 0 0 30px rgba(77, 255, 210, 0.14);
     }
-    body.party .photo-cta strong, body.party .photo-cta span {
-      background: rgba(5, 10, 7, 0.85);
-      color: #eafff5;
-      padding: 8px 18px;
-      border-radius: 16px;
-    }
-    body.party .photo-cta svg {
-      color: #39ff8c;
-      background: rgba(5, 10, 7, 0.85);
-      border-radius: 18px;
-      padding: 10px;
-    }
+    body.party .photo-cta svg { color: #4dffd2; filter: drop-shadow(0 0 10px rgba(77, 255, 210, 0.8)); }
+    body.party .photo-cta strong { color: #ffffff; text-shadow: 0 0 16px rgba(77, 255, 210, 0.55); }
+    body.party .photo-cta span { color: #9be4cf; }
 
-    /* Neon snakeskin: the test/chemistry photo CTA */
     body.party .photo-cta.test-step {
       background:
-        radial-gradient(circle at 7px 7px, rgba(57, 255, 140, 0.55) 4px, transparent 5px),
-        radial-gradient(circle at 21px 21px, rgba(20, 110, 60, 0.85) 4px, transparent 5px),
-        linear-gradient(135deg, #0d2114, #17402a 60%, #0e2a1a);
-      background-size: 28px 28px, 28px 28px, 100% 100%;
-      box-shadow: 0 0 24px rgba(57, 255, 140, 0.35);
+        radial-gradient(120% 90% at 50% 115%, rgba(167, 122, 255, 0.26), transparent 55%),
+        linear-gradient(170deg, #0c0a1f 0%, #1b1238 60%, #070617 100%);
+      box-shadow:
+        0 0 0 2px rgba(167, 122, 255, 0.85),
+        0 0 20px rgba(167, 122, 255, 0.45),
+        inset 0 0 30px rgba(167, 122, 255, 0.16);
     }
+    body.party .photo-cta.test-step svg { color: #c5a3ff; filter: drop-shadow(0 0 10px rgba(167, 122, 255, 0.85)); }
+    body.party .photo-cta.test-step strong { text-shadow: 0 0 16px rgba(167, 122, 255, 0.6); }
+    body.party .photo-cta.test-step span { color: #cbb6f2; }
 
-    /* Talk CTA: dark neon */
     body.party .brain-cta {
       background:
-        radial-gradient(circle at 74% 12%, rgba(217, 255, 61, 0.3), transparent 36%),
-        linear-gradient(150deg, #0a0e11, #15212a);
-      box-shadow: 0 0 26px rgba(57, 255, 140, 0.25);
+        radial-gradient(circle at 76% 10%, rgba(46, 230, 255, 0.18), transparent 38%),
+        linear-gradient(165deg, #020d13 0%, #07202b 100%);
+      box-shadow: 0 0 0 1px rgba(46, 230, 255, 0.35), 0 0 22px rgba(46, 230, 255, 0.18), inset 0 0 26px rgba(46, 230, 255, 0.08);
     }
-    body.party .brain-cta svg { color: #39ff8c; }
-    body.party .brain-cta span { color: #9fb4ae; }
+    body.party .brain-cta svg { color: #4dffd2; filter: drop-shadow(0 0 10px rgba(77, 255, 210, 0.7)); }
+    body.party .brain-cta span { color: #93b8c4; }
+
+    body.party .home-maint {
+      background: rgba(6, 23, 32, 0.94);
+      box-shadow: inset 0 0 0 1px rgba(125, 220, 240, 0.18);
+      color: #eafcff;
+    }
+    body.party .home-maint span { color: #8fb6c2; }
+    body.party .home-maint.green { background: rgba(4, 32, 24, 0.95); box-shadow: inset 0 0 0 2px rgba(43, 255, 196, 0.8), 0 0 14px rgba(43, 255, 196, 0.25); }
+    body.party .home-maint.yellow { background: rgba(36, 28, 5, 0.95); box-shadow: inset 0 0 0 2px rgba(255, 211, 77, 0.8), 0 0 14px rgba(255, 211, 77, 0.25); }
+    body.party .home-maint.red { background: rgba(42, 7, 14, 0.95); box-shadow: inset 0 0 0 2px rgba(255, 93, 115, 0.85), 0 0 14px rgba(255, 93, 115, 0.3); }
+    body.party .home-maint.gray { background: rgba(8, 20, 27, 0.9); }
+    body.party .home-status-svg { color: #d7f3fb; }
+
+    body.party input, body.party select, body.party textarea {
+      background: #051520;
+      color: #eafcff;
+      border-color: rgba(125, 220, 240, 0.22);
+    }
+    body.party input:focus, body.party select:focus, body.party textarea:focus {
+      border-color: #2ee6ff;
+      box-shadow: 0 0 0 3px rgba(46, 230, 255, 0.22), 0 0 14px rgba(46, 230, 255, 0.25);
+    }
+    body.party .test-grid label { background: #051520; border-color: rgba(125, 220, 240, 0.18); color: #8fb6c2; }
+    body.party .test-grid label:focus-within { border-color: #2ee6ff; box-shadow: 0 0 0 3px rgba(46, 230, 255, 0.2); }
+    body.party .test-grid input { color: #eafcff; }
+
+    body.party .setup-option { background: rgba(9, 30, 38, 0.95); color: #def7ff; box-shadow: inset 0 0 0 1px rgba(125, 220, 240, 0.2); }
+    body.party .setup-option.wide {
+      background: rgba(5, 30, 40, 0.95);
+      color: #aefaff;
+      box-shadow: inset 0 0 0 2px rgba(46, 230, 255, 0.85), 0 0 16px rgba(46, 230, 255, 0.3);
+    }
+
+    body.party .summary-item, body.party .step-row { background: rgba(5, 21, 30, 0.94); border-color: rgba(125, 220, 240, 0.16); color: #eafcff; }
+    body.party .step-row { border-color: rgba(46, 230, 255, 0.25); }
+    body.party .step-num { background: rgba(46, 230, 255, 0.16); color: #aefaff; box-shadow: inset 0 0 0 1px rgba(46, 230, 255, 0.6); }
+    body.party .step-row.flagged { background: rgba(42, 7, 14, 0.95); border-color: rgba(255, 93, 115, 0.7); }
+    body.party .step-row.flagged .step-num { background: #ff3b5c; color: #1a0509; box-shadow: none; }
+    body.party .big-step { color: #f4feff; }
+    body.party .big-step.flagged { color: #ff5d73; }
+    body.party .why-link { color: #4dffd2; }
+
+    body.party .chip { background: rgba(5, 21, 30, 0.94); color: #def7ff; border-color: rgba(125, 220, 240, 0.22); }
+    body.party .chip.on {
+      background: rgba(77, 255, 210, 0.14);
+      color: #4dffd2;
+      border-color: rgba(77, 255, 210, 0.8);
+      box-shadow: 0 0 12px rgba(77, 255, 210, 0.25);
+    }
+    body.party .history-badge { background: rgba(77, 255, 210, 0.1); color: #4dffd2; }
+    body.party .status { background: rgba(36, 28, 5, 0.95); color: #ffd34d; }
+    body.party .status-flagged { background: rgba(42, 7, 14, 0.95); color: #ff8298; }
+    body.party .history-arrow { background: rgba(46, 230, 255, 0.16); color: #aefaff; box-shadow: inset 0 0 0 1px rgba(46, 230, 255, 0.6); }
+    body.party .history-thumb { background: #07202b; border-color: rgba(125, 220, 240, 0.18); }
+    body.party .thumb { background: #07202b; border-color: rgba(125, 220, 240, 0.18); }
+    body.party .empty { background: rgba(46, 230, 255, 0.05); border-color: rgba(46, 230, 255, 0.3); color: #8fb6c2; }
+
+    body.party .retest-banner {
+      background: rgba(6, 23, 32, 0.95);
+      color: #def7ff;
+      box-shadow: inset 0 0 0 1px rgba(46, 230, 255, 0.55), 0 0 14px rgba(46, 230, 255, 0.18);
+    }
+    body.party .retest-banner.due {
+      background: rgba(48, 4, 16, 0.96);
+      color: #ffd7e0;
+      box-shadow: inset 0 0 0 2px rgba(255, 46, 99, 0.9), 0 0 24px rgba(255, 46, 99, 0.5);
+    }
+    body.party .sheet-backdrop { background: rgba(1, 6, 10, 0.78); }
+    body.party .gps-suggest {
+      background: rgba(5, 26, 24, 0.95);
+      border-color: rgba(77, 255, 210, 0.5);
+      color: #c9f6e8;
+      box-shadow: 0 0 12px rgba(77, 255, 210, 0.15);
+    }
     /* ===== end Party mode ===== */
 
     @media (max-width: 900px) {
@@ -1622,6 +1735,8 @@
       document.body.classList.toggle("party", theme === "party");
       const pill = document.querySelector("[data-theme-toggle]");
       if (pill) pill.textContent = theme === "party" ? "Day" : "Party";
+      const themeMeta = document.querySelector('meta[name="theme-color"]');
+      if (themeMeta) themeMeta.setAttribute("content", theme === "party" ? "#04121d" : "#63d7c6");
       try { localStorage.setItem(themeStorageKey, theme); } catch { /* in-memory only */ }
     }
     let authUserId = "";
@@ -2191,7 +2306,17 @@
     }
 
     function saveLocalPools(pools) {
-      localStorage.setItem(poolStorageKey, JSON.stringify(pools));
+      try {
+        localStorage.setItem(poolStorageKey, JSON.stringify(pools));
+      } catch (error) {
+        // Phone storage full: keep every pool, shed extra product photos first.
+        const slimmed = pools.map((pool) => ({
+          ...pool,
+          chemInventoryPhotos: (pool.chemInventoryPhotos || []).slice(0, 1)
+        }));
+        try { localStorage.setItem(poolStorageKey, JSON.stringify(slimmed)); }
+        catch { console.warn("Pool list could not save - storage is full", error); }
+      }
     }
 
     function localChecks() {
@@ -2579,7 +2704,7 @@
       screens.forEach((screen) => {
         const isActive = screen.dataset.screen === name;
         screen.classList.toggle("active", isActive);
-        if (isActive) screen.scrollTo({ top: 0, behavior: "instant" });
+        if (isActive) screen.scrollTo(0, 0);
       });
       pickers.forEach((button) => button.classList.toggle("active", button.dataset.go === name));
       renderHome();
@@ -3428,8 +3553,8 @@
         { ok: proStep, label: "Next step recorded" }
       ];
       const score = signals.filter((item) => item.ok).length;
-      if (score >= 5) return { status: "Strong", copy: "Good check. ClearWay can learn from this with more history.", signals };
-      if (score >= 3) return { status: "Useful", copy: "Useful check. Better after one more proof point or retest.", signals };
+      if (score >= 5) return { status: "Strong", copy: "Good scan. ClearWay can learn from this with more history.", signals };
+      if (score >= 3) return { status: "Useful", copy: "Useful scan. Better after one more proof point or retest.", signals };
       return { status: "Needs more", copy: "Needs more info. Add photos, values, or a next step.", signals };
     }
 
@@ -3590,7 +3715,7 @@
         ...(check.photos?.equipment || []).map((src, index) => [`Equipment ${index + 1}`, src])
       ].filter((item) => item[1]);
       document.querySelector("[data-guide-photos]").innerHTML = photoItems.length
-        ? photoItems.map(([label, src]) => `<div class="thumb"><img alt="${label}" src="${src}"><span>${label}</span></div>`).join("")
+        ? photoItems.map(([label, src]) => `<div class="thumb"><img alt="${label}" src="${escapeHtml(src)}"><span>${label}</span></div>`).join("")
         : '<div class="empty" style="grid-column: 1 / -1;">No photos saved for this check.</div>';
 
       const closeButton = document.querySelector("[data-close-loop]");
@@ -3630,8 +3755,9 @@
       ].filter(Boolean).join(" ").toLowerCase();
     }
 
-    async function renderHistory() {
-      const saved = await checks();
+    async function renderHistory(fromLocal = false) {
+      // Typing in search filters the already-synced local list - no network per keystroke.
+      const saved = fromLocal ? localChecks() : await checks();
       const query = document.querySelector("[data-history-search]")?.value.trim().toLowerCase() || "";
       const shown = query ? saved.filter((item) => historySearchText(item).includes(query)) : saved;
       document.querySelector("[data-history-count]").textContent = saved.length;
@@ -3643,9 +3769,9 @@
           const photoCount = historyPhotoCount(item);
           const status = historyStatus(item);
           return `
-            <button class="history-item" data-open-check="${item.id}">
+            <button class="history-item" data-open-check="${escapeHtml(item.id)}">
               <div class="history-card-grid">
-                ${thumb ? `<img class="history-thumb" alt="Pool thumbnail" src="${thumb}">` : '<div class="history-thumb"></div>'}
+                ${thumb ? `<img class="history-thumb" alt="Pool thumbnail" src="${escapeHtml(thumb)}">` : '<div class="history-thumb"></div>'}
                 <div class="history-main">
                   <strong>${escapeHtml(item.poolName || "Unnamed Pool")}</strong>
                   <p class="muted">${new Date(item.createdAt).toLocaleString()}</p>
@@ -3666,16 +3792,6 @@
         : (saved.length
           ? '<div class="empty">Nothing matches that search.</div>'
           : '<div class="empty">No scans yet. Tap Scan My Pool.</div>');
-    }
-
-    async function copyText(text) {
-      if (navigator.clipboard?.writeText) return navigator.clipboard.writeText(text);
-      const area = document.createElement("textarea");
-      area.value = text;
-      document.body.appendChild(area);
-      area.select();
-      document.execCommand("copy");
-      area.remove();
     }
 
     async function exportHistory() {
@@ -3764,7 +3880,8 @@
         const files = [...poolChemInput.files];
         editPoolChemPhotos = editPoolChemPhotos || [];
         for (const file of files) {
-          editPoolChemPhotos.push(await compressImage(file));
+          try { editPoolChemPhotos.push(await compressImage(file)); }
+          catch { /* skip a photo this phone cannot read */ }
         }
         editPoolChemChanged = true;
         poolChemInput.value = "";
@@ -3779,7 +3896,9 @@
         evidenceSlotOverride = "";
         const files = [...evidenceInput.files];
         for (const file of files) {
-          let dataUrl = await compressImage(file);
+          let dataUrl = null;
+          try { dataUrl = await compressImage(file); }
+          catch { continue; }
           try {
             dataUrl = await uploadOne(activeCheck.id, slot, dataUrl, (activeCheck.photos?.[slot] || []).length);
           } catch (error) {
@@ -3803,7 +3922,8 @@
         const files = [...setupChemInput.files];
         setupDraft.chemInventoryPhotos = setupDraft.chemInventoryPhotos || [];
         for (const file of files) {
-          setupDraft.chemInventoryPhotos.push(await compressImage(file));
+          try { setupDraft.chemInventoryPhotos.push(await compressImage(file)); }
+          catch { /* skip a photo this phone cannot read */ }
         }
         setupDraft.chemInventoryNote = "Product photo saved";
         setupDraft.chemInventoryUpdatedAt = new Date().toISOString();
@@ -3817,7 +3937,9 @@
       const step = photoSteps[activePhotoStep];
       const files = [...input.files];
       for (const file of files) {
-        const dataUrl = await compressImage(file);
+        let dataUrl = null;
+        try { dataUrl = await compressImage(file); }
+        catch { continue; }
         if (step.key === "pool") {
           if (!Array.isArray(draft.photos.pool)) draft.photos.pool = draft.photos.pool ? [draft.photos.pool] : [];
           draft.photos.pool.push(dataUrl);
@@ -3830,7 +3952,7 @@
 
     document.addEventListener("input", async (event) => {
       if (event.target.closest("[data-history-search]")) {
-        await renderHistory();
+        await renderHistory(true);
       }
     });
 
@@ -4110,14 +4232,20 @@
         button.style.opacity = "0.72";
         const prevLabel = button.textContent;
         button.textContent = "Thinking…";
-        const check = await createCheck();
-        await saveCheck(check);
-        localStorage.removeItem(retestStorageKey);
-        renderGuide(check);
-        await showScreen("guide");
-        button.style.opacity = "";
-        button.textContent = prevLabel;
-        button.disabled = false;
+        try {
+          const check = await createCheck();
+          await saveCheck(check);
+          localStorage.removeItem(retestStorageKey);
+          renderGuide(check);
+          await showScreen("guide");
+        } catch (error) {
+          console.warn("Scan could not finish", error);
+          openSheet("Could not finish that scan", "Nothing was lost - your photos and note are still here. Tap Get Do Next to try again.", "");
+        } finally {
+          button.style.opacity = "";
+          button.textContent = prevLabel;
+          button.disabled = false;
+        }
         return;
       }
 
@@ -4185,6 +4313,7 @@
     window.addEventListener("offline", () => renderSyncStatus());
     setInterval(() => {
       if (document.querySelector(".screen.active")?.dataset.screen === "home") renderRetestBanner();
+      if (readOutbox().length && navigator.onLine !== false) flushOutbox();
     }, 60000);
   </script>
 </body>
