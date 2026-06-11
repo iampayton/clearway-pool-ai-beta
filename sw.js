@@ -1,6 +1,6 @@
-// ClearWay Pool AI — offline shell (sw-v1)
+// ClearWay Pool AI — offline shell (sw-v2)
 // Keeps the app opening with zero signal. Scans queue on the phone and send when signal returns.
-const CACHE = "clearway-v1";
+const CACHE = "clearway-v2";
 
 self.addEventListener("install", () => {
   self.skipWaiting();
@@ -19,10 +19,11 @@ self.addEventListener("fetch", (event) => {
   if (request.method !== "GET") return;
   const url = new URL(request.url);
 
-  // The app page: try the network first (so updates land), fall back to the cached copy offline.
+  // The app page: revalidate with the server (skip the HTTP cache so updates
+  // actually land - GitHub Pages caches for ~10 min), fall back to the cached copy offline.
   if (request.mode === "navigate" || url.pathname.endsWith(".html")) {
     event.respondWith(
-      fetch(request)
+      fetch(request, { cache: "no-cache" })
         .then((response) => {
           const copy = response.clone();
           caches.open(CACHE).then((cache) => cache.put(request, copy));
