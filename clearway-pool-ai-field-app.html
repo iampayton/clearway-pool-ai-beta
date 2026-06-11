@@ -514,6 +514,12 @@
       box-shadow: none;
     }
 
+    .btn.danger {
+      color: var(--white);
+      background: #c64235;
+      box-shadow: none;
+    }
+
     .btn.full { width: 100%; }
 
     .start-cta {
@@ -1222,6 +1228,7 @@
           </section>
 
           <button class="btn primary full" data-save-pool>Save Pool</button>
+          <button class="btn full" type="button" data-remove-pool hidden style="color: #c64235;">Remove This Pool</button>
         </div>
       </div>
 
@@ -2419,6 +2426,7 @@
       confirmBtn.style.display = confirmLabel ? "block" : "none";
       if (confirmLabel) confirmBtn.textContent = confirmLabel;
       confirmBtn.parentElement.style.gridTemplateColumns = confirmLabel ? "1fr 1.4fr" : "1fr";
+      confirmBtn.classList.toggle("danger", confirmLabel === "Remove");
       backdrop.hidden = false;
     }
 
@@ -2530,6 +2538,11 @@
       });
     }
 
+    function setRemovePoolVisibility() {
+      const removeButton = document.querySelector("[data-remove-pool]");
+      if (removeButton) removeButton.hidden = !editingPoolId;
+    }
+
     async function openAddPool() {
       editingPoolId = null;
       setPoolForm(null);
@@ -2538,6 +2551,7 @@
       editPoolProducts = [];
       renderPoolChemThumbs();
       renderProductChips();
+      setRemovePoolVisibility();
       await showScreen("add-pool");
     }
 
@@ -2550,7 +2564,25 @@
       editPoolProducts = [...(pool?.productsOnHand || [])];
       renderPoolChemThumbs();
       renderProductChips();
+      setRemovePoolVisibility();
       await showScreen("add-pool");
+    }
+
+    function removePool(poolId) {
+      const removed = localPools().find((item) => item.id === poolId);
+      const remaining = localPools().filter((item) => item.id !== poolId);
+      saveLocalPools(remaining);
+      if (selectedPoolId === poolId) selectedPoolId = remaining[0]?.id || null;
+      editingPoolId = null;
+      try {
+        const reminder = JSON.parse(localStorage.getItem(retestStorageKey) || "null");
+        if (reminder?.poolName && removed?.poolName && reminder.poolName === removed.poolName) {
+          localStorage.removeItem(retestStorageKey);
+        }
+      } catch { /* reminder cleanup is best-effort */ }
+      ensureStarterPool();
+      renderHome();
+      showScreen("home");
     }
 
     function renderPhotoStep() {
@@ -3535,6 +3567,15 @@
       if (event.target.closest("[data-save-pool]")) {
         savePoolFromForm();
         await showScreen("home");
+        return;
+      }
+
+      if (event.target.closest("[data-remove-pool]")) {
+        const poolId = editingPoolId;
+        const pool = localPools().find((item) => item.id === poolId);
+        if (!pool) return;
+        sheetAction = () => removePool(poolId);
+        openSheet(`Remove ${pool.poolName}?`, "It comes off your list. Past scans stay in History, and you can add this pool back any time.", "Remove");
         return;
       }
 
