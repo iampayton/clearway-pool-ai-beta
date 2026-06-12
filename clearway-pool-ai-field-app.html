@@ -309,10 +309,12 @@
       cursor: pointer;
     }
 
-    .photo-cta > svg {
-      width: 112px;
-      height: 112px;
+    .photo-main-icon {
+      width: 126px;
+      height: 126px;
     }
+
+    .photo-main-icon:not(.active) { display: none; }
 
     .photo-cta strong {
       max-width: 260px;
@@ -346,8 +348,8 @@
     }
 
     .brain-cta svg {
-      width: 76px;
-      height: 76px;
+      width: 126px;
+      height: 126px;
       color: var(--seafoam);
     }
 
@@ -587,6 +589,8 @@
 
     .photo-symbol.active { display: grid; }
     .photo-symbol svg { width: 27px; height: 27px; }
+
+    .photo-main-icon:not(.active) { display: none; }
 
     .photo-cta strong {
       font-size: 24px;
@@ -1742,15 +1746,17 @@
         </div>
         <div class="content">
           <button class="photo-cta" data-open-camera aria-label="Open camera">
-            <svg aria-hidden="true" viewBox="0 0 64 64" fill="none">
-              <path d="M18 24h8l4-6h10l4 6h8a6 6 0 0 1 6 6v20a6 6 0 0 1-6 6H18a6 6 0 0 1-6-6V30a6 6 0 0 1 6-6Z" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>
-              <circle cx="35" cy="40" r="10" stroke="currentColor" stroke-width="4"/>
+            <svg class="photo-main-icon active" data-photo-main-icon="pool" aria-hidden="true" viewBox="0 0 64 64" fill="none">
+              <rect x="8" y="16" width="48" height="34" rx="12" stroke="currentColor" stroke-width="4"/>
+              <path d="M14 31c5 0 5-4 10-4s5 4 10 4 5-4 10-4 5 4 10 4M14 39c5 0 5-4 10-4s5 4 10 4 5-4 10-4 5 4 10 4" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+              <path d="M19 16V9M27 16V9M19 11h8" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
             </svg>
-            <div class="photo-symbols is-empty" aria-hidden="true">
-              <span class="photo-symbol" data-photo-symbol="chem">
-                <svg viewBox="0 0 32 32" fill="none"><path d="M11 4h10M14 4v8L8 24a3 3 0 0 0 3 4h10a3 3 0 0 0 3-4l-6-12V4" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 22h12" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/></svg>
-              </span>
-            </div>
+            <svg class="photo-main-icon" data-photo-main-icon="chem" aria-hidden="true" viewBox="0 0 64 64" fill="none">
+              <path d="M22 7h20M27 7v17L14 49a6 6 0 0 0 6 8h24a6 6 0 0 0 6-8L37 24V7" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M18 44h28" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+              <circle cx="29" cy="37" r="2.5" fill="currentColor"/>
+              <circle cx="38" cy="48" r="3" fill="currentColor"/>
+            </svg>
             <strong data-photo-step-title>POOL</strong>
             <span data-photo-step-copy></span>
           </button>
@@ -3305,12 +3311,9 @@
       if (copyTarget) copyTarget.textContent = "";
       const photoCta = document.querySelector("[data-open-camera]");
       if (photoCta) photoCta.classList.toggle("test-step", step.key === "tests");
-      document.querySelectorAll("[data-photo-symbol]").forEach((symbol) => {
-        const key = symbol.dataset.photoSymbol;
-        const active = step.key === "tests" && key === "chem";
-        symbol.classList.toggle("active", active);
+      document.querySelectorAll("[data-photo-main-icon]").forEach((icon) => {
+        icon.classList.toggle("active", icon.dataset.photoMainIcon === (step.key === "tests" ? "chem" : "pool"));
       });
-      document.querySelector(".photo-symbols")?.classList.toggle("is-empty", step.key !== "tests");
       renderPhotoThumbs();
     }
 
