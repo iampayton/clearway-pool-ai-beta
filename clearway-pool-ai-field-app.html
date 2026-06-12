@@ -10,7 +10,7 @@
   <title>ClearWay Pool AI</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
   <style>
     :root {
       --seafoam: #63d7c6;
@@ -125,22 +125,30 @@
     }
 
     .brand {
-      font-weight: 900;
-      letter-spacing: 0;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 7px;
+      white-space: nowrap;
     }
 
     .brand-dot {
-      width: 22px;
-      height: 22px;
-      border-radius: 8px;
-      background:
-        radial-gradient(circle at 70% 25%, rgba(255, 255, 255, 0.55), transparent 42%),
-        linear-gradient(150deg, var(--seafoam), var(--seafoam-dark));
-      box-shadow: 0 4px 10px rgba(26, 169, 152, 0.35);
+      width: 23px;
+      height: 30px;
+      flex: 0 0 auto;
+      background: url("assets/clearway-day-drop.png") center / contain no-repeat;
+      filter: drop-shadow(0 4px 8px rgba(26, 169, 152, 0.24));
     }
+
+    .brand-word {
+      font-family: Fredoka, Inter, ui-sans-serif, system-ui, sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: -0.8px;
+    }
+
+    .brand-clear { color: #159fb3; }
+    .brand-way { color: #ff7a24; }
 
     .top-icons {
       display: flex;
@@ -301,9 +309,9 @@
       cursor: pointer;
     }
 
-    .photo-cta svg {
-      width: 70px;
-      height: 70px;
+    .photo-cta > svg {
+      width: 112px;
+      height: 112px;
     }
 
     .photo-cta strong {
@@ -536,8 +544,8 @@
     }
 
     .start-cta svg {
-      width: 74px;
-      height: 74px;
+      width: 126px;
+      height: 126px;
     }
 
     .start-cta span {
@@ -546,6 +554,48 @@
       font-size: 15px;
       font-weight: 800;
       line-height: 1.35;
+    }
+
+    .start-cta strong,
+    .start-cta span,
+    .photo-cta > span[data-photo-step-copy],
+    .brain-cta > span { display: none; }
+
+    .photo-symbols {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 42px;
+    }
+
+    .photo-symbols.is-empty {
+      display: none;
+      min-height: 0;
+    }
+
+    .photo-symbol {
+      width: 42px;
+      height: 42px;
+      border-radius: 15px;
+      display: none;
+      place-items: center;
+      color: var(--charcoal);
+      background: rgba(255, 255, 255, 0.46);
+      box-shadow: inset 0 0 0 1px rgba(23, 36, 42, 0.12);
+    }
+
+    .photo-symbol.active { display: grid; }
+    .photo-symbol svg { width: 27px; height: 27px; }
+
+    .photo-cta strong {
+      font-size: 24px;
+      letter-spacing: 0.02em;
+    }
+
+    .brain-cta strong {
+      font-size: 27px;
+      letter-spacing: 0.04em;
     }
 
     .home-pool-line {
@@ -1087,10 +1137,10 @@
       font-weight: 900;
     }
 
-    /* ===== Party mode — pool lights at night. Pool done. Party on. =====
+    /* ===== Party mode â€” pool lights at night. Pool done. Party on. =====
        Design system: blacked-out water surfaces + neon pool-light edges.
-       Hue map: hero Scan = electric cyan (animated) · pool photo = seafoam ·
-       test photo = violet · talk = soft cyan · alerts = amber/red.
+       Hue map: hero Scan = electric cyan (animated) Â· pool photo = seafoam Â·
+       test photo = violet Â· talk = soft cyan Â· alerts = amber/red.
        SPECIFICITY RULE: the hero owns body.party .btn.primary.start-cta (0,4,1);
        the blanket primary rule below excludes .start-cta so it can never win. */
     @keyframes partyHeroGlow {
@@ -1233,7 +1283,7 @@
         0 0 20px rgba(77, 255, 210, 0.4),
         inset 0 0 30px rgba(77, 255, 210, 0.14);
     }
-    body.party .photo-cta svg { color: #4dffd2; filter: drop-shadow(0 0 10px rgba(77, 255, 210, 0.8)); }
+    body.party .photo-cta > svg { color: #4dffd2; filter: drop-shadow(0 0 10px rgba(77, 255, 210, 0.8)); }
     body.party .photo-cta strong { color: #ffffff; text-shadow: 0 0 16px rgba(77, 255, 210, 0.55); }
     body.party .photo-cta span { color: #9be4cf; }
 
@@ -1246,7 +1296,7 @@
         0 0 20px rgba(167, 122, 255, 0.45),
         inset 0 0 30px rgba(167, 122, 255, 0.16);
     }
-    body.party .photo-cta.test-step svg { color: #c5a3ff; filter: drop-shadow(0 0 10px rgba(167, 122, 255, 0.85)); }
+    body.party .photo-cta.test-step > svg { color: #c5a3ff; filter: drop-shadow(0 0 10px rgba(167, 122, 255, 0.85)); }
     body.party .photo-cta.test-step strong { text-shadow: 0 0 16px rgba(167, 122, 255, 0.6); }
     body.party .photo-cta.test-step span { color: #cbb6f2; }
 
@@ -1332,6 +1382,160 @@
       color: #c9f6e8;
       box-shadow: 0 0 12px rgba(77, 255, 210, 0.15);
     }
+    /* Rotating Party art. These skins only change paint, never layout or behavior. */
+    body.party .brand-dot {
+      background-image: url("assets/clearway-party-drop.png");
+      filter: drop-shadow(0 0 9px rgba(46, 230, 255, 0.7));
+      box-shadow: none;
+    }
+    body.party .brand-word { text-shadow: none; }
+    body.party .brand-clear { color: #2ee6ff; }
+    body.party .brand-way { color: #ff7a24; }
+    body.party .icon-btn:not(.theme-pill) {
+      background: transparent;
+      box-shadow: none;
+    }
+    body.party .top-icons .icon-btn:nth-last-child(2) { color: #2ee6ff; }
+    body.party .top-icons .icon-btn:last-child { color: #ff7a24; }
+    body.party .home-pool-line { color: #7dff36; text-shadow: 0 0 10px rgba(125, 255, 54, 0.45); }
+    body.party .home-maint > span,
+    body.party .home-maint > strong,
+    body.party .home-maint > small { display: none; }
+    body.party .home-maint { min-height: 68px; padding: 10px; }
+    body.party .home-status-svg { width: 34px; height: 34px; }
+    body.party .start-cta > svg,
+    body.party .photo-cta > svg,
+    body.party .brain-cta > svg {
+      color: #ff2f9d !important;
+      filter: drop-shadow(0 0 13px rgba(255, 47, 157, 0.88)) !important;
+    }
+    body.party .photo-cta strong,
+    body.party .brain-cta strong {
+      color: #7dff36;
+      text-shadow: 0 0 10px rgba(125, 255, 54, 0.48);
+    }
+    body.party .photo-symbol {
+      color: #2ee6ff;
+      background: rgba(1, 8, 14, 0.72);
+      box-shadow: inset 0 0 0 1px rgba(46, 230, 255, 0.72), 0 0 13px rgba(46, 230, 255, 0.24);
+    }
+    body.party .photo-symbol[data-photo-symbol="spa"] { color: #ff7a24; }
+    body.party .photo-symbol[data-photo-symbol="chem"] { color: #b792ff; }
+
+    body.party[data-party-surface="home"] .start-cta,
+    body.party[data-party-surface="pool"] .photo-cta:not(.test-step),
+    body.party[data-party-surface="test"] .photo-cta.test-step,
+    body.party[data-party-surface="talk"] .brain-cta {
+      color: #f4feff;
+      background: var(--party-art) !important;
+      background-size: var(--party-size, cover) !important;
+      background-position: center !important;
+      box-shadow:
+        0 0 0 2px var(--party-edge, rgba(46, 230, 255, 0.82)),
+        0 0 24px var(--party-glow, rgba(46, 230, 255, 0.38)),
+        inset 0 0 32px rgba(255, 255, 255, 0.07) !important;
+      animation: partyHeroGlow 3.4s ease-in-out infinite;
+    }
+
+    body.party[data-party-skin="home-leopard"] {
+      --party-art: linear-gradient(rgba(0,0,0,.06),rgba(0,0,0,.22)), url("assets/clearway-party-leopard-texture.png");
+      --party-edge: #ffd34d; --party-glow: rgba(255, 211, 77, .42); --party-size: cover;
+    }
+    body.party[data-party-skin="home-orbit"] {
+      --party-art: radial-gradient(ellipse at 50% 56%, transparent 0 26%, #20e6ff 26.5% 27%, transparent 27.5% 42%, rgba(108,78,255,.9) 42.5% 43%, transparent 43.5%), radial-gradient(circle at 80% 18%, #ff7a24 0 1.2%, transparent 1.6%), #02050a;
+      --party-edge: #2ee6ff; --party-glow: rgba(46,230,255,.42);
+    }
+    body.party[data-party-skin="home-bauhaus"] {
+      --party-art: radial-gradient(circle at 18% 18%, #12bde0 0 15%, transparent 15.5%), linear-gradient(90deg, transparent 0 68%, #ff6238 68% 86%, transparent 86%), radial-gradient(circle at 82% 80%, #f4e7c6 0 13%, transparent 13.5%), linear-gradient(145deg, #020508 0 58%, #162e86 58% 74%, #020508 74%);
+      --party-edge: #ff7a24; --party-glow: rgba(255,122,36,.35);
+    }
+    body.party[data-party-skin="home-solar"] {
+      --party-art: radial-gradient(circle at 18% 96%, #ff552e 0 24%, #ff8a22 25%, transparent 38%), radial-gradient(ellipse at 32% 76%, rgba(46,230,255,.54) 0 1%, transparent 2% 10%, rgba(46,230,255,.34) 11% 12%, transparent 13%), #02050a;
+      --party-edge: #ff7a24; --party-glow: rgba(255,90,42,.4);
+    }
+    body.party[data-party-skin="home-blueprint"] {
+      --party-art: linear-gradient(rgba(46,230,255,.08) 1px, transparent 1px), linear-gradient(90deg, rgba(46,230,255,.08) 1px, transparent 1px), radial-gradient(circle at 70% 30%, transparent 0 18%, rgba(46,230,255,.28) 18.5% 19%, transparent 19.5%), #031225;
+      --party-size: 32px 32px, 32px 32px, cover, cover; --party-edge: #2ee6ff;
+    }
+    body.party[data-party-skin="home-fresco"] {
+      --party-art: radial-gradient(ellipse at 26% 20%, rgba(234,190,132,.9) 0 12%, transparent 25%), radial-gradient(ellipse at 74% 78%, rgba(93,168,181,.74) 0 17%, transparent 31%), linear-gradient(135deg, #34221a, #826e52 42%, #27474f 70%, #17100e);
+      --party-edge: #e7c68d; --party-glow: rgba(231,198,141,.32);
+    }
+
+    body.party[data-party-skin="pool-portal"] {
+      --party-art: radial-gradient(ellipse at 50% 55%, transparent 0 22%, #ff2f9d 22.5% 23.5%, transparent 24% 34%, #2ee6ff 34.5% 35.5%, transparent 36% 50%, #5e63ff 50.5% 51%, transparent 52%), linear-gradient(160deg,#02040a,#07132d);
+      --party-edge: #2ee6ff;
+    }
+    body.party[data-party-skin="pool-quiet"] {
+      --party-art: radial-gradient(ellipse at 48% 56%, transparent 0 35%, rgba(46,230,255,.72) 35.5% 36%, transparent 36.5% 52%, rgba(104,80,255,.72) 52.5% 53%, transparent 53.5%), #020407;
+      --party-edge: #2ee6ff;
+    }
+    body.party[data-party-skin="pool-transit"] {
+      --party-art: linear-gradient(90deg, transparent 0 13%, #ff2f9d 13% 14%, transparent 14% 72%, #2ee6ff 72% 73%, transparent 73%), linear-gradient(0deg, transparent 0 27%, #ff7a24 27% 28%, transparent 28% 76%, #775cff 76% 77%, transparent 77%), #02050a;
+      --party-edge: #ff2f9d; --party-glow: rgba(255,47,157,.34);
+    }
+    body.party[data-party-skin="pool-glass"] {
+      --party-art: linear-gradient(135deg, transparent 0 8%, rgba(46,230,255,.28) 8% 26%, transparent 27% 66%, rgba(151,98,255,.3) 67% 85%, transparent 86%), radial-gradient(circle at 78% 20%, rgba(255,122,36,.55), transparent 13%), #02060b;
+      --party-edge: #aefaff;
+    }
+    body.party[data-party-skin="pool-prism"] {
+      --party-art: linear-gradient(122deg, transparent 0 28%, rgba(46,230,255,.5) 29% 35%, rgba(120,86,255,.52) 36% 43%, rgba(255,47,157,.48) 44% 50%, rgba(255,122,36,.45) 51% 55%, transparent 56%), #020408;
+      --party-edge: #c5a3ff; --party-glow: rgba(197,163,255,.36);
+    }
+    body.party[data-party-skin="pool-brutalist"] {
+      --party-art: linear-gradient(160deg, #0a0b0d 0 18%, #10337f 18% 39%, #08090b 39% 63%, #ef4f32 63% 77%, #111214 77%), radial-gradient(circle at 12% 86%, #b9f52d 0 4%, transparent 4.5%);
+      --party-edge: #2ee6ff;
+    }
+
+    body.party[data-party-skin="test-molecule"] {
+      --party-art: radial-gradient(circle at 16% 20%, #2ee6ff 0 4%, transparent 4.5%), radial-gradient(circle at 82% 22%, #ff7a24 0 5%, transparent 5.5%), radial-gradient(circle at 24% 78%, #ff2f9d 0 5%, transparent 5.5%), radial-gradient(circle at 78% 82%, #aaff32 0 4%, transparent 4.5%), linear-gradient(32deg, transparent 0 49.5%, rgba(183,146,255,.6) 50% 50.5%, transparent 51%), #020408;
+      --party-edge: #b792ff;
+    }
+    body.party[data-party-skin="test-chrome"] {
+      --party-art: radial-gradient(ellipse at 8% 18%, #f5fbff 0 2%, #835cff 5%, #06131e 13%, transparent 27%), radial-gradient(ellipse at 90% 78%, #f5fbff 0 2%, #2ee6ff 6%, #ff2f9d 14%, transparent 30%), #020408;
+      --party-edge: #c5a3ff;
+    }
+    body.party[data-party-skin="test-spectral"] {
+      --party-art: linear-gradient(135deg, transparent 0 31%, rgba(46,230,255,.88) 31% 38%, rgba(106,79,255,.86) 38% 45%, rgba(255,47,157,.84) 45% 52%, rgba(255,122,36,.82) 52% 59%, rgba(174,255,45,.8) 59% 66%, transparent 66%), #020408;
+      --party-edge: #ff2f9d;
+    }
+    body.party[data-party-skin="test-lava"] {
+      --party-art: radial-gradient(ellipse at 18% 20%, rgba(162,73,255,.9) 0 12%, transparent 21%), radial-gradient(ellipse at 76% 24%, rgba(255,47,157,.88) 0 13%, transparent 23%), radial-gradient(ellipse at 78% 82%, rgba(255,122,36,.82) 0 11%, transparent 22%), radial-gradient(ellipse at 18% 80%, rgba(46,230,255,.76) 0 12%, transparent 23%), #020408;
+      --party-edge: #ff2f9d;
+    }
+    body.party[data-party-skin="test-halftone"] {
+      --party-art: radial-gradient(circle at 20% 20%, rgba(46,230,255,.92) 0 1.5%, transparent 1.8%) 0 0 / 15px 15px, radial-gradient(circle at 82% 78%, rgba(255,47,157,.9) 0 1.5%, transparent 1.8%) 0 0 / 18px 18px, #020408;
+      --party-edge: #b792ff;
+    }
+    body.party[data-party-skin="test-luxury"] {
+      --party-art: linear-gradient(112deg, transparent 0 22%, rgba(222,190,126,.55) 22.3% 22.8%, transparent 23.1% 62%, rgba(222,190,126,.4) 62.3% 62.7%, transparent 63%), radial-gradient(circle at 78% 24%, rgba(22,158,120,.78) 0 5%, transparent 12%), #030303;
+      --party-edge: #d9bc7b; --party-glow: rgba(217,188,123,.28);
+    }
+
+    body.party[data-party-skin="talk-signal"] {
+      --party-art: repeating-linear-gradient(90deg, transparent 0 12%, rgba(46,230,255,.24) 12.2% 12.5%, transparent 12.8% 20%), linear-gradient(180deg,#020408,#090526);
+      --party-edge: #b792ff;
+    }
+    body.party[data-party-skin="talk-quiet"] {
+      --party-art: radial-gradient(ellipse at 50% 58%, transparent 0 40%, rgba(46,230,255,.48) 40.5% 41%, transparent 41.5%), #020407;
+      --party-edge: #2ee6ff;
+    }
+    body.party[data-party-skin="talk-prism"] {
+      --party-art: linear-gradient(118deg, transparent 0 42%, rgba(46,230,255,.78) 42.5% 44%, rgba(117,88,255,.76) 44.5% 46%, rgba(255,47,157,.74) 46.5% 48%, rgba(255,122,36,.72) 48.5% 50%, transparent 50.5%), #020408;
+      --party-edge: #ff2f9d;
+    }
+    body.party[data-party-skin="talk-memphis"] {
+      --party-art: radial-gradient(circle at 18% 18%, #ff2f9d 0 2%, transparent 2.5%), linear-gradient(30deg, transparent 0 72%, #ff7a24 72% 76%, transparent 76%), repeating-linear-gradient(90deg, transparent 0 20px, rgba(46,230,255,.18) 20px 22px), #020408;
+      --party-edge: #b792ff;
+    }
+    body.party[data-party-skin="talk-sonar"] {
+      --party-art: conic-gradient(from 208deg at 18% 72%, transparent 0 18%, rgba(46,230,255,.34) 19% 25%, transparent 26%), radial-gradient(circle at 18% 72%, transparent 0 18%, rgba(46,230,255,.42) 18.5% 19%, transparent 19.5% 31%, rgba(46,230,255,.22) 31.5% 32%, transparent 32.5%), #020914;
+      --party-edge: #2ee6ff;
+    }
+    body.party[data-party-skin="talk-laser"] {
+      --party-art: linear-gradient(90deg, transparent 0 13%, #2ee6ff 13.2% 13.6%, transparent 13.8% 32%, #8d62ff 32.2% 32.6%, transparent 32.8% 52%, #ff2f9d 52.2% 52.6%, transparent 52.8% 72%, #2ee6ff 72.2% 72.6%, transparent 72.8% 88%, #ff7a24 88.2% 88.6%, transparent 88.8%), #020408;
+      --party-edge: #ff2f9d;
+    }
     /* ===== end Party mode ===== */
 
     @media (max-width: 900px) {
@@ -1369,7 +1573,7 @@
     <section class="phone" aria-label="ClearWay Pool AI app">
       <div class="screen active" data-screen="home">
         <div class="app-top">
-          <div class="brand"><span class="brand-dot" aria-hidden="true"></span>ClearWay Pool AI</div>
+          <div class="brand"><span class="brand-dot" aria-hidden="true"></span><span class="brand-word"><span class="brand-clear">Clear</span><span class="brand-way">Way</span></span></div>
           <div class="top-icons">
             <button class="icon-btn theme-pill" data-theme-toggle aria-label="Switch look">Party</button>
             <button class="icon-btn" data-go="history" aria-label="History">
@@ -1392,10 +1596,8 @@
               <path d="M18 24h8l4-6h10l4 6h8a6 6 0 0 1 6 6v20a6 6 0 0 1-6 6H18a6 6 0 0 1-6-6V30a6 6 0 0 1 6-6Z" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>
               <circle cx="35" cy="40" r="10" stroke="currentColor" stroke-width="4"/>
             </svg>
-            <strong>Scan<br>My Pool</strong>
-            <span>Takes about a minute.</span>
           </button>
-          <p class="muted home-pool-line" data-selected-pool-text title="Tap to change pool">New Pool · Tap to change</p>
+          <p class="muted home-pool-line" data-selected-pool-text title="Tap to change pool">New Pool Â· Tap to change</p>
           <p class="muted" data-sync-status hidden></p>
           <button class="retest-banner" data-retest-banner hidden>Retest reminder</button>
           <div class="home-status-row" aria-label="Maintenance status">
@@ -1431,7 +1633,7 @@
 
       <div class="screen" data-screen="add-pool">
         <div class="app-top">
-          <div class="brand">ClearWay Pool AI</div>
+          <div class="brand"><span class="brand-dot" aria-hidden="true"></span><span class="brand-word"><span class="brand-clear">Clear</span><span class="brand-way">Way</span></span></div>
           <button class="btn" data-go="home">Home</button>
         </div>
         <div class="content">
@@ -1511,7 +1713,7 @@
 
       <div class="screen" data-screen="rules">
         <div class="app-top">
-          <div class="brand">ClearWay Pool AI</div>
+          <div class="brand"><span class="brand-dot" aria-hidden="true"></span><span class="brand-word"><span class="brand-clear">Clear</span><span class="brand-way">Way</span></span></div>
           <button class="btn" data-back>Back</button>
         </div>
         <div class="content">
@@ -1535,7 +1737,7 @@
 
       <div class="screen" data-screen="photos">
         <div class="app-top">
-          <div class="brand">ClearWay Pool AI</div>
+          <div class="brand"><span class="brand-dot" aria-hidden="true"></span><span class="brand-word"><span class="brand-clear">Clear</span><span class="brand-way">Way</span></span></div>
           <button class="btn" data-back>Back</button>
         </div>
         <div class="content">
@@ -1544,8 +1746,13 @@
               <path d="M18 24h8l4-6h10l4 6h8a6 6 0 0 1 6 6v20a6 6 0 0 1-6 6H18a6 6 0 0 1-6-6V30a6 6 0 0 1 6-6Z" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>
               <circle cx="35" cy="40" r="10" stroke="currentColor" stroke-width="4"/>
             </svg>
-            <strong data-photo-step-title>Take Pool Photo</strong>
-            <span data-photo-step-copy>Tap to open camera.</span>
+            <div class="photo-symbols is-empty" aria-hidden="true">
+              <span class="photo-symbol" data-photo-symbol="chem">
+                <svg viewBox="0 0 32 32" fill="none"><path d="M11 4h10M14 4v8L8 24a3 3 0 0 0 3 4h10a3 3 0 0 0 3-4l-6-12V4" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 22h12" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/></svg>
+              </span>
+            </div>
+            <strong data-photo-step-title>POOL</strong>
+            <span data-photo-step-copy></span>
           </button>
           <button class="gps-suggest" data-gps-suggest hidden type="button"></button>
           <input class="hidden-file" data-camera-input type="file" accept="image/*" capture="environment" />
@@ -1579,7 +1786,7 @@
 
       <div class="screen" data-screen="values">
         <div class="app-top">
-          <div class="brand">ClearWay Pool AI</div>
+          <div class="brand"><span class="brand-dot" aria-hidden="true"></span><span class="brand-word"><span class="brand-clear">Clear</span><span class="brand-way">Way</span></span></div>
           <button class="btn" data-back>Back</button>
         </div>
         <div class="content">
@@ -1588,20 +1795,20 @@
               <rect x="22" y="8" width="20" height="34" rx="10" stroke="currentColor" stroke-width="5"/>
               <path d="M14 30c0 10 8 18 18 18s18-8 18-18M32 48v8M24 56h16" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
             </svg>
-            <strong>Talk about<br>the pool</strong>
-            <span>Say what you see. Say what you did. Say test numbers if you have them.</span>
+            <strong>TALK</strong>
+            
           </button>
 
-          <textarea class="brain-note" data-check-field="brainInput" placeholder="ex: Routine check. Water clear. Chlorine looked low on strip. Cleaned filter, brushed steps, added product by label. Retest later today."></textarea>
+          <textarea class="brain-note" data-check-field="brainInput" placeholder="Water clear. Chlorine looked low. Brushed walls and steps, emptied baskets, added product by label. Pump sounds normal."></textarea>
 
           <button class="btn full" type="button" data-toggle-tests>Add test numbers (optional)</button>
           <div class="test-grid" data-test-grid hidden>
-            <label>Chlorine <input data-test-current="free_chlorine" type="number" inputmode="decimal" step="0.5" min="0" placeholder="1–4" /></label>
-            <label>pH <input data-test-current="ph" type="number" inputmode="decimal" step="0.1" min="0" placeholder="7.2–7.8" /></label>
-            <label>Alkalinity <input data-test-current="alkalinity" type="number" inputmode="numeric" step="10" min="0" placeholder="80–120" /></label>
-            <label>Stabilizer <input data-test-current="cya" type="number" inputmode="numeric" step="5" min="0" placeholder="30–50" /></label>
-            <label>Hardness <input data-test-current="calcium" type="number" inputmode="numeric" step="10" min="0" placeholder="200–400" /></label>
-            <label>Salt <input data-test-current="salt" type="number" inputmode="numeric" step="100" min="0" placeholder="2700–3400" /></label>
+            <label>Chlorine <input data-test-current="free_chlorine" type="number" inputmode="decimal" step="0.5" min="0" placeholder="1â€“4" /></label>
+            <label>pH <input data-test-current="ph" type="number" inputmode="decimal" step="0.1" min="0" placeholder="7.2â€“7.8" /></label>
+            <label>Alkalinity <input data-test-current="alkalinity" type="number" inputmode="numeric" step="10" min="0" placeholder="80â€“120" /></label>
+            <label>Stabilizer <input data-test-current="cya" type="number" inputmode="numeric" step="5" min="0" placeholder="30â€“50" /></label>
+            <label>Hardness <input data-test-current="calcium" type="number" inputmode="numeric" step="10" min="0" placeholder="200â€“400" /></label>
+            <label>Salt <input data-test-current="salt" type="number" inputmode="numeric" step="100" min="0" placeholder="2700â€“3400" /></label>
           </div>
 
           <div class="note-actions">
@@ -1618,7 +1825,7 @@
 
       <div class="screen" data-screen="guide">
         <div class="app-top">
-          <div class="brand">ClearWay Pool AI</div>
+          <div class="brand"><span class="brand-dot" aria-hidden="true"></span><span class="brand-word"><span class="brand-clear">Clear</span><span class="brand-way">Way</span></span></div>
           <button class="btn" data-go="home">Home</button>
         </div>
         <div class="content">
@@ -1675,7 +1882,7 @@
 
       <div class="screen" data-screen="history">
         <div class="app-top">
-          <div class="brand">ClearWay Pool AI</div>
+          <div class="brand"><span class="brand-dot" aria-hidden="true"></span><span class="brand-word"><span class="brand-clear">Clear</span><span class="brand-way">Way</span></span></div>
           <button class="btn" data-go="home">Home</button>
         </div>
         <div class="content">
@@ -1731,12 +1938,55 @@
     const outboxStorageKey = "clearwayOutboxV1";
     const costLedgerStorageKey = "clearwayCostLedgerV1";
 
+    const PARTY_SKINS = {
+      home: ["home-leopard", "home-orbit", "home-bauhaus", "home-solar", "home-blueprint", "home-fresco"],
+      pool: ["pool-portal", "pool-quiet", "pool-transit", "pool-glass", "pool-prism", "pool-brutalist"],
+      test: ["test-molecule", "test-chrome", "test-spectral", "test-lava", "test-halftone", "test-luxury"],
+      talk: ["talk-signal", "talk-quiet", "talk-prism", "talk-memphis", "talk-sonar", "talk-laser"]
+    };
+    const partySkinBySurface = {};
+    let activePartySurface = "";
+
+    function partySurfaceForScreen(name) {
+      if (name === "home") return "home";
+      if (name === "photos") return photoSteps[activePhotoStep]?.key === "tests" ? "test" : "pool";
+      if (name === "values") return "talk";
+      return "";
+    }
+
+    function rotatePartySkin(surface, force = false) {
+      if (!document.body.classList.contains("party") || !surface) return;
+      if (!force && activePartySurface === surface) return;
+      const choices = PARTY_SKINS[surface] || [];
+      const previous = partySkinBySurface[surface];
+      const available = choices.filter((skin) => skin !== previous);
+      const candidates = available.length ? available : choices;
+      const skin = candidates[Math.floor(Math.random() * candidates.length)];
+      if (!skin) return;
+      partySkinBySurface[surface] = skin;
+      activePartySurface = surface;
+      document.body.dataset.partySurface = surface;
+      document.body.dataset.partySkin = skin;
+    }
+
+    function syncPartySurface(name, force = false) {
+      rotatePartySkin(partySurfaceForScreen(name), force);
+    }
+
     function applyTheme(theme) {
       document.body.classList.toggle("party", theme === "party");
       const pill = document.querySelector("[data-theme-toggle]");
       if (pill) pill.textContent = theme === "party" ? "Day" : "Party";
       const themeMeta = document.querySelector('meta[name="theme-color"]');
       if (themeMeta) themeMeta.setAttribute("content", theme === "party" ? "#04121d" : "#63d7c6");
+      if (theme === "party") {
+        const currentScreen = document.querySelector(".screen.active")?.dataset.screen || "home";
+        syncPartySurface(currentScreen, true);
+      } else {
+        activePartySurface = "";
+        delete document.body.dataset.partySurface;
+        delete document.body.dataset.partySkin;
+      }
       try { localStorage.setItem(themeStorageKey, theme); } catch { /* in-memory only */ }
     }
     let authUserId = "";
@@ -1755,8 +2005,8 @@
     let draft = freshDraft();
 
     const photoSteps = [
-      { key: "pool", label: "Pool / Spa", title: "Take Pool Photo", copy: "Show the water.", multi: true },
-      { key: "tests", label: "Test", title: "Take Test Photo", copy: "Strip, dye kit, or report.", multi: true }
+      { key: "pool", label: "Pool", title: "POOL", copy: "", multi: true },
+      { key: "tests", label: "Chem Test", title: "CHEM TEST", copy: "", multi: true }
     ];
 
     // ===== ClearWay Deterministic Chemistry Engine v1 =====
@@ -1879,7 +2129,7 @@
       if (psi) { const v = Number(psi[1]); if (v >= 2 && v <= 50) extras.psi = v; }
       const pump = lower.match(/pump[^.!?\d]{0,30}(\d{1,2})\s*(?:hours|hrs|hour)\b/);
       if (pump) { const v = Number(pump[1]); if (v >= 1 && v <= 24) extras.pumpHours = v; }
-      const temp = lower.match(/water\s*(?:temp(?:erature)?)?\s*(?:is|at|reads?|'s)?\s*(\d{2,3})\s*(?:degrees|deg|°|f\b)/) || lower.match(/water temp[^.!?\d]{0,10}(\d{2,3})/);
+      const temp = lower.match(/water\s*(?:temp(?:erature)?)?\s*(?:is|at|reads?|'s)?\s*(\d{2,3})\s*(?:degrees|deg|Â°|f\b)/) || lower.match(/water temp[^.!?\d]{0,10}(\d{2,3})/);
       if (temp) { const v = Number(temp[1]); if (v >= 50 && v <= 104) extras.waterTempF = v; }
       if (/(topp?ed (?:off|up)|fill(?:ed|ing)? (?:the )?(?:pool|water)|added water|hose (?:in|running)|auto.?fill)/.test(lower)) extras.waterAdded = true;
       return extras;
@@ -2709,6 +2959,7 @@
       pickers.forEach((button) => button.classList.toggle("active", button.dataset.go === name));
       renderHome();
       if (name === "history") await renderHistory();
+      syncPartySurface(name, true);
     }
 
     function resetDraft() {
@@ -2743,7 +2994,7 @@
       if (selectedText) {
         selectedText.textContent = !pool
           ? "No pool yet. Tap to add."
-          : (pool.profileComplete ? `${pool.poolName} · Tap to change` : "Add pool details · Tap here");
+          : (pool.profileComplete ? `${pool.poolName} Â· Tap to change` : "Add pool details Â· Tap here");
       }
       renderHomeMaintenance(pool);
       renderRetestBanner();
@@ -2758,7 +3009,7 @@
           const days = Math.floor((Date.now() - last.getTime()) / 86400000);
           const when = days === 0 ? "today" : (days === 1 ? "yesterday" : `${days} days ago`);
           stats.hidden = false;
-          stats.textContent = `${saved.length} scan${saved.length === 1 ? "" : "s"} · Last ${when}`;
+          stats.textContent = `${saved.length} scan${saved.length === 1 ? "" : "s"} Â· Last ${when}`;
         }
       }
     }
@@ -3046,14 +3297,20 @@
     function renderPhotoStep() {
       const step = photoSteps[activePhotoStep];
       const pool = selectedPool();
-      const title = step.key === "pool" && pool?.hasSpa === "Yes" ? "Take Pool + Spa" : step.title;
-      const copy = step.key === "pool" && pool?.hasSpa === "Yes" ? "Add both photos." : step.copy;
+      const hasSpa = step.key === "pool" && pool?.hasSpa === "Yes";
+      const title = step.key === "tests" ? "CHEM TEST" : (hasSpa ? "POOL / SPA" : "POOL");
       const titleTarget = document.querySelector("[data-photo-step-title]");
       const copyTarget = document.querySelector("[data-photo-step-copy]");
       if (titleTarget) titleTarget.textContent = title;
-      if (copyTarget) copyTarget.textContent = copy;
+      if (copyTarget) copyTarget.textContent = "";
       const photoCta = document.querySelector("[data-open-camera]");
       if (photoCta) photoCta.classList.toggle("test-step", step.key === "tests");
+      document.querySelectorAll("[data-photo-symbol]").forEach((symbol) => {
+        const key = symbol.dataset.photoSymbol;
+        const active = step.key === "tests" && key === "chem";
+        symbol.classList.toggle("active", active);
+      });
+      document.querySelector(".photo-symbols")?.classList.toggle("is-empty", step.key !== "tests");
       renderPhotoThumbs();
     }
 
@@ -3698,7 +3955,7 @@
       const shortTestNames = { free_chlorine: "Cl", ph: "pH", alkalinity: "Alk", cya: "CYA", calcium: "Hard", salt: "Salt" };
       const enteredItems = (check.values || []).filter((item) => item.current);
       const anySpoken = enteredItems.some((item) => item.source === "spoken");
-      const enteredTests = enteredItems.map((item) => `${shortTestNames[item.key] || item.label} ${item.current}`).join(" · ") + (anySpoken ? " · heard from your note" : "");
+      const enteredTests = enteredItems.map((item) => `${shortTestNames[item.key] || item.label} ${item.current}`).join(" Â· ") + (anySpoken ? " Â· heard from your note" : "");
       const noteRows = [
         ["Note", check.brainInput || check.notes || check.firstImpression],
         ["Tests", enteredTests],
@@ -3997,6 +4254,7 @@
           if (activePhotoStep > 0) {
             activePhotoStep -= 1;
             renderPhotoStep();
+            syncPartySurface("photos", true);
           } else {
             await showScreen("home");
           }
@@ -4213,6 +4471,7 @@
         if (activePhotoStep < photoSteps.length - 1) {
           activePhotoStep += 1;
           renderPhotoStep();
+          syncPartySurface("photos", true);
         } else {
           await showScreen("values");
         }
@@ -4231,7 +4490,7 @@
         button.disabled = true;
         button.style.opacity = "0.72";
         const prevLabel = button.textContent;
-        button.textContent = "Thinking…";
+        button.textContent = "Thinkingâ€¦";
         try {
           const check = await createCheck();
           await saveCheck(check);
