@@ -302,16 +302,18 @@
       background: var(--seafoam);
       box-shadow: 0 18px 38px rgba(26, 169, 152, 0.28);
       display: grid;
-      align-content: center;
-      justify-items: center;
+      place-content: center;
+      place-items: center;
       gap: 16px;
       text-align: center;
       cursor: pointer;
     }
 
     .photo-main-icon {
-      width: 126px;
-      height: 126px;
+      width: 152px;
+      height: 152px;
+      display: block;
+      justify-self: center;
     }
 
     .photo-main-icon:not(.active) { display: none; }
@@ -339,8 +341,8 @@
         linear-gradient(150deg, var(--charcoal), var(--charcoal-soft));
       box-shadow: 0 18px 38px rgba(24, 36, 42, 0.24);
       display: grid;
-      align-content: center;
-      justify-items: center;
+      place-content: center;
+      place-items: center;
       gap: 16px;
       text-align: center;
       cursor: pointer;
@@ -348,8 +350,10 @@
     }
 
     .brain-cta svg {
-      width: 126px;
-      height: 126px;
+      width: 152px;
+      height: 152px;
+      display: block;
+      justify-self: center;
       color: var(--seafoam);
     }
 
@@ -536,8 +540,8 @@
       min-height: 460px;
       border-radius: 34px;
       display: grid;
-      align-content: center;
-      justify-items: center;
+      place-content: center;
+      place-items: center;
       gap: 16px;
       text-align: center;
       padding: 34px 26px;
@@ -546,8 +550,10 @@
     }
 
     .start-cta svg {
-      width: 126px;
-      height: 126px;
+      width: 168px;
+      height: 168px;
+      display: block;
+      justify-self: center;
     }
 
     .start-cta span {
@@ -691,8 +697,8 @@
     .home-maint.gray { background: #eef3f2; }
 
     .home-status-svg {
-      width: 36px;
-      height: 36px;
+      width: 44px;
+      height: 44px;
       color: var(--charcoal);
       display: block;
     }
@@ -1143,8 +1149,8 @@
 
     /* ===== Party mode â€” pool lights at night. Pool done. Party on. =====
        Design system: blacked-out water surfaces + neon pool-light edges.
-       Hue map: hero Scan = electric cyan (animated) Â· pool photo = seafoam Â·
-       test photo = violet Â· talk = soft cyan Â· alerts = amber/red.
+       Hue map: hero Scan = electric cyan (animated) - pool photo = seafoam Â·
+       test photo = violet - talk = soft cyan - alerts = amber/red.
        SPECIFICITY RULE: the hero owns body.party .btn.primary.start-cta (0,4,1);
        the blanket primary rule below excludes .start-cta so it can never win. */
     @keyframes partyHeroGlow {
@@ -1406,7 +1412,7 @@
     body.party .home-maint > strong,
     body.party .home-maint > small { display: none; }
     body.party .home-maint { min-height: 68px; padding: 10px; }
-    body.party .home-status-svg { width: 34px; height: 34px; }
+    body.party .home-status-svg { width: 44px; height: 44px; }
     body.party .start-cta > svg,
     body.party .photo-cta > svg,
     body.party .brain-cta > svg {
@@ -1597,11 +1603,11 @@
         <div class="content home-content">
           <button class="btn primary full start-cta" data-start-check>
             <svg aria-hidden="true" viewBox="0 0 64 64" fill="none">
-              <path d="M18 24h8l4-6h10l4 6h8a6 6 0 0 1 6 6v20a6 6 0 0 1-6 6H18a6 6 0 0 1-6-6V30a6 6 0 0 1 6-6Z" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>
-              <circle cx="35" cy="40" r="10" stroke="currentColor" stroke-width="4"/>
+              <path d="M15 24h8l4-6h10l4 6h8a6 6 0 0 1 6 6v20a6 6 0 0 1-6 6H15a6 6 0 0 1-6-6V30a6 6 0 0 1 6-6Z" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>
+              <circle cx="32" cy="40" r="10" stroke="currentColor" stroke-width="4"/>
             </svg>
           </button>
-          <p class="muted home-pool-line" data-selected-pool-text title="Tap to change pool">New Pool Â· Tap to change</p>
+          <p class="muted home-pool-line" data-selected-pool-text title="Tap to change pool">New Pool - Tap to change</p>
           <p class="muted" data-sync-status hidden></p>
           <button class="retest-banner" data-retest-banner hidden>Retest reminder</button>
           <div class="home-status-row" aria-label="Maintenance status">
@@ -1749,7 +1755,6 @@
             <svg class="photo-main-icon active" data-photo-main-icon="pool" aria-hidden="true" viewBox="0 0 64 64" fill="none">
               <rect x="8" y="16" width="48" height="34" rx="12" stroke="currentColor" stroke-width="4"/>
               <path d="M14 31c5 0 5-4 10-4s5 4 10 4 5-4 10-4 5 4 10 4M14 39c5 0 5-4 10-4s5 4 10 4 5-4 10-4 5 4 10 4" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
-              <path d="M19 16V9M27 16V9M19 11h8" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
             </svg>
             <svg class="photo-main-icon" data-photo-main-icon="chem" aria-hidden="true" viewBox="0 0 64 64" fill="none">
               <path d="M22 7h20M27 7v17L14 49a6 6 0 0 0 6 8h24a6 6 0 0 0 6-8L37 24V7" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
@@ -3000,7 +3005,7 @@
       if (selectedText) {
         selectedText.textContent = !pool
           ? "No pool yet. Tap to add."
-          : (pool.profileComplete ? `${pool.poolName} Â· Tap to change` : "Add pool details Â· Tap here");
+          : (pool.profileComplete ? `${pool.poolName} - Tap to change` : "Add pool details - Tap here");
       }
       renderHomeMaintenance(pool);
       renderRetestBanner();
@@ -3015,7 +3020,7 @@
           const days = Math.floor((Date.now() - last.getTime()) / 86400000);
           const when = days === 0 ? "today" : (days === 1 ? "yesterday" : `${days} days ago`);
           stats.hidden = false;
-          stats.textContent = `${saved.length} scan${saved.length === 1 ? "" : "s"} Â· Last ${when}`;
+          stats.textContent = `${saved.length} scan${saved.length === 1 ? "" : "s"} - Last ${when}`;
         }
       }
     }
@@ -3958,7 +3963,7 @@
       const shortTestNames = { free_chlorine: "Cl", ph: "pH", alkalinity: "Alk", cya: "CYA", calcium: "Hard", salt: "Salt" };
       const enteredItems = (check.values || []).filter((item) => item.current);
       const anySpoken = enteredItems.some((item) => item.source === "spoken");
-      const enteredTests = enteredItems.map((item) => `${shortTestNames[item.key] || item.label} ${item.current}`).join(" Â· ") + (anySpoken ? " Â· heard from your note" : "");
+      const enteredTests = enteredItems.map((item) => `${shortTestNames[item.key] || item.label} ${item.current}`).join(" - ") + (anySpoken ? " - heard from your note" : "");
       const noteRows = [
         ["Note", check.brainInput || check.notes || check.firstImpression],
         ["Tests", enteredTests],
