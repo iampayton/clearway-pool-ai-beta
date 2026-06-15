@@ -485,6 +485,33 @@
       margin-top: 16px;
     }
 
+    .pool-picker-list {
+      margin-top: 14px;
+      display: grid;
+      gap: 8px;
+      max-height: 320px;
+      overflow-y: auto;
+    }
+
+    .pool-picker-item {
+      border: 0;
+      width: 100%;
+      border-radius: 16px;
+      padding: 13px 15px;
+      background: var(--mist);
+      box-shadow: inset 0 0 0 1px var(--line);
+      text-align: left;
+      cursor: pointer;
+      display: grid;
+      gap: 2px;
+      transition: transform 0.12s ease, background-color 0.2s ease;
+    }
+
+    .pool-picker-item:active { transform: scale(0.98); }
+    .pool-picker-item.active { background: var(--seafoam-soft); box-shadow: inset 0 0 0 2px var(--seafoam-dark); }
+    .pool-picker-item strong { font-size: 15px; }
+    .pool-picker-item .muted { font-size: 12px; }
+
     .card {
       border: 1px solid var(--line);
       border-radius: var(--radius);
@@ -613,11 +640,44 @@
       text-align: center;
       cursor: pointer;
       font-weight: 800;
+      font-size: 18px;
+      color: var(--charcoal);
+      padding: 6px 10px;
+      border-radius: 14px;
+    }
+
+    .home-pool-line:active { transform: scale(0.98); background: var(--seafoam-soft); }
+
+    .mode-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .mode-option {
+      border: 0;
+      border-radius: 18px;
+      padding: 14px 12px;
+      background: var(--white);
+      box-shadow: inset 0 0 0 1px var(--line);
+      text-align: left;
+      cursor: pointer;
+      display: grid;
+      gap: 4px;
+      transition: transform 0.12s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    }
+
+    .mode-option strong { font-size: 15px; }
+    .mode-option .muted { font-size: 12px; }
+    .mode-option:active { transform: scale(0.97); }
+    .mode-option.active {
+      background: var(--seafoam-soft);
+      box-shadow: inset 0 0 0 2px var(--seafoam-dark);
     }
 
     .home-status-row {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+      grid-template-columns: repeat(2, 1fr);
       gap: 10px;
     }
 
@@ -637,6 +697,41 @@
       background: #c64235;
       animation: pulseSoft 1.6s ease-in-out infinite;
     }
+
+    .access-banner {
+      border: 0;
+      border-radius: 18px;
+      padding: 13px 15px;
+      background: #fff4d8;
+      box-shadow: inset 0 0 0 1px #f0d99a;
+      color: var(--charcoal);
+      font-weight: 800;
+      font-size: 14px;
+      text-align: left;
+      cursor: pointer;
+      line-height: 1.35;
+    }
+
+    .access-banner.alert {
+      background: #ffe9df;
+      box-shadow: inset 0 0 0 1px #f3b9a6;
+    }
+
+    .sync-banner {
+      border: 0;
+      border-radius: 18px;
+      padding: 13px 15px;
+      background: var(--seafoam-soft);
+      box-shadow: inset 0 0 0 1px var(--line);
+      color: var(--charcoal);
+      font-weight: 700;
+      font-size: 13px;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .sync-banner.busy { opacity: 0.7; }
+    .sync-banner.sent { background: #dff9ef; }
 
     .home-stats {
       margin: 0;
@@ -1024,6 +1119,27 @@
       font-size: 11px;
       font-weight: 900;
       cursor: pointer;
+    }
+
+    .step-edit-btn {
+      border: 0;
+      border-radius: 12px;
+      padding: 7px 11px;
+      background: var(--seafoam-soft);
+      color: var(--seafoam-dark);
+      box-shadow: inset 0 0 0 1px var(--line);
+      font-size: 11px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .step-edit-btn.first-step-edit {
+      display: inline-block;
+      background: transparent;
+      box-shadow: none;
+      color: var(--seafoam-dark);
+      text-decoration: underline;
+      padding: 4px 2px;
     }
 
     .chip-row {
@@ -1668,8 +1784,9 @@
               <circle cx="32" cy="40" r="10" stroke="currentColor" stroke-width="4"/>
             </svg>
           </button>
-          <p class="muted home-pool-line" data-selected-pool-text title="Tap to change pool">New Pool - Tap to change</p>
-          <p class="muted" data-sync-status hidden></p>
+          <p class="home-pool-line" data-selected-pool-text title="Tap to change pool">New Pool · Tap to change</p>
+          <button class="access-banner" data-access-banner hidden type="button"></button>
+          <button class="sync-banner" data-sync-status hidden type="button"></button>
           <button class="retest-banner" data-retest-banner hidden>Retest reminder</button>
           <div class="home-status-row" aria-label="Maintenance status">
             <button class="home-maint gray" data-home-maintenance="filter">
@@ -1697,8 +1814,16 @@
               <span>Salt Cell</span>
               <strong data-home-salt-state>Not needed</strong>
             </button>
+            <button class="home-maint gray" data-home-maintenance="vacuum">
+              <svg class="home-status-svg" aria-hidden="true" viewBox="0 0 48 48" fill="none">
+                <path d="M12 8v14a8 8 0 0 0 8 8h6" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="32" cy="34" r="8" stroke="currentColor" stroke-width="4"/>
+              </svg>
+              <span data-home-vacuum-label>Vacuum</span>
+              <strong data-home-vacuum-state>Not logged</strong>
+            </button>
           </div>
-          <p class="muted home-stats" data-home-stats hidden></p>
+          <input class="hidden-file" data-shelf-input type="file" accept="image/*" capture="environment" />
         </div>
       </div>
 
@@ -1712,6 +1837,31 @@
             <p class="setup-label">Settings</p>
             <h1>Pool Details</h1>
             <p class="setup-help" style="margin-bottom: 0;">Edit if you need.</p>
+          </section>
+
+          <section class="card">
+            <h3>I am a…</h3>
+            <p class="muted" style="margin-top: 6px;">Changes how ClearWay handles product photos and reminders.</p>
+            <div class="mode-row" data-mode-row style="margin-top: 12px;">
+              <button class="mode-option" type="button" data-mode-option="homeowner">
+                <strong>Homeowner</strong>
+                <span class="muted">My own pool. Daily checks.</span>
+              </button>
+              <button class="mode-option" type="button" data-mode-option="tech">
+                <strong>Pool Tech</strong>
+                <span class="muted">Many pools. One stop a week.</span>
+              </button>
+            </div>
+          </section>
+
+          <section class="card" data-tech-shelf-card hidden>
+            <h3>Today's Truck Stock</h3>
+            <p class="muted" style="margin-top: 6px;">One photo of the chemicals on your truck. ClearWay uses it for every pool today, so you only snap it once each morning.</p>
+            <p class="muted" data-shelf-status style="margin-top: 10px; font-weight: 700;"></p>
+            <div class="thumb-grid" data-shelf-thumbs style="margin-top: 10px;"></div>
+            <button class="btn full" type="button" data-shelf-update style="margin-top: 12px;">Update Truck Stock Photo</button>
+            <p class="muted" style="margin-top: 14px;">What's on the truck today (drives exact amounts):</p>
+            <div class="chip-row" data-shelf-chips style="margin-top: 8px;"></div>
           </section>
 
           <section class="card">
@@ -1768,6 +1918,42 @@
           </section>
 
           <section class="card">
+            <h3>Service & Equipment</h3>
+            <div class="form-grid" style="margin-top: 14px;">
+              <label>Service Plan
+                <select data-pool-field="serviceCadence">
+                  <option>Weekly</option>
+                  <option>Every other week</option>
+                </select>
+              </label>
+              <label>Robot Vacuum
+                <select data-pool-field="hasRobot">
+                  <option>Not sure</option>
+                  <option>Yes</option>
+                  <option>No</option>
+                </select>
+              </label>
+              <label data-robot-name-label hidden>Robot's Name (optional) <input data-pool-field="robotName" placeholder="ex: Doug" /></label>
+            </div>
+          </section>
+
+          <section class="card">
+            <h3>Site Access</h3>
+            <p class="muted" style="margin-top: 6px;">Helps whoever services the pool get in safely.</p>
+            <div class="form-grid" style="margin-top: 14px;">
+              <label>Gate / HOA Code <input data-pool-field="gateCode" placeholder="ex: 1842" /></label>
+              <label>Access Notes <textarea data-pool-field="accessNotes" placeholder="Side gate, lockbox, where to enter, etc."></textarea></label>
+              <label>Dog / Pet on Site
+                <select data-pool-field="petWarning">
+                  <option>No</option>
+                  <option>Yes</option>
+                </select>
+              </label>
+              <label>Pet Note (optional) <input data-pool-field="petNote" placeholder="ex: Friendly golden in back yard" /></label>
+            </div>
+          </section>
+
+          <section class="card">
             <h3>Products</h3>
             <p class="muted" style="margin-top: 6px;">Tap what you have. Exact doses use these.</p>
             <div class="chip-row" data-product-chips></div>
@@ -1812,6 +1998,7 @@
           <button class="btn" data-back>Back</button>
         </div>
         <div class="content">
+          <button class="access-banner" data-photos-access-banner hidden type="button"></button>
           <button class="photo-cta" data-open-camera aria-label="Open camera">
             <svg class="photo-main-icon active" data-photo-main-icon="pool" aria-hidden="true" viewBox="0 0 64 64" fill="none">
               <rect x="8" y="16" width="48" height="34" rx="12" stroke="currentColor" stroke-width="4"/>
@@ -1909,8 +2096,9 @@
           <section class="card guide-card">
             <p class="setup-label">Do Next</p>
             <div class="big-step" data-next-step style="margin-top: 4px;">Retest before you add more.</div>
+            <button class="step-edit-btn first-step-edit" data-edit-first-step hidden style="margin-top: 8px;">Edit this step</button>
             <div class="summary-list" data-step-guide-list style="margin-top: 14px;"></div>
-            <p class="muted" data-flag-hint hidden style="margin-top: 10px;">Wrong step? Tap it to flag it red.</p>
+            <p class="muted" data-flag-hint hidden style="margin-top: 10px;">Tap "Edit" to fix a step's wording, or tap the step text to flag it red.</p>
             <div class="summary-list" data-missing-list style="margin-top: 10px;"></div>
             <button class="btn full" type="button" data-missing-step style="margin-top: 12px;">Missing step? Say it</button>
             <button class="gps-suggest" data-nameplate-ask hidden type="button">One-time: snap the pump/filter label. ClearWay learns this pool's gear. Tap here.</button>
@@ -1978,9 +2166,22 @@
         <div class="sheet" role="dialog" aria-modal="true">
           <h3 data-sheet-title>Status</h3>
           <p class="muted" data-sheet-body style="margin-top: 8px;"></p>
+          <button class="btn full" type="button" data-sheet-alt hidden style="margin-top: 12px;"></button>
           <div class="sheet-actions">
             <button class="btn" data-sheet-close>Close</button>
             <button class="btn primary" data-sheet-confirm>Done today</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="sheet-backdrop" data-pool-picker hidden>
+        <div class="sheet" role="dialog" aria-modal="true">
+          <h3>Your pools</h3>
+          <p class="muted" style="margin-top: 6px;">Tap a pool to switch to it.</p>
+          <div class="pool-picker-list" data-pool-picker-list></div>
+          <div class="sheet-actions">
+            <button class="btn" data-pool-picker-close>Close</button>
+            <button class="btn primary" data-pool-picker-add>Add new pool</button>
           </div>
         </div>
       </div>
@@ -2009,6 +2210,8 @@
     const themeStorageKey = "clearwayThemeV1";
     const outboxStorageKey = "clearwayOutboxV1";
     const costLedgerStorageKey = "clearwayCostLedgerV1";
+    const userModeStorageKey = "clearwayUserModeV1";
+    const techShelfStorageKey = "clearwayTechShelfV1";
 
     const PARTY_SKINS = {
       home: ["home-leopard"],
@@ -2127,7 +2330,8 @@
     }
 
     function hasProduct(pool, key) {
-      const list = pool?.productsOnHand || [];
+      // Tech mode doses from today's truck shelf; homeowner doses from the pool's own list.
+      const list = effectiveProducts(pool);
       return list.includes(key);
     }
 
@@ -2489,18 +2693,31 @@
       }
 
       // Maintenance that is actually due folds into Do Next
-      ["filter", "waterLevel", "saltCell"].forEach((type) => {
+      const robot = pool?.hasRobot === "Yes";
+      const robotLabel = robot ? (pool?.robotName ? pool.robotName : "the robot") : "";
+      ["filter", "waterLevel", "saltCell", "vacuum"].forEach((type) => {
         const info = maintenanceInfo(pool, type);
         if (info.color === "red") {
           rulesFired.push(`maint-${type}`);
-          steps.push({
-            id: `maint-${type}`,
-            text: type === "waterLevel"
-              ? "Check the water level - aim for about half the skimmer."
-              : `${info.label} is past due. ${type === "filter" ? "Clean or check it." : "Inspect and clean it."}`
-          });
+          let text;
+          if (type === "waterLevel") {
+            text = "Check the water level - aim for about half the skimmer.";
+          } else if (type === "vacuum") {
+            text = robot
+              ? `Run ${robotLabel}, then empty and rinse its filter basket.`
+              : "Vacuum the pool and brush the walls and floor.";
+          } else {
+            text = `${info.label} is past due. ${type === "filter" ? "Clean or check it." : "Inspect and clean it."}`;
+          }
+          steps.push({ id: `maint-${type}`, text });
         }
       });
+
+      // Robot quick-check line - useful even when the vacuum tile is not overdue.
+      if (robot && !steps.some((s) => s.id === "maint-vacuum")) {
+        rulesFired.push("robot-check");
+        steps.push({ id: "robot-check", text: `Quick check: empty and rinse ${robotLabel}'s filter basket.` });
+      }
 
       if (pool?.hasSpa === "Yes" && steps.some((s) => /^(ta|ph|fc|cya|ch|salt)-/.test(s.id))) {
         rulesFired.push("spa-separate");
@@ -2551,6 +2768,8 @@
       "maint-filter": "A dirty filter undoes good chemistry.",
       "maint-waterLevel": "The skimmer needs water at half height to work.",
       "maint-saltCell": "A scaled cell makes less chlorine.",
+      "maint-vacuum": "Debris on the floor uses up chlorine and clouds the water.",
+      "robot-check": "A clogged robot basket stops it cleaning well.",
       "spa-separate": "Spas are tiny - pool doses would overshoot them."
     };
 
@@ -2580,7 +2799,8 @@
       { key: "hasSpa", question: "Spa too?", help: "If yes, ClearWay asks for pool and spa photos.", options: ["Yes", "No", "Not sure"] },
       { key: "heater", question: "Heater?", help: "Heaters need extra caution with chemistry.", options: ["No heater", "Gas heater", "Heat pump", "Solar heater", "Not sure"] },
       { key: "filter", question: "Filter type?", help: "This helps the filter reminder make sense.", options: ["Cartridge", "Sand", "DE", "Not sure"] },
-      { key: "chemInventory", question: "Products", help: "Take one photo of the products you have. You can update it later in settings.", photo: true },
+      { key: "hasRobot", question: "Robot vacuum?", help: "If yes, ClearWay reminds you to clean its basket.", options: ["Yes", "No", "Not sure"] },
+      { key: "chemInventory", question: "Products", help: "Take one photo of the products you have. You can update it later in settings.", photo: true, homeownerOnly: true },
       { key: "filterCleanedAt", question: "Last filter clean?", help: "Tap the closest answer.", options: ["Today", "This week", "This month", "Not sure"], date: true },
       { key: "waterLevelCheckedAt", question: "Last water check?", help: "Normal target is around halfway up the skimmer.", options: ["Today", "This week", "Not sure"], date: true },
       { key: "saltCellCleanedAt", question: "Last salt cell clean?", help: "Skip if this is not a salt pool.", options: ["Today", "This month", "Not sure"], date: true, saltOnly: true }
@@ -2620,6 +2840,68 @@
         try { localStorage.setItem(householdStorageKey, id); } catch { /* keep in-memory */ }
       }
       return id;
+    }
+
+    // ===== Account mode: homeowner (default) vs tech =====
+    function getUserMode() {
+      try {
+        const mode = localStorage.getItem(userModeStorageKey);
+        return mode === "tech" ? "tech" : "homeowner";
+      } catch { return "homeowner"; }
+    }
+
+    function setUserMode(mode) {
+      const next = mode === "tech" ? "tech" : "homeowner";
+      try { localStorage.setItem(userModeStorageKey, next); } catch { /* keep in-memory */ }
+      return next;
+    }
+
+    function isTechMode() {
+      return getUserMode() === "tech";
+    }
+
+    // Local calendar date key (device timezone) - used for the tech daily product shelf.
+    function localDateKey(date = new Date()) {
+      const d = new Date(date);
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    }
+
+    // ===== Tech daily product shelf (truck stock for the day) =====
+    function getTechShelf() {
+      try {
+        const raw = JSON.parse(localStorage.getItem(techShelfStorageKey) || "null");
+        if (raw && raw.date === localDateKey()) return raw;
+      } catch { /* fall through */ }
+      return { date: localDateKey(), photos: [], products: [], updatedAt: "" };
+    }
+
+    function saveTechShelf(shelf) {
+      const record = {
+        date: shelf.date || localDateKey(),
+        photos: (shelf.photos || []).slice(0, 1),
+        products: shelf.products || [],
+        updatedAt: shelf.updatedAt || new Date().toISOString()
+      };
+      try { localStorage.setItem(techShelfStorageKey, JSON.stringify(record)); } catch { /* keep in-memory */ }
+      return record;
+    }
+
+    // Shelf is "fresh" only if captured for today's local date with at least a photo or product list.
+    function techShelfReadyToday() {
+      const shelf = getTechShelf();
+      return shelf.date === localDateKey() && (shelf.photos.length > 0 || shelf.products.length > 0);
+    }
+
+    // Effective products on hand for dosing: tech mode uses today's truck shelf, homeowner uses the pool.
+    function effectiveProducts(pool) {
+      if (isTechMode()) {
+        const shelf = getTechShelf();
+        if (shelf.products && shelf.products.length) return shelf.products;
+      }
+      return pool?.productsOnHand || [];
     }
 
     function localPools() {
@@ -2712,6 +2994,7 @@
       const ids = readOutbox();
       if (!ids.length) { renderSyncStatus(); return; }
       outboxFlushing = true;
+      renderSyncStatus();
       let sent = 0;
       try {
         for (const id of ids) {
@@ -2742,18 +3025,24 @@
       if (!line) return;
       const waiting = readOutbox().length;
       const offline = typeof navigator !== "undefined" && navigator.onLine === false;
-      if (offline) {
+      line.classList.remove("busy", "sent");
+      if (outboxFlushing) {
+        line.hidden = false;
+        line.classList.add("busy");
+        line.textContent = "Sending…";
+      } else if (offline) {
         line.hidden = false;
         line.textContent = waiting
-          ? `No signal. ${waiting} scan${waiting === 1 ? "" : "s"} saved on this phone - they send when signal is back.`
-          : "No signal. Scans save to this phone and send later.";
+          ? `${waiting} scan${waiting === 1 ? "" : "s"} saved on this phone. No signal yet — tap to retry, or they send automatically when you're back online. Nothing is lost.`
+          : "No signal. Scans save to this phone and send automatically later.";
       } else if (waiting) {
         line.hidden = false;
-        line.textContent = `${waiting} scan${waiting === 1 ? "" : "s"} waiting to send. Keep the app open a moment.`;
+        line.textContent = `${waiting} scan${waiting === 1 ? "" : "s"} saved on this phone, not sent yet. Tap to send now.`;
       } else if (justSent) {
         line.hidden = false;
-        line.textContent = "All scans sent.";
-        setTimeout(() => { if (!readOutbox().length) line.hidden = true; }, 4000);
+        line.classList.add("sent");
+        line.textContent = "All scans sent ✓";
+        setTimeout(() => { if (!readOutbox().length && !outboxFlushing) line.hidden = true; }, 4000);
       } else {
         line.hidden = true;
       }
@@ -2789,6 +3078,14 @@
         chemInventoryNote: "",
         chemInventoryPhotos: [],
         chemInventoryUpdatedAt: "",
+        serviceCadence: "Weekly",
+        hasRobot: "Not sure",
+        robotName: "",
+        gateCode: "",
+        accessNotes: "",
+        petWarning: "No",
+        petNote: "",
+        vacuumedAt: "",
         profileComplete: false,
         updatedAt: new Date().toISOString()
       };
@@ -2803,6 +3100,7 @@
 
     function visibleSetupQuestions() {
       return setupQuestions.filter((question) => {
+        if (question.homeownerOnly && isTechMode()) return false;
         if (!question.saltOnly) return true;
         return setupDraft.poolType === "Salt pool";
       });
@@ -3011,6 +3309,14 @@
         chemInventoryPhotos: setupDraft.chemInventoryPhotos?.length ? setupDraft.chemInventoryPhotos : (current.chemInventoryPhotos || []),
         chemInventoryUpdatedAt: setupDraft.chemInventoryUpdatedAt || current.chemInventoryUpdatedAt || "",
         measurements: current.measurements || "",
+        serviceCadence: setupDraft.serviceCadence || current.serviceCadence || "Weekly",
+        hasRobot: setupDraft.hasRobot || current.hasRobot || "Not sure",
+        robotName: setupDraft.robotName || current.robotName || "",
+        gateCode: current.gateCode || "",
+        accessNotes: current.accessNotes || "",
+        petWarning: current.petWarning || "No",
+        petNote: current.petNote || "",
+        vacuumedAt: current.vacuumedAt || "",
         profileComplete: true,
         updatedAt: new Date().toISOString()
       };
@@ -3071,19 +3377,118 @@
       renderHomeMaintenance(pool);
       renderRetestBanner();
       renderSyncStatus();
-      const stats = document.querySelector("[data-home-stats]");
-      if (stats) {
-        const saved = localChecks();
-        if (!saved.length) {
-          stats.hidden = true;
-        } else {
-          const last = new Date(saved[0].createdAt);
-          const days = Math.floor((Date.now() - last.getTime()) / 86400000);
-          const when = days === 0 ? "today" : (days === 1 ? "yesterday" : `${days} days ago`);
-          stats.hidden = false;
-          stats.textContent = `${saved.length} scan${saved.length === 1 ? "" : "s"} - Last ${when}`;
-        }
+      renderAccessBanner(pool);
+    }
+
+    // Site access / hazard banner - shows gate code + dog warning before the visit starts.
+    function renderAccessBanner(pool, selector = "[data-access-banner]") {
+      const banner = document.querySelector(selector);
+      if (!banner) return;
+      const code = (pool?.gateCode || "").trim();
+      const notes = (pool?.accessNotes || "").trim();
+      const hasPet = pool?.petWarning === "Yes" || pool?.petWarning === true;
+      const petNote = (pool?.petNote || "").trim();
+      if (!code && !notes && !hasPet) {
+        banner.hidden = true;
+        return;
       }
+      const parts = [];
+      if (code) parts.push(`🔒 Gate ${escapeHtml(code)}`);
+      if (hasPet) parts.push(`🐕 ${petNote ? escapeHtml(petNote) : "Dog on site"}`);
+      if (notes) parts.push(escapeHtml(notes));
+      banner.innerHTML = parts.join(" · ");
+      banner.classList.toggle("alert", hasPet);
+      banner.hidden = false;
+    }
+
+    // Reflect the saved homeowner/tech mode on the Settings toggle.
+    function renderModeToggle() {
+      const mode = getUserMode();
+      document.querySelectorAll("[data-mode-option]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.modeOption === mode);
+      });
+      renderShelfCard();
+    }
+
+    // ===== Pool picker: a simple, reliable way to switch the active pool =====
+    function openPoolPicker() {
+      ensureStarterPool();
+      renderPoolPicker();
+      const overlay = document.querySelector("[data-pool-picker]");
+      if (overlay) overlay.hidden = false;
+    }
+
+    function closePoolPicker() {
+      const overlay = document.querySelector("[data-pool-picker]");
+      if (overlay) overlay.hidden = true;
+    }
+
+    function renderPoolPicker() {
+      const list = document.querySelector("[data-pool-picker-list]");
+      if (!list) return;
+      const pools = localPools();
+      list.innerHTML = pools.length
+        ? pools.map((pool) => {
+            const sub = pool.profileComplete
+              ? [pool.poolType && pool.poolType !== "Not sure" ? pool.poolType : "", pool.address || ""].filter(Boolean).join(" · ")
+              : "Tap to finish setup";
+            return `<button type="button" class="pool-picker-item ${pool.id === selectedPoolId ? "active" : ""}" data-pick-pool="${pool.id}">
+              <strong>${escapeHtml(pool.poolName || "Unnamed Pool")}</strong>
+              <span class="muted">${escapeHtml(sub || "No details yet")}</span>
+            </button>`;
+          }).join("")
+        : '<div class="empty">No pools yet. Tap "Add new pool".</div>';
+    }
+
+    // ===== Tech daily truck-stock shelf =====
+    let pendingStartAfterShelf = false;
+
+    function promptTechShelf() {
+      pendingStartAfterShelf = true;
+      sheetAction = () => document.querySelector("[data-shelf-input]")?.click();
+      openSheet(
+        "Today's truck stock",
+        "Snap one photo of the chemicals on your truck. ClearWay uses it for every pool today — you only do this once each morning.",
+        "Take photo",
+        "Skip for today",
+        () => { pendingStartAfterShelf = false; startPhotoFlow(); }
+      );
+    }
+
+    function renderShelfCard() {
+      const card = document.querySelector("[data-tech-shelf-card]");
+      if (!card) return;
+      const tech = isTechMode();
+      card.hidden = !tech;
+      if (!tech) return;
+      const shelf = getTechShelf();
+      const status = document.querySelector("[data-shelf-status]");
+      if (status) {
+        status.textContent = shelf.photos.length
+          ? "Today's photo is set ✓"
+          : "No photo for today yet.";
+      }
+      const thumbs = document.querySelector("[data-shelf-thumbs]");
+      if (thumbs) {
+        thumbs.innerHTML = shelf.photos.length
+          ? shelf.photos.map((src) => `<div class="thumb"><img alt="Truck stock" src="${src}"><span>Today</span></div>`).join("")
+          : "";
+      }
+      const chips = document.querySelector("[data-shelf-chips]");
+      if (chips) {
+        const selected = shelf.products || [];
+        chips.innerHTML = Object.entries(CHEM_PRODUCTS).map(([key, product]) => `
+          <button type="button" class="chip ${selected.includes(key) ? "on" : ""}" data-shelf-chip="${key}">${product.chip}</button>
+        `).join("");
+      }
+    }
+
+    function toggleShelfProduct(key) {
+      const shelf = getTechShelf();
+      const products = shelf.products || [];
+      const next = products.includes(key) ? products.filter((item) => item !== key) : [...products, key];
+      saveTechShelf({ ...shelf, products: next, updatedAt: new Date().toISOString() });
+      renderShelfCard();
     }
 
     function readRetestReminder() {
@@ -3115,13 +3520,17 @@
       const filterBox = document.querySelector('[data-home-maintenance="filter"]');
       const waterBox = document.querySelector('[data-home-maintenance="waterLevel"]');
       const saltBox = document.querySelector('[data-home-maintenance="saltCell"]');
+      const vacuumBox = document.querySelector('[data-home-maintenance="vacuum"]');
       const filterState = document.querySelector("[data-home-filter-state]");
       const waterState = document.querySelector("[data-home-water-state]");
       const saltState = document.querySelector("[data-home-salt-state]");
+      const vacuumState = document.querySelector("[data-home-vacuum-state]");
+      const vacuumLabelEl = document.querySelector("[data-home-vacuum-label]");
       if (!filterBox || !waterBox || !saltBox || !pool) return;
       const filter = maintenanceInfo(pool, "filter");
       const water = maintenanceInfo(pool, "waterLevel");
       const salt = maintenanceInfo(pool, "saltCell");
+      const vacuum = maintenanceInfo(pool, "vacuum");
       filterBox.className = `home-maint ${filter.color}`;
       waterBox.className = `home-maint ${water.color}`;
       saltBox.className = `home-maint ${salt.color}`;
@@ -3129,6 +3538,9 @@
       if (filterState) filterState.textContent = filter.color === "red" ? "Check due" : filter.detail;
       if (waterState) waterState.textContent = water.color === "red" ? "Check level" : (water.color === "yellow" ? "Check soon" : "Looks current");
       if (saltState) saltState.textContent = salt.color === "red" ? "Check due" : salt.detail;
+      if (vacuumBox) vacuumBox.className = `home-maint ${vacuum.color}`;
+      if (vacuumLabelEl) vacuumLabelEl.textContent = vacuum.label;
+      if (vacuumState) vacuumState.textContent = vacuum.color === "red" ? "Due" : (vacuum.color === "gray" ? "Not logged" : "On track");
     }
 
     function formatDate(value) {
@@ -3139,12 +3551,24 @@
       return Math.floor((b.getTime() - a.getTime()) / 86400000);
     }
 
+    // Vacuum interval follows the pool's service plan: weekly (7d) or every other week (14d).
+    function vacuumIntervalDays(pool) {
+      return pool?.serviceCadence === "Every other week" ? 14 : 7;
+    }
+
+    function hasRobotVacuum(pool) {
+      return pool?.hasRobot === "Yes";
+    }
+
     function maintenanceInfo(pool, type) {
       const isSalt = pool?.poolType === "Salt pool";
+      const robot = hasRobotVacuum(pool);
+      const vacuumLabel = robot ? (pool?.robotName ? pool.robotName : "Robot") : "Vacuum";
       const setup = {
         filter: { key: "filterCleanedAt", label: "Filter", short: "F", interval: 60 },
         waterLevel: { key: "waterLevelCheckedAt", label: "Water Level", short: "WL", interval: 7 },
-        saltCell: { key: "saltCellCleanedAt", label: "Salt Cell", short: "SC", interval: 90 }
+        saltCell: { key: "saltCellCleanedAt", label: "Salt Cell", short: "SC", interval: 90 },
+        vacuum: { key: "vacuumedAt", label: vacuumLabel, short: "V", interval: vacuumIntervalDays(pool) }
       }[type] || { key: "filterCleanedAt", label: "Filter", short: "F", interval: 60 };
       const { key, label, short, interval } = setup;
       if (type === "saltCell" && !isSalt) {
@@ -3180,8 +3604,9 @@
     }
 
     let sheetAction = null;
+    let sheetAltAction = null;
 
-    function openSheet(title, body, confirmLabel) {
+    function openSheet(title, body, confirmLabel, altLabel = "", altAction = null) {
       const backdrop = document.querySelector("[data-sheet]");
       if (!backdrop) return;
       document.querySelector("[data-sheet-title]").textContent = title;
@@ -3191,6 +3616,12 @@
       if (confirmLabel) confirmBtn.textContent = confirmLabel;
       confirmBtn.parentElement.style.gridTemplateColumns = confirmLabel ? "1fr 1.4fr" : "1fr";
       confirmBtn.classList.toggle("danger", confirmLabel === "Remove");
+      const altBtn = document.querySelector("[data-sheet-alt]");
+      if (altBtn) {
+        altBtn.hidden = !altLabel;
+        if (altLabel) altBtn.textContent = altLabel;
+      }
+      sheetAltAction = altAction;
       backdrop.hidden = false;
     }
 
@@ -3198,6 +3629,9 @@
       const backdrop = document.querySelector("[data-sheet]");
       if (backdrop) backdrop.hidden = true;
       sheetAction = null;
+      sheetAltAction = null;
+      const altBtn = document.querySelector("[data-sheet-alt]");
+      if (altBtn) altBtn.hidden = true;
     }
 
     function showMaintenanceDetail(poolId, type) {
@@ -3209,14 +3643,37 @@
       }
       const verb = type === "waterLevel" ? "Checked today" : "Done today";
       sheetAction = () => logMaintenance(type);
+      if (type === "vacuum") {
+        const plan = pool?.serviceCadence === "Every other week" ? "Every other week" : "Weekly";
+        const switchTo = plan === "Weekly" ? "Every other week" : "Weekly";
+        openSheet(
+          info.label,
+          `Last: ${info.last}. Next: ${info.next}. Plan: ${plan}. ${info.detail}`,
+          verb,
+          `Switch plan to ${switchTo}`,
+          () => setPoolCadence(pool.id, switchTo)
+        );
+        return;
+      }
       openSheet(info.label, `Last: ${info.last}. Next: ${info.next}. ${info.detail}`, verb);
+    }
+
+    // One-tap service-plan switch from the vacuum tile sheet.
+    function setPoolCadence(poolId, cadence) {
+      const pools = localPools();
+      const pool = pools.find((item) => item.id === poolId);
+      if (!pool) return;
+      const updated = { ...pool, serviceCadence: cadence, updatedAt: new Date().toISOString() };
+      saveLocalPools([updated, ...pools.filter((item) => item.id !== updated.id)]);
+      selectedPoolId = updated.id;
+      renderHome();
     }
 
     function logMaintenance(type) {
       const pool = selectedPool();
       if (!pool) return;
       const pools = localPools();
-      const key = type === "filter" ? "filterCleanedAt" : (type === "waterLevel" ? "waterLevelCheckedAt" : "saltCellCleanedAt");
+      const key = { filter: "filterCleanedAt", waterLevel: "waterLevelCheckedAt", saltCell: "saltCellCleanedAt", vacuum: "vacuumedAt" }[type] || "filterCleanedAt";
       const updated = { ...pool, [key]: new Date().toISOString(), updatedAt: new Date().toISOString() };
       saveLocalPools([updated, ...pools.filter((item) => item.id !== updated.id)]);
       selectedPoolId = updated.id;
@@ -3269,6 +3726,14 @@
         chemInventoryNote: editPoolChemChanged && chemPhotos.length ? "Product photo saved" : (existingPool?.chemInventoryNote || ""),
         chemInventoryPhotos: chemPhotos,
         chemInventoryUpdatedAt: editPoolChemChanged ? new Date().toISOString() : (existingPool?.chemInventoryUpdatedAt || ""),
+        serviceCadence: get("serviceCadence") || existingPool?.serviceCadence || "Weekly",
+        hasRobot: get("hasRobot") || existingPool?.hasRobot || "Not sure",
+        robotName: get("robotName") || existingPool?.robotName || "",
+        gateCode: get("gateCode") || existingPool?.gateCode || "",
+        accessNotes: get("accessNotes") || existingPool?.accessNotes || "",
+        petWarning: get("petWarning") || existingPool?.petWarning || "No",
+        petNote: get("petNote") || existingPool?.petNote || "",
+        vacuumedAt: existingPool?.vacuumedAt || "",
         profileComplete: true,
         updatedAt: new Date().toISOString()
       };
@@ -3282,6 +3747,7 @@
       activePhotoStep = 0;
       renderPhotoStep();
       await showScreen("photos");
+      renderAccessBanner(selectedPool(), "[data-photos-access-banner]");
       offerNearestPool();
     }
 
@@ -3311,7 +3777,14 @@
         filter: pool?.filter || "Not sure",
         volumeBracket: pool?.volumeBracket || "Not sure",
         volumeGallons: pool?.volumeGallons || "",
-        measurements: pool?.measurements || ""
+        measurements: pool?.measurements || "",
+        serviceCadence: pool?.serviceCadence || "Weekly",
+        hasRobot: pool?.hasRobot || "Not sure",
+        robotName: pool?.robotName || "",
+        gateCode: pool?.gateCode || "",
+        accessNotes: pool?.accessNotes || "",
+        petWarning: pool?.petWarning || "No",
+        petNote: pool?.petNote || ""
       };
       Object.entries(fields).forEach(([key, value]) => {
         const field = document.querySelector(`[data-pool-field="${key}"]`);
@@ -3332,6 +3805,8 @@
       editPoolProducts = [];
       renderPoolChemThumbs();
       renderProductChips();
+      renderModeToggle();
+      applyRobotFieldState();
       setRemovePoolVisibility();
       await showScreen("add-pool");
     }
@@ -3345,8 +3820,18 @@
       editPoolProducts = [...(pool?.productsOnHand || [])];
       renderPoolChemThumbs();
       renderProductChips();
+      renderModeToggle();
+      applyRobotFieldState();
       setRemovePoolVisibility();
       await showScreen("add-pool");
+    }
+
+    // Robot name field only matters when a robot is present.
+    function applyRobotFieldState() {
+      const robotSelect = document.querySelector('[data-pool-field="hasRobot"]');
+      const nameLabel = document.querySelector("[data-robot-name-label]");
+      if (!robotSelect || !nameLabel) return;
+      nameLabel.hidden = robotSelect.value !== "Yes";
     }
 
     function removePool(poolId) {
@@ -3520,29 +4005,65 @@
       return normalizePhotoList(draft.photos.tests).length ? "Test photo" : "Not stated";
     }
 
+    // Retest wording depends on who's using the app: homeowners can retest same-day,
+    // techs come back on their next visit.
+    function doNextRetestLine() {
+      return isTechMode()
+        ? "Retest at your next visit before adding more."
+        : "Retest in about 24 hours, before adding anything else.";
+    }
+
     function buildDoNext(check) {
       const text = `${check.brainInput || ""} ${check.nextStep || ""}`.toLowerCase();
+      const edits = check.stepEdits || {};
       const steps = [];
       const add = (id, stepText) => {
-        const lower = stepText.toLowerCase();
+        const finalText = edits[id] || stepText; // honor any in-place edits
+        const lower = finalText.toLowerCase();
         const dupe = steps.some((item) => {
           const existing = item.text.toLowerCase();
           return existing === lower || existing.includes(lower) || lower.includes(existing);
         });
-        if (!dupe) steps.push({ id, text: stepText });
+        if (!dupe) steps.push({ id, text: finalText });
       };
       const engineSteps = check.engine?.steps || [];
       engineSteps.forEach((step) => add(step.id, step.text));
       const hasEngine = engineSteps.length > 0;
-      if (!hasEngine && check.nextStep) add("note-next", check.nextStep);
-      if (!hasEngine && (text.includes("green") || text.includes("algae"))) add("note-algae", "Check chlorine and pH first.");
-      if (text.includes("cloudy") || text.includes("hazy")) add("note-pump", "Run the pump.");
-      if (text.includes("filter") && !hasEngine) add("note-filter", "Check the filter.");
-      if (text.includes("water level") || text.includes("low water")) add("note-water", "Fill water to about half the skimmer.");
-      // Retest ALWAYS survives, even on a crowded card
-      const sliced = steps.slice(0, 5);
+
+      // Note-driven observations - these work even when no test numbers were entered,
+      // so the card is a full, ordered checklist the user corrects rather than rebuilds.
+      if (text.includes("green") || text.includes("algae")) {
+        add("note-algae", "Looks like algae: brush the walls and floor, then bring chlorine up per the product label.");
+      }
+      if (text.includes("cloudy") || text.includes("hazy") || text.includes("murky") || text.includes("milky")) {
+        add("note-clear", "Cloudy water: run the pump and let the filter clear it. Don't shock blindly.");
+      }
+      if (text.includes("leaf") || text.includes("leaves") || text.includes("debris") || text.includes("dirty")) {
+        add("note-skim", "Skim the surface and empty the skimmer and pump baskets.");
+      }
+      if ((text.includes("filter") || text.includes("psi") || text.includes("pressure")) && !hasEngine) {
+        add("note-filter", "Check the filter - clean or backwash it if the pressure is running high.");
+      }
+      if (text.includes("water level") || text.includes("low water")) {
+        add("note-water", "Top the water up to about halfway up the skimmer.");
+      }
+
+      // Circulation is the safe baseline action almost every visit.
+      if (!steps.some((step) => /pump/i.test(step.text))) {
+        add("circulate", isTechMode()
+          ? "Run the pump after service so everything mixes before you leave."
+          : "Run the pump 6-8 hours today so the water turns over and clears.");
+      }
+
+      // If neither readings nor the note produced a concrete step, give a real first move.
+      if (!hasEngine && steps.length <= 1) {
+        add("baseline-test", "Test the water with a strip so the next step is exact - chlorine, pH, and alkalinity.");
+      }
+
+      // Retest ALWAYS survives, even on a crowded card.
+      const sliced = steps.slice(0, 6);
       const hasRetest = sliced.some((step) => step.text.toLowerCase().includes("retest"));
-      if (!hasRetest) sliced.push({ id: "retest", text: "Retest before you add more." });
+      if (!hasRetest) sliced.push({ id: "retest", text: edits["retest"] || doNextRetestLine() });
       return sliced;
     }
 
@@ -3656,6 +4177,14 @@
     async function createCheck() {
       const pool = selectedPool() || { poolName: "Unnamed Pool", poolType: "Not sure", heater: "Not sure", filter: "Not sure" };
       const checkId = crypto.randomUUID ? crypto.randomUUID() : String(Date.now());
+      // Tech mode: attach today's truck-stock photo to this scan for the AI to read.
+      if (isTechMode()) {
+        const shelf = getTechShelf();
+        if (shelf.photos.length) {
+          draft.photos = draft.photos || { pool: [], tests: [], products: [] };
+          draft.photos.products = [...(draft.photos.products || []), ...shelf.photos];
+        }
+      }
       const concern = draft.visitConcern ? `Visit concern: ${draft.visitConcern}. ` : "";
       const brain = `${concern}${brainText()}`.trim();
       const values = mergeSpokenReadings(readValues(), brain);
@@ -3687,6 +4216,10 @@
         filterCleanedAt: pool.filterCleanedAt || "",
         waterLevelCheckedAt: pool.waterLevelCheckedAt || "",
         saltCellCleanedAt: pool.saltCellCleanedAt || "",
+        vacuumedAt: pool.vacuumedAt || "",
+        serviceCadence: pool.serviceCadence || "Weekly",
+        hasRobot: pool.hasRobot || "Not sure",
+        robotName: pool.robotName || "",
         chemInventoryNote: pool.chemInventoryNote || "",
         chemInventoryUpdatedAt: pool.chemInventoryUpdatedAt || "",
         mainIssue,
@@ -3886,7 +4419,7 @@
 
     function homeownerReport(check) {
       const outside = (check.values || []).filter((item) => item.status === "low" || item.status === "high");
-      const statuses = ["filter", "waterLevel", "saltCell"].map((type) => ({ type, ...maintenanceInfo(check, type) }));
+      const statuses = ["filter", "waterLevel", "saltCell", "vacuum"].map((type) => ({ type, ...maintenanceInfo(check, type) }));
       const attention = statuses.filter((item) => item.color === "red" || item.color === "yellow");
       const caution = check.poolType === "Salt pool" || (check.heater && check.heater !== "No heater" && check.heater !== "Not sure");
       const hasAlert = outside.length || attention.some((item) => item.color === "red") || caution;
@@ -3948,10 +4481,18 @@
         closedVia: withPump ? "pump" : "finish",
         visitSeconds: Math.max(0, Math.round((Date.now() - new Date(check.createdAt).getTime()) / 1000))
       };
-      if (withPump) setRetestReminder(check, check.engine?.retestMinutes || 30);
+      // Homeowners are at the pool and can retest same-day, so they get the timed
+      // reminder. Techs work a weekly route, so we skip the short countdown for them.
+      const setReminder = withPump && !isTechMode();
+      if (setReminder) setRetestReminder(check, check.engine?.retestMinutes || 30);
       await saveCheck(check);
       await showScreen("home");
-      openSheet("Done", withPump ? "Visit closed. Pump circulating - the retest reminder is set on Home." : "Visit closed and saved to pool history.", "");
+      const doneMsg = setReminder
+        ? "Visit closed. Pump circulating - the retest reminder is set on Home."
+        : (isTechMode()
+          ? "Visit closed and saved. Retest at your next visit."
+          : "Visit closed and saved to pool history.");
+      openSheet("Done", doneMsg, "");
     }
 
     function renderGuide(check) {
@@ -3973,6 +4514,11 @@
       bigStep.textContent = first ? first.text : "Retest before you add more.";
       bigStep.classList.toggle("flagged", Boolean(first && flags[first.id]?.flagged));
       if (first) bigStep.setAttribute("data-flag-step", first.id);
+      const bigEdit = document.querySelector("[data-edit-first-step]");
+      if (bigEdit) {
+        bigEdit.hidden = !first;
+        if (first) bigEdit.dataset.editStep = first.id;
+      }
       const stepList = document.querySelector("[data-step-guide-list]");
       if (stepList) {
         stepList.innerHTML = steps.slice(1).map((step, index) => {
@@ -3982,6 +4528,7 @@
           <div class="step-row ${isFlagged ? "flagged" : ""}" data-flag-step="${step.id}">
             <span class="step-num">${index + 2}</span>
             <strong>${escapeHtml(step.text)}</strong>
+            <button class="step-edit-btn" data-edit-step="${step.id}" aria-label="Edit step">Edit</button>
             ${isFlagged ? `<button class="why-btn" data-flag-why="${step.id}">${flag?.reason ? "Why saved" : "Say why"}</button>` : ""}
           </div>`;
         }).join("");
@@ -4140,11 +4687,17 @@
       }
       const recognition = new Speech();
       recognition.lang = "en-US";
-      recognition.interimResults = false;
+      // Interim results land in the field live, so whatever was heard is captured
+      // even if the user taps Next before the final result arrives.
+      recognition.interimResults = true;
       recognition.maxAlternatives = 1;
+      const base = field.value ? field.value.trim() + " " : "";
       recognition.onresult = (event) => {
-        const said = event.results?.[0]?.[0]?.transcript || "";
-        field.value = `${field.value ? field.value + " " : ""}${said}`.trim();
+        let transcript = "";
+        for (let i = 0; i < event.results.length; i += 1) {
+          transcript += event.results[i][0]?.transcript || "";
+        }
+        field.value = (base + transcript).trim();
       };
       recognition.onerror = () => alert("Dictation did not catch that. Try the phone keyboard mic.");
       recognition.start();
@@ -4201,6 +4754,29 @@
     }
 
     document.addEventListener("change", async (event) => {
+      if (event.target.closest('[data-pool-field="hasRobot"]')) {
+        applyRobotFieldState();
+        return;
+      }
+
+      const shelfInput = event.target.closest("[data-shelf-input]");
+      if (shelfInput && shelfInput.files[0]) {
+        let dataUrl = null;
+        try { dataUrl = await compressImage(shelfInput.files[0]); }
+        catch { dataUrl = null; }
+        shelfInput.value = "";
+        if (dataUrl) {
+          const shelf = getTechShelf();
+          saveTechShelf({ ...shelf, photos: [dataUrl], updatedAt: new Date().toISOString() });
+        }
+        renderShelfCard();
+        if (pendingStartAfterShelf) {
+          pendingStartAfterShelf = false;
+          await startPhotoFlow();
+        }
+        return;
+      }
+
       const poolChemInput = event.target.closest("[data-pool-chem-input]");
       if (poolChemInput && poolChemInput.files[0]) {
         const files = [...poolChemInput.files];
@@ -4289,8 +4865,32 @@
         return;
       }
 
-      if (event.target.closest("[data-sheet-close]") || event.target.matches(".sheet-backdrop")) {
+      if (event.target.closest("[data-sheet-alt]")) {
+        if (sheetAltAction) sheetAltAction();
         closeSheet();
+        return;
+      }
+
+      if (event.target.closest("[data-sheet-close]") || (event.target.matches(".sheet-backdrop") && event.target.hasAttribute("data-sheet"))) {
+        closeSheet();
+        return;
+      }
+
+      const editStep = event.target.closest("[data-edit-step], [data-edit-first-step]");
+      if (editStep && activeCheck) {
+        const stepId = editStep.dataset.editStep;
+        if (stepId) {
+          const current = (buildDoNext(activeCheck).find((s) => s.id === stepId) || {}).text || "";
+          const next = window.prompt("Edit this step:", current);
+          if (next !== null) {
+            const trimmed = next.trim();
+            activeCheck.stepEdits = activeCheck.stepEdits || {};
+            if (trimmed) activeCheck.stepEdits[stepId] = trimmed;
+            else delete activeCheck.stepEdits[stepId];
+            await saveCheck(activeCheck);
+            renderGuide(activeCheck);
+          }
+        }
         return;
       }
 
@@ -4423,6 +5023,29 @@
         return;
       }
 
+      if (event.target.closest("[data-sync-status]")) {
+        const offline = typeof navigator !== "undefined" && navigator.onLine === false;
+        if (offline) {
+          openSheet("Saved on this phone", "No signal right now. Your scans are saved here and will send automatically the moment you're back online — nothing is lost.", "");
+        } else if (readOutbox().length) {
+          await flushOutbox();
+        }
+        return;
+      }
+
+      const modeOption = event.target.closest("[data-mode-option]");
+      if (modeOption) {
+        setUserMode(modeOption.dataset.modeOption);
+        renderModeToggle();
+        renderHome();
+        return;
+      }
+
+      if (event.target.closest("[data-access-banner]")) {
+        await openEditPool();
+        return;
+      }
+
       const homeMaintenance = event.target.closest("[data-home-maintenance]");
       if (homeMaintenance) {
         const pool = selectedPool();
@@ -4440,6 +5063,18 @@
         return;
       }
 
+      if (event.target.closest("[data-shelf-update]")) {
+        pendingStartAfterShelf = false;
+        document.querySelector("[data-shelf-input]")?.click();
+        return;
+      }
+
+      const shelfChip = event.target.closest("[data-shelf-chip]");
+      if (shelfChip) {
+        toggleShelfProduct(shelfChip.dataset.shelfChip);
+        return;
+      }
+
       const productChip = event.target.closest("[data-product-chip]");
       if (productChip) {
         const key = productChip.dataset.productChip;
@@ -4454,14 +5089,32 @@
       }
 
       if (event.target.closest("[data-selected-pool-text]")) {
-        ensureStarterPool();
-        const pool = selectedPool();
-        if (pool && !pool.profileComplete) {
+        openPoolPicker();
+        return;
+      }
+
+      const pickPool = event.target.closest("[data-pick-pool]");
+      if (pickPool) {
+        const id = pickPool.dataset.pickPool;
+        if (localPools().some((pool) => pool.id === id)) selectedPoolId = id;
+        closePoolPicker();
+        const chosen = selectedPool();
+        if (chosen && !chosen.profileComplete) {
           await openEditPool();
         } else {
-          resetDraft();
-          await startSetupWizard();
+          renderHome();
         }
+        return;
+      }
+
+      if (event.target.closest("[data-pool-picker-add]")) {
+        closePoolPicker();
+        await openAddPool();
+        return;
+      }
+
+      if (event.target.closest("[data-pool-picker-close]") || (event.target.matches(".sheet-backdrop") && event.target.closest("[data-pool-picker]"))) {
+        closePoolPicker();
         return;
       }
 
@@ -4506,6 +5159,11 @@
       if (event.target.closest("[data-start-check]")) {
         ensureStarterPool();
         resetDraft();
+        // Tech mode: capture one truck-stock photo before the first pool of the day.
+        if (isTechMode() && !techShelfReadyToday()) {
+          promptTechShelf();
+          return;
+        }
         await startPhotoFlow();
         return;
       }
@@ -4581,6 +5239,11 @@
       if (open) {
         const check = (await checks()).find((item) => item.id === open.dataset.openCheck);
         if (check) {
+          // Sticky home pool: reopening a scan makes its pool the active one,
+          // and it stays on the home screen until the next Start.
+          if (check.poolId && localPools().some((pool) => pool.id === check.poolId)) {
+            selectedPoolId = check.poolId;
+          }
           renderGuide(check);
           await showScreen("guide");
         }
