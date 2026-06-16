@@ -3987,9 +3987,8 @@
     }
 
     // Fill the test grid from AI-read values - ONLY empty fields (manual entry always wins).
-    function applyStripReadings(readings, confidence) {
+    function applyStripReadings(readings, confidence, confidences) {
       if (!readings) return 0;
-      const lowConf = confidence && confidence !== "high";
       let filled = 0;
       Object.keys(testMeta).forEach((key) => {
         const value = readings[key];
@@ -3997,7 +3996,8 @@
         const input = document.querySelector(`[data-test-current="${key}"]`);
         if (input && !input.value.trim()) {
           input.value = String(value);
-          input.title = lowConf ? "Read by AI (low confidence) - please confirm" : "Read by AI - confirm";
+          const fc = (confidences && confidences[key]) || confidence || "";
+          input.title = (fc && fc !== "high") ? "Read by AI (low confidence) - please confirm" : "Read by AI - confirm";
           filled += 1;
         }
       });
@@ -4020,13 +4020,15 @@
       try {
         const data = await callAiExtract(dataUrl, brainText());
         const readings = data.readings || {};
-        const filled = applyStripReadings(readings, data.confidence);
+        const filled = applyStripReadings(readings, data.confidence, data.confidences);
         if (typeof data.aiCents === "number") pendingAiCents += data.aiCents;
-        lastStripRead = { readings, confidence: data.confidence || "", observations: data.observations || "" };
+        lastStripRead = { readings, confidence: data.confidence || "", confidences: data.confidences || {}, observations: data.observations || "" };
         if (filled) {
-          const conf = (data.confidence && data.confidence !== "high") ? " (please confirm each number)" : "";
+          const confs = data.confidences || {};
+          const lowLabels = Object.keys(testMeta).filter((k) => readings[k] !== null && readings[k] !== undefined && readings[k] !== "" && (confs[k] ? confs[k] !== "high" : (data.confidence && data.confidence !== "high"))).map((k) => testMeta[k].label);
+          const conf = lowLabels.length ? ` Double-check ${lowLabels.join(", ")}.` : "";
           setCopy("Strip read - numbers added. Tap Next to review.");
-          setStatus(`Read from your photo${conf} - check these, then Get Do Next.`);
+          setStatus(`Read from your photo - check these, then Get Do Next.${conf}`);
         } else {
           setCopy("Couldn't read clear numbers - type them on the next screen.");
           setStatus("");
