@@ -4292,16 +4292,17 @@
       const mainIssue = inferIssueFromText(brain);
       const previous = localChecks().find((item) => item.poolId && item.poolId === (pool.id || "") && (Date.now() - new Date(item.createdAt).getTime()) < 172800000);
       const memory = buildPoolMemory(pool.id || "");
-      const positionFix = await getPositionFix(5000);
-      const gps = gpsFromPosition(positionFix);
-      const weatherLog = await quietWeatherLog(positionFix);
+      // Render-first (field fix): build the card with NO GPS/weather/upload wait so the
+      // "What next" button never hangs on "Thinking...". GPS, weather cautions, photo upload,
+      // and the far-from-usual-spot caution all fold in afterward via enrichCheck (background).
+      const gps = null;
+      const weatherLog = null;
       const engine = chemEngine(pool, values, brain, memory, weatherLog);
-      if (gps && pool.gps && haversineMeters(gps, pool.gps) > 400) {
-        engine.cautions = engine.cautions || [];
-        engine.cautions.push(`This scan is far from ${pool.poolName}'s usual spot. Double-check the right pool is selected.`);
-      }
-      learnPoolGps(pool.id || "", gps);
-      const photos = await uploadPhotos(checkId);
+      const photos = {
+        pool: normalizePhotoList(draft.photos.pool),
+        tests: [...(draft.photos.tests || [])],
+        products: [...(draft.photos.products || [])]
+      };
       const check = {
         id: checkId,
         createdAt: new Date().toISOString(),
@@ -4347,7 +4348,37 @@
       check.report = homeownerReport(check);
       check.learning = learningQuality(check);
       logVisitCost(check);
+      // Persist locally right away; GPS/weather/upload/remote-save happen in the background.
+      saveLocalChecks([check, ...localChecks().filter((item) => item.id !== check.id)]);
+      enrichCheck(check, pool, brain, memory, mainIssue);
       return check;
+    }
+
+    // Background enrichment AFTER the Do Next card is on screen (field fix for the "What next"
+    // hang). Adds GPS + weather (folding in heat/rain + far-pool cautions), uploads photos,
+    // then saves. Never blocks the button or the card.
+    async function enrichCheck(check, pool, brain, memory, mainIssue) {
+      try {
+        const positionFix = await getPositionFix(5000);
+        const gps = gpsFromPosition(positionFix);
+        const weatherLog = await quietWeatherLog(positionFix);
+        if (gps) check.gps = gps;
+        if (weatherLog) check.weatherLog = weatherLog;
+        const engine = chemEngine(pool, check.values, brain, memory, weatherLog);
+        if (gps && pool.gps && haversineMeters(gps, pool.gps) > 400) {
+          engine.cautions = engine.cautions || [];
+          engine.cautions.push(`This scan is far from ${pool.poolName}'s usual spot. Double-check the right pool is selected.`);
+        }
+        check.engine = engine;
+        check.nextStep = engine.steps.length ? engine.steps[0].text : buildNextStep(check.values, mainIssue);
+        learnPoolGps(pool.id || "", gps);
+        check.photos = await reUploadCheckPhotos(check);
+        if (activeCheck && activeCheck.id === check.id) renderGuide(check);
+      } catch (error) {
+        console.warn("enrichCheck deferred", error);
+      } finally {
+        saveCheck(check);
+      }
     }
 
     function toDb(check) {
@@ -4818,25 +4849,31 @@
 
     function dictateMissingStep() {
       if (!activeCheck) return;
-      const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!Speech) {
-        alert("Dictation is not supported here. Tell Payton the missing step at end of day.");
-        return;
-      }
-      const recognition = new Speech();
-      recognition.lang = "en-US";
-      recognition.interimResults = false;
-      recognition.maxAlternatives = 1;
-      recognition.onresult = async (event) => {
-        const said = event.results?.[0]?.[0]?.transcript || "";
-        if (!said) return;
+      const saveMissing = async (said) => {
+        const text = (said || "").trim();
+        if (!text) return;
         activeCheck.missingSteps = activeCheck.missingSteps || [];
-        activeCheck.missingSteps.push({ text: said, at: new Date().toISOString(), scope: "review" });
+        activeCheck.missingSteps.push({ text, at: new Date().toISOString(), scope: "review" });
         await saveCheck(activeCheck);
         renderGuide(activeCheck);
       };
-      recognition.onerror = () => alert("Did not catch that. Tap Missing step again.");
-      recognition.start();
+      const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
+      // No voice support (e.g. iOS standalone) -> type it. Never a dead end, never leaves the card.
+      if (!Speech) {
+        saveMissing(prompt("What step did ClearWay miss? Type it here."));
+        return;
+      }
+      try {
+        const recognition = new Speech();
+        recognition.lang = "en-US";
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+        recognition.onresult = (event) => { saveMissing(event.results?.[0]?.[0]?.transcript || ""); };
+        recognition.onerror = () => { saveMissing(prompt("Didn't catch that - type the missing step:")); };
+        recognition.start();
+      } catch (err) {
+        saveMissing(prompt("Type the missing step:"));
+      }
     }
 
     function dictateFlagReason(stepId) {
@@ -5336,7 +5373,6 @@
         button.textContent = "Thinkingâ€¦";
         try {
           const check = await createCheck();
-          await saveCheck(check);
           localStorage.removeItem(retestStorageKey);
           renderGuide(check);
           await showScreen("guide");
