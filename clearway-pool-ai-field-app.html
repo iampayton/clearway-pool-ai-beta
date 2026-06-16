@@ -2946,6 +2946,7 @@
     }
 
     function saveLocalChecks(checks) {
+      mirrorChecksToIdb(checks); // durable backup (esp. offline photo blobs) - never throws
       try {
         localStorage.setItem(checkStorageKey, JSON.stringify(checks));
       } catch (error) {
@@ -2964,6 +2965,86 @@
         try { localStorage.setItem(checkStorageKey, JSON.stringify(slimmed)); }
         catch { localStorage.setItem(checkStorageKey, JSON.stringify(slimmed.slice(0, 40))); }
       }
+    }
+
+    // ---- IndexedDB durability mirror for checks (esp. offline photo payloads) ----
+    // localStorage caps at ~5-10MB; a long no-signal route with photo scans can exceed it
+    // and the quota guard may shed unsynced photos. We mirror the FULL checks array (with
+    // photos) into IndexedDB (much larger quota) so field scans survive. Purely additive:
+    // if IndexedDB is unavailable or errors, everything falls back to localStorage behavior.
+    let _idbPromise = null;
+    function idbOpen() {
+      if (_idbPromise) return _idbPromise;
+      _idbPromise = new Promise((resolve) => {
+        try {
+          if (typeof indexedDB === "undefined") { resolve(null); return; }
+          const req = indexedDB.open("clearwayDB", 1);
+          req.onupgradeneeded = () => { try { req.result.createObjectStore("kv"); } catch (e) { /* exists */ } };
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => resolve(null);
+        } catch (e) { resolve(null); }
+      });
+      return _idbPromise;
+    }
+    function idbSet(key, value) {
+      return idbOpen().then((db) => new Promise((resolve) => {
+        if (!db) { resolve(false); return; }
+        try {
+          const tx = db.transaction("kv", "readwrite");
+          tx.objectStore("kv").put(value, key);
+          tx.oncomplete = () => resolve(true);
+          tx.onerror = () => resolve(false);
+          tx.onabort = () => resolve(false);
+        } catch (e) { resolve(false); }
+      }));
+    }
+    function idbGet(key) {
+      return idbOpen().then((db) => new Promise((resolve) => {
+        if (!db) { resolve(null); return; }
+        try {
+          const tx = db.transaction("kv", "readonly");
+          const r = tx.objectStore("kv").get(key);
+          r.onsuccess = () => resolve(r.result === undefined ? null : r.result);
+          r.onerror = () => resolve(null);
+        } catch (e) { resolve(null); }
+      }));
+    }
+    function mirrorChecksToIdb(checks) {
+      try { idbSet("checks", checks).catch(() => {}); } catch (e) { /* no-op */ }
+    }
+    // For uploads: prefer the IDB mirror if localStorage shed the original data: photos.
+    async function getCheckForUpload(id) {
+      const local = localChecks().find((item) => item.id === id) || null;
+      if (local && hasPendingPhotos(local)) return local;
+      try {
+        const mirror = await idbGet("checks");
+        if (Array.isArray(mirror)) {
+          const m = mirror.find((item) => item.id === id);
+          if (m && hasPendingPhotos(m)) return m;
+        }
+      } catch (e) { /* fall through */ }
+      return local;
+    }
+    // On boot, restore any photo payloads localStorage shed (merge the IDB mirror back in).
+    async function rehydrateChecksFromIdb() {
+      try {
+        const mirror = await idbGet("checks");
+        if (!Array.isArray(mirror) || !mirror.length) return;
+        const local = localChecks();
+        const byId = new Map(local.map((c) => [c.id, c]));
+        let changed = false;
+        for (const m of mirror) {
+          const cur = byId.get(m.id);
+          if (!cur) { byId.set(m.id, m); changed = true; }
+          else if (hasPendingPhotos(m) && !hasPendingPhotos(cur)) { byId.set(m.id, m); changed = true; }
+        }
+        if (changed) {
+          const order = mirror.map((c) => c.id);
+          const merged = [...byId.values()].sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
+          saveLocalChecks(merged);
+          if (document.querySelector(".screen.active")?.dataset.screen === "history") renderHistory(true);
+        }
+      } catch (e) { /* best effort */ }
     }
 
     function readOutbox() {
@@ -3015,7 +3096,7 @@
       let sent = 0;
       try {
         for (const id of ids) {
-          const check = localChecks().find((item) => item.id === id);
+          const check = await getCheckForUpload(id);
           if (!check) { removeFromOutbox(id); continue; }
           try {
             if (hasPendingPhotos(check)) {
@@ -5496,6 +5577,7 @@
     ensureStarterPool();
     try { applyTheme(localStorage.getItem(themeStorageKey) || "day"); } catch { applyTheme("day"); }
     renderHome();
+    rehydrateChecksFromIdb(); // restore any offline photos localStorage shed (best-effort, async)
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("./sw.js").catch(() => { /* offline shell needs sw.js next to this file */ });
     }
