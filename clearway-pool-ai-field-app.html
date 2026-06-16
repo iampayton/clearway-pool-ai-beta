@@ -733,7 +733,7 @@
     .sync-banner.busy { opacity: 0.7; }
     .sync-banner.sent { background: #dff9ef; }
 
-    .arrival-brief {
+    .arrival-brief, .parts-card {
       border: 0;
       border-radius: 18px;
       padding: 13px 15px;
@@ -742,7 +742,7 @@
       color: var(--charcoal);
       text-align: left;
     }
-    .arrival-brief .arrival-title {
+    .arrival-title {
       margin: 0 0 6px;
       font-weight: 800;
       font-size: 12px;
@@ -750,13 +750,28 @@
       text-transform: uppercase;
       color: var(--seafoam-dark);
     }
-    .arrival-brief .arrival-line {
+    .arrival-line {
       margin: 0 0 4px;
       font-size: 13.5px;
       font-weight: 600;
       line-height: 1.35;
     }
-    .arrival-brief .arrival-line:last-child { margin-bottom: 0; }
+    .arrival-line:last-child { margin-bottom: 0; }
+    .oi-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .open-item { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+    .open-item .oi-main span {
+      display: inline-block; font-size: 11px; font-weight: 800; text-transform: uppercase;
+      letter-spacing: 0.03em; color: var(--seafoam-dark);
+    }
+    .open-item .oi-main strong { display: block; font-size: 14px; line-height: 1.3; }
+    .oi-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+    .oi-actions button {
+      border: 0; border-radius: 12px; padding: 7px 11px; font-size: 12.5px; font-weight: 700;
+      background: var(--seafoam-soft); box-shadow: inset 0 0 0 1px var(--seafoam-dark);
+      color: var(--charcoal); cursor: pointer;
+    }
+    .oi-actions button:active { transform: scale(0.96); }
+    .oi-actions button[data-res="remove"] { box-shadow: inset 0 0 0 1px #e0a9a9; color: #9a3b3b; }
 
     .home-stats {
       margin: 0;
@@ -1814,6 +1829,7 @@
           <button class="sync-banner" data-sync-status hidden type="button"></button>
           <button class="retest-banner" data-retest-banner hidden>Retest reminder</button>
           <div class="arrival-brief" data-arrival-brief hidden></div>
+          <div class="parts-card" data-parts-card hidden></div>
           <div class="home-status-row" aria-label="Maintenance status">
             <button class="home-maint gray" data-home-maintenance="filter">
               <svg class="home-status-svg" aria-hidden="true" viewBox="0 0 48 48" fill="none">
@@ -2136,6 +2152,14 @@
             <p class="muted" data-add-numbers-hint hidden style="margin-top: 12px;">Add your test strip numbers next time and ClearWay gives exact amounts to add - not just the steps.</p>
           </section>
 
+          <section class="card open-items-card">
+            <div class="oi-head">
+              <h3 style="margin: 0;">This pool's open items</h3>
+              <button class="btn" type="button" data-add-open-item>+ Flag</button>
+            </div>
+            <div class="summary-list" data-open-items-list style="margin-top: 12px;"></div>
+          </section>
+
           <section class="card warning">
             <h3>Remember</h3>
             <ul>
@@ -2242,6 +2266,7 @@
     const costLedgerStorageKey = "clearwayCostLedgerV1";
     const userModeStorageKey = "clearwayUserModeV1";
     const techShelfStorageKey = "clearwayTechShelfV1";
+    const openItemsStorageKey = "clearwayOpenItemsV1";
 
     const PARTY_SKINS = {
       home: ["home-leopard"],
@@ -2947,6 +2972,77 @@
       return pool?.productsOnHand || [];
     }
 
+    // ===== Open Items: per-pool running list of issues / suggested fixes / parts (the continuity spine).
+    // The tech/homeowner owns the verdict; the app remembers and routes it. AI may suggest an INSPECT,
+    // never a repair diagnosis. "Checked - good" snoozes an item so it stops nagging.
+    function getAllOpenItems() {
+      try { return JSON.parse(localStorage.getItem(openItemsStorageKey) || "[]"); }
+      catch { return []; }
+    }
+    function saveAllOpenItems(items) {
+      try { localStorage.setItem(openItemsStorageKey, JSON.stringify(items.slice(0, 500))); }
+      catch { /* best effort */ }
+    }
+    function openItemsForPool(poolId) {
+      if (!poolId) return [];
+      return getAllOpenItems().filter((it) => it.poolId === poolId && it.status !== "resolved");
+    }
+    function activeOpenItems(poolId) {
+      const now = Date.now();
+      return openItemsForPool(poolId).filter((it) =>
+        (it.status === "open" || it.status === "needs_fix") &&
+        (!it.snoozeUntil || new Date(it.snoozeUntil).getTime() <= now));
+    }
+    function knownOpenItems(poolId) {
+      return openItemsForPool(poolId).filter((it) => it.status === "known");
+    }
+    function addOpenItem(poolId, fields) {
+      if (!poolId) return;
+      const items = getAllOpenItems();
+      items.unshift({
+        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+        poolId,
+        title: (fields.title || "Item").slice(0, 80),
+        kind: fields.kind || "inspect",
+        part: fields.part || "",
+        cost: fields.cost || "",
+        source: fields.source || "tech",
+        status: "open",
+        snoozeUntil: "",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      });
+      saveAllOpenItems(items);
+    }
+    function resolveOpenItem(id, resolution, extra = {}) {
+      const items = getAllOpenItems();
+      const it = items.find((x) => x.id === id);
+      if (!it) return;
+      if (resolution === "remove" || resolution === "fixed") {
+        saveAllOpenItems(items.filter((x) => x.id !== id));
+        return;
+      }
+      if (resolution === "needs_fix") {
+        it.status = "needs_fix";
+        it.snoozeUntil = "";
+        if (extra.part) it.part = extra.part;
+      } else if (resolution === "good") {
+        it.status = "snoozed";
+        const d = new Date();
+        d.setDate(d.getDate() + (extra.days || 90));
+        it.snoozeUntil = d.toISOString();
+      } else if (resolution === "known") {
+        it.status = "known";
+        it.snoozeUntil = "";
+      }
+      it.updatedAt = new Date().toISOString();
+      saveAllOpenItems(items);
+    }
+    // Route-wide "pick these up before the week" = needs_fix items that name a part.
+    function partsToPickUp() {
+      return getAllOpenItems().filter((it) => it.status === "needs_fix" && it.part);
+    }
+
     function localPools() {
       try { return JSON.parse(localStorage.getItem(poolStorageKey) || "[]"); }
       catch { return []; }
@@ -3509,6 +3605,7 @@
       renderSyncStatus();
       renderAccessBanner(pool);
       renderArrivalBrief(pool);
+      renderPartsToPickUp();
     }
 
     // Site access / hazard banner - shows gate code + dog warning before the visit starts.
@@ -3587,6 +3684,8 @@
         .map((t) => ({ t, info: maintenanceInfo(pool, t) }))
         .filter((x) => x.info && x.info.color === "red");
       if (overdue.length) lines.push(`Due now: ${overdue.map((x) => labelMap[x.t]).join(", ")}.`);
+      activeOpenItems(pool.id).forEach((it) => lines.push(`Open: ${it.title}${it.status === "needs_fix" ? (it.part ? ` - needs ${it.part}` : " - needs fix") : " - take a look"}`));
+      knownOpenItems(pool.id).slice(0, 2).forEach((it) => lines.push(`Known: ${it.title} (no action needed)`));
       equipmentTips(pool).forEach((tip) => lines.push(tip));
       return { lines, count: history.length };
     }
@@ -3598,6 +3697,47 @@
       if (!brief.lines.length) { card.hidden = true; card.innerHTML = ""; return; }
       card.innerHTML = `<p class="arrival-title">This pool</p>` +
         brief.lines.map((l) => `<p class="arrival-line">${escapeHtml(l)}</p>`).join("");
+      card.hidden = false;
+    }
+
+    // Open items list on the guide - tap an action to resolve (fast, in the field).
+    function renderOpenItems(poolId) {
+      const list = document.querySelector("[data-open-items-list]");
+      if (!list) return;
+      const items = openItemsForPool(poolId);
+      if (!items.length) {
+        list.innerHTML = '<div class="empty">No open items. Tap +Flag to log a noise, leak, or part to remember.</div>';
+        return;
+      }
+      const now = Date.now();
+      list.innerHTML = items.map((it) => {
+        const snoozed = it.status === "snoozed" && it.snoozeUntil && new Date(it.snoozeUntil).getTime() > now;
+        const tag = it.status === "needs_fix" ? "Needs fix"
+          : it.status === "known" ? "Known"
+          : snoozed ? "Checked - good" : "Open";
+        return `<div class="summary-item open-item">
+          <div class="oi-main"><span>${tag}</span><strong>${escapeHtml(it.title)}${it.part ? " - " + escapeHtml(it.part) : ""}</strong></div>
+          <div class="oi-actions">
+            <button type="button" data-resolve-item="${it.id}" data-res="needs_fix">Needs fix</button>
+            <button type="button" data-resolve-item="${it.id}" data-res="good">Checked - good</button>
+            <button type="button" data-resolve-item="${it.id}" data-res="known">Known</button>
+            <button type="button" data-resolve-item="${it.id}" data-res="remove" aria-label="Remove">x</button>
+          </div>
+        </div>`;
+      }).join("");
+    }
+
+    // Start-of-week parts pickup chart (tech mode) - aggregates needs_fix items that name a part.
+    function renderPartsToPickUp() {
+      const card = document.querySelector("[data-parts-card]");
+      if (!card) return;
+      if (!isTechMode()) { card.hidden = true; card.innerHTML = ""; return; }
+      const parts = partsToPickUp();
+      if (!parts.length) { card.hidden = true; card.innerHTML = ""; return; }
+      const pools = localPools();
+      const nameFor = (id) => (pools.find((p) => p.id === id) || {}).poolName || "A pool";
+      card.innerHTML = `<p class="arrival-title">Parts to pick up</p>` +
+        parts.slice(0, 12).map((it) => `<p class="arrival-line">${escapeHtml(it.part)} - ${escapeHtml(nameFor(it.poolId))}</p>`).join("");
       card.hidden = false;
     }
 
@@ -4449,6 +4589,13 @@
         add("baseline-test", "Test the water with a strip so the next step is exact - chlorine, pH, and alkalinity.");
       }
 
+      // Open items for this pool fold in as follow-ups (the continuity spine: known issues + suggested fixes).
+      activeOpenItems(check.poolId).forEach((it) => {
+        add(`open-${it.id}`, it.status === "needs_fix"
+          ? `Bring/fix: ${it.title}${it.part ? ` (part: ${it.part})` : ""}.`
+          : `Follow up: take a look at ${it.title}.`);
+      });
+
       // Retest ALWAYS survives, even on a crowded card.
       const sliced = steps.slice(0, 6);
       const hasRetest = sliced.some((step) => step.text.toLowerCase().includes("retest"));
@@ -4960,6 +5107,7 @@
       }
       const dateTarget = document.querySelector("[data-guide-date]");
       if (dateTarget) dateTarget.textContent = check.createdAt ? new Date(check.createdAt).toLocaleString() : "";
+      renderOpenItems(check.poolId);
 
       const steps = buildDoNext(check);
       const flags = check.stepFlags || {};
@@ -5769,6 +5917,30 @@
       if (event.target.closest("[data-nameplate-ask]") && activeCheck) {
         evidenceSlotOverride = "equipment";
         document.querySelector("[data-evidence-input]")?.click();
+        return;
+      }
+
+      const addOpenBtn = event.target.closest("[data-add-open-item]");
+      if (addOpenBtn && activeCheck) {
+        const title = (prompt("What needs a look or fixing? (e.g., filter o-ring, pump noise, cracked skimmer lid)") || "").trim();
+        if (title) {
+          addOpenItem(activeCheck.poolId, { title, source: "tech" });
+          renderOpenItems(activeCheck.poolId);
+        }
+        return;
+      }
+
+      const resolveBtn = event.target.closest("[data-resolve-item]");
+      if (resolveBtn && activeCheck) {
+        const id = resolveBtn.dataset.resolveItem;
+        const res = resolveBtn.dataset.res;
+        if (res === "needs_fix") {
+          const part = (prompt("Part needed? (optional - leave blank if none)") || "").trim();
+          resolveOpenItem(id, "needs_fix", { part });
+        } else {
+          resolveOpenItem(id, res); // good -> snooze ~90d, known -> context-only, remove -> delete
+        }
+        renderOpenItems(activeCheck.poolId);
         return;
       }
 
