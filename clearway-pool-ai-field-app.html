@@ -3062,9 +3062,6 @@
       // substring match only when the shorter key is meaningful (avoids tiny-token false matches)
       return Math.min(x.length, y.length) >= 5 && (x.includes(y) || y.includes(x));
     }
-    function suggestedOpenItems(poolId) {
-      return openItemsForPool(poolId).filter((it) => it.status === "suggested");
-    }
     // Add an AI inspect suggestion - but NEVER re-nag: skip if a matching item already exists
     // in any live state (open/needs_fix/snoozed/known/dismissed/suggested) for this pool.
     function addSuggestedItem(poolId, title) {
@@ -3081,6 +3078,7 @@
       saveAllOpenItems(items);
     }
     function ingestSuggestions(poolId, list) {
+      if (!isTechMode()) return; // AI inspect suggestions are a tech-mode tool
       if (!poolId || !Array.isArray(list)) return;
       list.slice(0, 2).forEach((s) => { if (typeof s === "string" && s.trim()) addSuggestedItem(poolId, s.trim()); });
     }
@@ -3740,8 +3738,10 @@
         .map((t) => ({ t, info: maintenanceInfo(pool, t) }))
         .filter((x) => x.info && x.info.color === "red");
       if (overdue.length) lines.push(`Due now: ${overdue.map((x) => labelMap[x.t]).join(", ")}.`);
-      activeOpenItems(pool.id).forEach((it) => lines.push(`Open: ${it.title}${it.status === "needs_fix" ? (it.part ? ` - needs ${it.part}` : " - needs fix") : " - take a look"}`));
-      knownOpenItems(pool.id).slice(0, 2).forEach((it) => lines.push(`Known: ${it.title} (no action needed)`));
+      if (isTechMode()) { // open items are a tech tool; keep the homeowner brief clean
+        activeOpenItems(pool.id).forEach((it) => lines.push(`Open: ${it.title}${it.status === "needs_fix" ? (it.part ? ` - needs ${it.part}` : " - needs fix") : " - take a look"}`));
+        knownOpenItems(pool.id).slice(0, 2).forEach((it) => lines.push(`Known: ${it.title} (no action needed)`));
+      }
       equipmentTips(pool).forEach((tip) => lines.push(tip));
       return { lines, count: history.length };
     }
@@ -3758,8 +3758,13 @@
 
     // Open items list on the guide - tap an action to resolve (fast, in the field).
     function renderOpenItems(poolId) {
+      const card = document.querySelector(".open-items-card");
       const list = document.querySelector("[data-open-items-list]");
       if (!list) return;
+      // Pro tool: open items / parts / AI inspect prompts are tech-mode only.
+      // Homeowners keep the pristine scan -> do-next -> done flow.
+      if (!isTechMode()) { if (card) card.hidden = true; return; }
+      if (card) card.hidden = false;
       const all = openItemsForPool(poolId);
       const suggestions = all.filter((it) => it.status === "suggested");
       const items = all.filter((it) => it.status !== "suggested" && it.status !== "dismissed");
