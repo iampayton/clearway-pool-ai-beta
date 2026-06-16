@@ -3451,6 +3451,7 @@
       applyTalkCopy();
       pendingAiCents = 0;
       lastStripRead = null;
+      lastPoolVision = null;
       const stripStatus = document.querySelector("[data-strip-read-status]");
       if (stripStatus) { stripStatus.hidden = true; stripStatus.textContent = ""; }
       const testToggle = document.querySelector("[data-toggle-tests]");
@@ -4039,7 +4040,8 @@
     // Sends a test-strip/label photo to the deployed ai-extract edge function and gets
     // back structured READINGS ONLY. The deterministic engine still owns every dose.
     let pendingAiCents = 0;   // extraction cost accumulated for the current scan
-    let lastStripRead = null; // {readings, confidence, observations} from the photo
+    let lastStripRead = null; // {readings, confidence, observations} from the strip/test photo
+    let lastPoolVision = null; // {clarity, tint, algae, note, observations} from the pool photo
 
     async function callAiExtract(dataUrl, noteText) {
       const body = { text: (noteText || "").slice(0, 600) };
@@ -4122,6 +4124,21 @@
       }
     }
 
+    // Read the POOL photo with the vision tier -> structured water observation (clarity/tint/algae).
+    // This lets the actual look of the water guide Do Next instead of a keyword guess from the note.
+    async function readPoolPhoto(dataUrl) {
+      try {
+        const data = await callAiExtract(dataUrl, brainText());
+        if (typeof data.aiCents === "number") pendingAiCents += data.aiCents;
+        const wv = data.water || {};
+        if (wv.clarity || wv.tint || wv.algae || wv.note) {
+          lastPoolVision = { clarity: wv.clarity || null, tint: wv.tint || null, algae: wv.algae || null, note: wv.note || "", observations: data.observations || "" };
+        }
+      } catch (err) {
+        console.warn("pool photo read failed", err.status || "", err.detail || err.message);
+      }
+    }
+
     function dataUrlToFile(dataUrl, fileName) {
       const [meta, base64] = dataUrl.split(",");
       const mime = meta.match(/data:(.*);base64/)?.[1] || "image/jpeg";
@@ -4167,7 +4184,7 @@
 
     function inferIssueFromText(text) {
       const lower = text.toLowerCase();
-      if (lower.includes("green") || lower.includes("algae")) return "Green Water";
+      if (lower.includes("green") || lower.includes("widespread algae")) return "Green Water";
       if (lower.includes("cloudy") || lower.includes("hazy")) return "Cloudy Water";
       if (lower.includes("low chlorine") || lower.includes("chlorine low")) return "Low Chlorine";
       if (lower.includes("high chlorine") || lower.includes("chlorine high")) return "High Chlorine";
@@ -4229,8 +4246,23 @@
 
       // Note-driven observations - these work even when no test numbers were entered,
       // so the card is a full, ordered checklist the user corrects rather than rebuilds.
-      if (text.includes("green") || text.includes("algae")) {
-        add("note-algae", "Looks like algae: brush the walls and floor, then bring chlorine up per the product label.");
+      // Visual condition - prefer the AI's actual look at the pool photo over note keywords, and
+      // GRADE it (clear vs spots/tint vs widespread) so "yellow in the corners" is NOT a green pool.
+      const pv = check.poolVision || {};
+      const hasPV = !!(pv.clarity || pv.tint || pv.algae);
+      const photoClear = hasPV && pv.clarity === "clear" && (pv.algae === "none" || !pv.algae) && (!pv.tint || pv.tint === "normal");
+      let widespreadAlgae = false, spotIssue = false;
+      if (hasPV) {
+        widespreadAlgae = pv.algae === "widespread" || pv.tint === "green";
+        spotIssue = !widespreadAlgae && !photoClear && (pv.algae === "spots" || pv.tint === "yellow" || pv.tint === "brown" || pv.tint === "other");
+      } else {
+        widespreadAlgae = text.includes("green") || text.includes("widespread algae") || text.includes("whole pool");
+        spotIssue = !widespreadAlgae && (text.includes("yellow") || text.includes("mustard") || text.includes("stain") || text.includes("spot") || text.includes("patch") || (text.includes("algae") && (text.includes("corner") || text.includes("little") || text.includes("some"))));
+      }
+      if (widespreadAlgae) {
+        add("note-algae", "Looks like algae across the pool: brush the walls and floor, then bring chlorine up per the product label.");
+      } else if (spotIssue) {
+        add("note-spot", "Some discoloration or spots (like yellow in the corners) - brush those areas and keep chlorine and pH balanced; a light shock per the label can help. Not a full green-pool situation.");
       }
       if (text.includes("cloudy") || text.includes("hazy") || text.includes("murky") || text.includes("milky")) {
         add("note-clear", "Cloudy water: run the pump and let the filter clear it. Don't shock blindly.");
@@ -4441,6 +4473,7 @@
         nextStep: engine.steps.length ? engine.steps[0].text : buildNextStep(values, mainIssue)
       };
       check.aiReadings = lastStripRead || null;
+      check.poolVision = lastPoolVision || null;
       // Review-queue signal: where the human overrode an AI-read number (AI accuracy training data).
       check.aiCorrections = [];
       if (lastStripRead && lastStripRead.readings) {
@@ -5113,6 +5146,7 @@
       const step = photoSteps[activePhotoStep];
       const files = [...input.files];
       let lastTestPhoto = null;
+      let lastPoolPhoto = null;
       for (const file of files) {
         let dataUrl = null;
         try { dataUrl = await compressImage(file); }
@@ -5120,6 +5154,7 @@
         if (step.key === "pool") {
           if (!Array.isArray(draft.photos.pool)) draft.photos.pool = draft.photos.pool ? [draft.photos.pool] : [];
           draft.photos.pool.push(dataUrl);
+          lastPoolPhoto = dataUrl;
         }
         else {
           draft.photos[step.key].push(dataUrl);
@@ -5128,8 +5163,9 @@
       }
       input.value = "";
       renderPhotoThumbs();
-      // Strip photo on the CHEM TEST step -> auto-read the numbers (graceful if offline/unfunded).
+      // CHEM TEST photo -> read the numbers (strip/drop-kit/digital). Pool photo -> read the water.
       if (lastTestPhoto) readStripPhoto(lastTestPhoto);
+      if (lastPoolPhoto) readPoolPhoto(lastPoolPhoto);
     });
 
     document.addEventListener("input", async (event) => {
