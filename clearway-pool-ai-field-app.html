@@ -4965,7 +4965,11 @@
           closedAt: check.closedAt || "",
           closeSnapshot: check.closeSnapshot || null,
           report: check.report || null,
-          learning: check.learning || null
+          learning: check.learning || null,
+          aiReadings: check.aiReadings || null,
+          aiCorrections: check.aiCorrections || [],
+          aiNoteReadings: check.aiNoteReadings || null,
+          poolVision: check.poolVision || null
         }),
         photos: check.photos || {},
         confirmed_values: check.values || [],
@@ -5005,6 +5009,10 @@
         closeSnapshot: noteData.closeSnapshot || null,
         report: noteData.report || null,
         learning: noteData.learning || null,
+        aiReadings: noteData.aiReadings || null,
+        aiCorrections: noteData.aiCorrections || [],
+        aiNoteReadings: noteData.aiNoteReadings || null,
+        poolVision: noteData.poolVision || null,
         mainIssue: row.main_issue,
         testType: row.test_type,
         brainInput: noteData.brainInput || noteData.notes || "",

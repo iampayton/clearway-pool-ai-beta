@@ -1,0 +1,117 @@
+// ClearWay Pool AI - ai-extract edge function (extract-v1)
+// Cheap multimodal extraction tier per BUILD-SPEC: reads a test-strip photo and/or
+// dictated text, returns structured readings. The deterministic engine still owns
+// ALL dosing math in the app. This function never recommends chemicals.
+// Secrets: ANTHROPIC_API_KEY (set in Edge Functions -> Secrets, never in the app).
+
+const CORS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS"
+};
+
+const MODEL = "claude-haiku-4-5-20251001"; // extraction tier; reasoning tier comes later
+const PRICE_IN_PER_MTOK_CENTS = 100;  // $1.00 per MTok input
+const PRICE_OUT_PER_MTOK_CENTS = 500; // $5.00 per MTok output
+
+const SYSTEM = `You read pool test results, pool water photos, photos of pool chemical containers, AND photos of pool equipment. Extract ONLY what you can actually see or read.
+Return strict JSON: {"readings":{"free_chlorine":null,"ph":null,"alkalinity":null,"cya":null,"calcium":null,"salt":null},"confidences":{"free_chlorine":null,"ph":null,"alkalinity":null,"cya":null,"calcium":null,"salt":null},"water":{"clarity":null,"tint":null,"algae":null,"note":""},"products":[],"equipment":{"filter":null,"pump":null,"heater":null,"sanitizer":null,"note":""},"suggestions":[],"observations":"","confidence":"low|medium|high"}
+Rules:
+- TEST RESULTS: a test may be a paper test strip, a liquid/drop test kit (color vials), or a digital tester reading. Fill readings with numbers you can clearly read; set each matching confidences value to "low"|"medium"|"high"; leave a reading and its confidence null when you cannot read it. Never guess a number.
+- POOL WATER: if pool water is visible, fill water - clarity: "clear"|"hazy"|"cloudy"; tint: "normal"|"green"|"yellow"|"brown"|"other"; algae: "none"|"spots"|"widespread" (spots = small patches or in corners; widespread = covering large areas/whole pool); note: one short factual phrase about what you see. Use null for any water field you cannot judge. Do NOT call a pool green or algae-covered unless you actually see it - light staining or color only in the corners is "spots", not "widespread".
+- PRODUCTS: if pool chemical containers/labels are visible, list which of these product types you can clearly identify, using ONLY these exact keys: "liquid_chlorine" (liquid chlorine / sodium hypochlorite / pool bleach), "cal_hypo" (cal-hypo shock), "dichlor" (dichlor granular shock), "trichlor_tabs" (chlorine tablets / trichlor), "muriatic_acid" (muriatic or hydrochloric acid / pH down), "soda_ash" (soda ash / pH up), "baking_soda" (baking soda / sodium bicarbonate / alkalinity up), "stabilizer" (stabilizer / conditioner / cyanuric acid / CYA), "calcium_chloride" (calcium hardness increaser), "pool_salt" (pool salt). Put the keys in the products array. Use an empty array if no containers are visible or none are clearly identifiable. Never include a product you are not sure about, and never invent one.
+- EQUIPMENT: if a pool equipment pad, pump, filter, heater, or salt cell (or its label) is visible, fill equipment - filter: "sand"|"cartridge"|"de"; pump: "single_speed"|"variable_speed"; heater: "gas"|"heat_pump"|"none"; sanitizer: "salt"|"chlorine"; note: a short brand/model or factual phrase you can read. Use null for any equipment field you cannot identify. Only describe what you can see - NEVER diagnose the condition of equipment or recommend repairs or replacement.
+- SUGGESTIONS: if something visible looks worth a closer LOOK (e.g., a filter o-ring, a cracked skimmer lid, debris in the salt cell, a loose fitting), you may add up to 2 short prompts to suggestions, each phrased as "Check the ..." or "Worth a look at the ...". These are prompts to INSPECT only - NEVER a diagnosis, a claim that something is broken, a repair, a replacement, or a chemical dose. If nothing clearly warrants a look, use an empty array.
+- Anything you cannot determine stays null or empty. observations = one short sentence. confidence = overall. NEVER recommend chemicals or doses.`;
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
+  if (req.method !== "POST") return new Response("POST only", { status: 405, headers: CORS });
+
+  let body: { text?: string; imageBase64?: string; mediaType?: string; review?: boolean; token?: string } = {};
+  try { body = await req.json(); } catch { /* empty body handled below */ }
+
+  // Payton-only review feed for the accuracy dashboard: recent scans via service role, token-guarded.
+  if (body.review) {
+    const token = Deno.env.get("REVIEW_TOKEN");
+    if (!token || body.token !== token) {
+      return new Response(JSON.stringify({ error: "unauthorized" }), {
+        status: 401, headers: { ...CORS, "Content-Type": "application/json" }
+      });
+    }
+    const svc = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+    const sbUrl = Deno.env.get("SUPABASE_URL") || "";
+    if (!svc || !sbUrl) {
+      return new Response(JSON.stringify({ error: "review not available" }), {
+        status: 503, headers: { ...CORS, "Content-Type": "application/json" }
+      });
+    }
+    const sel = "id,created_at,pool_name,pool_type,main_issue,test_type,notes,confirmed_values,next_step";
+    const rr = await fetch(`${sbUrl}/rest/v1/pool_checks?select=${sel}&order=created_at.desc&limit=300`, {
+      headers: { apikey: svc, Authorization: `Bearer ${svc}` }
+    });
+    const rows = rr.ok ? await rr.json() : [];
+    return new Response(JSON.stringify({ rows }), {
+      headers: { ...CORS, "Content-Type": "application/json" }
+    });
+  }
+
+  const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
+  if (!apiKey) {
+    return new Response(JSON.stringify({ error: "extraction tier not configured yet" }), {
+      status: 503, headers: { ...CORS, "Content-Type": "application/json" }
+    });
+  }
+  const text = (body.text || "").slice(0, 4000);
+  const imageBase64 = body.imageBase64 || "";
+  if (!text && !imageBase64) {
+    return new Response(JSON.stringify({ error: "send text and/or imageBase64" }), {
+      status: 400, headers: { ...CORS, "Content-Type": "application/json" }
+    });
+  }
+
+  const content: unknown[] = [];
+  if (imageBase64) {
+    content.push({
+      type: "image",
+      source: { type: "base64", media_type: body.mediaType || "image/jpeg", data: imageBase64 }
+    });
+  }
+  content.push({ type: "text", text: text ? `Field note: ${text}\nExtract the readings.` : "Extract the readings from this test photo." });
+
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+      "content-type": "application/json"
+    },
+    body: JSON.stringify({
+      model: MODEL,
+      max_tokens: 400,
+      system: SYSTEM,
+      messages: [{ role: "user", content }]
+    })
+  });
+
+  if (!response.ok) {
+    const detail = await response.text();
+    return new Response(JSON.stringify({ error: "extraction unavailable", detail: detail.slice(0, 300) }), {
+      status: 502, headers: { ...CORS, "Content-Type": "application/json" }
+    });
+  }
+
+  const data = await response.json();
+  const raw = data?.content?.[0]?.text || "{}";
+  let parsed: Record<string, unknown> = {};
+  try { parsed = JSON.parse(raw.replace(/^```json\s*|```\s*$/g, "")); } catch { parsed = { observations: raw.slice(0, 200) }; }
+
+  const usage = data?.usage || {};
+  const aiCents = Math.ceil(
+    ((usage.input_tokens || 0) * PRICE_IN_PER_MTOK_CENTS + (usage.output_tokens || 0) * PRICE_OUT_PER_MTOK_CENTS) / 1000000 * 100
+  ) / 100;
+
+  return new Response(JSON.stringify({ ...parsed, aiCents, model: MODEL, engineNote: "Readings only. Dosing stays deterministic in the app." }), {
+    headers: { ...CORS, "Content-Type": "application/json" }
+  });
+});

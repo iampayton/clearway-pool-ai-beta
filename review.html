@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>ClearWay Review</title>
+<style>
+  :root {
+    --seafoam: #63d7c6; --seafoam-dark: #149d8d; --seafoam-soft: #e6fbf7;
+    --charcoal: #17242a; --charcoal-soft: #2b3b42; --line: #d9e6e3;
+    --good: #149d8d; --warn: #c9871f; --bad: #b3402f; --bg: #f4faf8;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--charcoal); }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 20px 16px 60px; }
+  header { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+  .dot { width: 22px; height: 22px; border-radius: 50%; background: var(--seafoam); box-shadow: inset 0 0 0 4px var(--seafoam-dark); }
+  h1 { font-size: 20px; margin: 0; }
+  .sub { color: var(--charcoal-soft); font-size: 13px; margin: 2px 0 18px; }
+  .gate { background: #fff; border-radius: 16px; padding: 18px; box-shadow: inset 0 0 0 1px var(--line); max-width: 420px; }
+  .gate input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--line); font-size: 15px; margin: 10px 0; }
+  button { border: 0; border-radius: 12px; padding: 11px 16px; font-weight: 700; font-size: 14px; cursor: pointer; background: var(--seafoam); color: var(--charcoal); }
+  button:active { transform: scale(0.98); }
+  button.ghost { background: var(--seafoam-soft); box-shadow: inset 0 0 0 1px var(--seafoam-dark); }
+  .hero { background: linear-gradient(150deg, var(--charcoal), var(--charcoal-soft)); color: #fff; border-radius: 20px; padding: 22px; margin-bottom: 16px; }
+  .hero .big { font-size: 52px; font-weight: 800; line-height: 1; color: var(--seafoam); }
+  .hero .biglabel { font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase; opacity: 0.85; margin-top: 6px; }
+  .hero .sectwo { margin-top: 14px; display: flex; gap: 22px; flex-wrap: wrap; font-size: 13px; }
+  .hero .sectwo b { color: #fff; font-size: 18px; display: block; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .card { background: #fff; border-radius: 16px; padding: 14px; box-shadow: inset 0 0 0 1px var(--line); }
+  .card .n { font-size: 26px; font-weight: 800; }
+  .card .l { font-size: 12px; color: var(--charcoal-soft); margin-top: 3px; }
+  .panel { background: #fff; border-radius: 16px; padding: 16px; box-shadow: inset 0 0 0 1px var(--line); margin-bottom: 16px; }
+  .panel h2 { font-size: 14px; margin: 0 0 12px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--seafoam-dark); }
+  .bar { display: flex; align-items: center; gap: 8px; margin: 5px 0; font-size: 13px; }
+  .bar .track { flex: 1; height: 10px; background: var(--seafoam-soft); border-radius: 6px; overflow: hidden; }
+  .bar .fill { height: 100%; background: var(--seafoam-dark); }
+  .bar .lab { width: 120px; } .bar .val { width: 34px; text-align: right; font-weight: 700; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em; color: var(--charcoal-soft); }
+  .pill { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 8px; }
+  .pill.ok { background: var(--seafoam-soft); color: var(--seafoam-dark); }
+  .pill.fix { background: #fde7e3; color: var(--bad); }
+  .muted { color: var(--charcoal-soft); }
+  .empty { text-align: center; color: var(--charcoal-soft); padding: 30px; }
+  .toolbar { display: flex; gap: 8px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
+  .err { color: var(--bad); font-size: 13px; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><span class="dot"></span><h1>ClearWay &mdash; Brain Review</h1></header>
+  <p class="sub">How often the brain reads right, what techs corrected, and what needs a look. Founder-only.</p>
+
+  <div id="gate" class="gate" hidden>
+    <strong>Enter review passcode</strong>
+    <input id="tok" type="password" placeholder="Review passcode" autocomplete="off" />
+    <button id="go">View dashboard</button>
+    <button class="ghost" id="forget" style="margin-left:8px;">Clear saved</button>
+    <div id="gateerr" class="err"></div>
+  </div>
+
+  <div id="dash" hidden>
+    <div class="toolbar">
+      <button class="ghost" id="reload">Reload</button>
+      <span id="status" class="muted" style="font-size:13px;"></span>
+    </div>
+    <div id="content"></div>
+  </div>
+</div>
+
+<script>
+  var SUPABASE_URL = "https://wwhbwhgnwmmlpvrjkjek.supabase.co";
+  var ANON = "sb_publishable_CN_Z7T4c3zN66C7xKVuJ8g_rQe9FJNX";
+  var TOKKEY = "cwReviewTokenV1";
+
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c];}); }
+
+  function showGate(msg){ $("dash").hidden = true; $("gate").hidden = false; if(msg) $("gateerr").textContent = msg; }
+  function showDash(){ $("gate").hidden = true; $("dash").hidden = false; }
+
+  async function fetchRows(token){
+    var res = await fetch(SUPABASE_URL + "/functions/v1/ai-extract", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + ANON, "apikey": ANON },
+      body: JSON.stringify({ review: true, token: token })
+    });
+    if (res.status === 401) { var e = new Error("bad token"); e.code = 401; throw e; }
+    if (!res.ok) { var e2 = new Error("server " + res.status); throw e2; }
+    var j = await res.json();
+    return j.rows || [];
+  }
+
+  var TESTLABEL = { free_chlorine:"Chlorine", ph:"pH", alkalinity:"Alkalinity", cya:"Stabilizer", calcium:"Hardness", salt:"Salt" };
+
+  function parseNotes(row){ try { return JSON.parse(row.notes || "{}"); } catch (e) { return {}; } }
+
+  function compute(rows){
+    var s = { scans: rows.length, last7: 0, pools: {}, issues: {},
+      readTotal: 0, readWrong: 0, stepTotal: 0, stepFlagged: 0, cents: 0, flaggedSteps: 0 };
+    var weekAgo = Date.now() - 7*86400000;
+    var nowYM = new Date().getFullYear() + "-" + new Date().getMonth();
+    rows.forEach(function(r){
+      var n = parseNotes(r);
+      if (r.created_at && new Date(r.created_at).getTime() >= weekAgo) s.last7++;
+      if (n.poolId) s.pools[n.poolId] = 1;
+      if (r.main_issue && r.main_issue !== "Routine") s.issues[r.main_issue] = (s.issues[r.main_issue]||0)+1;
+      // reading accuracy
+      var ai = n.aiReadings && n.aiReadings.readings ? n.aiReadings.readings : null;
+      if (ai) {
+        Object.keys(ai).forEach(function(k){ var v = ai[k]; if (v!==null && v!==undefined && v!=="") s.readTotal++; });
+      }
+      var corr = n.aiCorrections || [];
+      s.readWrong += corr.length;
+      // step accuracy
+      var shown = (n.closeSnapshot && n.closeSnapshot.shownStepIds) ? n.closeSnapshot.shownStepIds.length
+        : (n.engine && n.engine.steps ? n.engine.steps.length : 0);
+      var flagged = (n.closeSnapshot && typeof n.closeSnapshot.flaggedCount === "number") ? n.closeSnapshot.flaggedCount
+        : Object.keys(n.stepFlags||{}).filter(function(id){ return n.stepFlags[id] && n.stepFlags[id].flagged; }).length;
+      s.stepTotal += shown; s.stepFlagged += flagged; s.flaggedSteps += flagged;
+      // cost this month
+      var d = r.created_at ? new Date(r.created_at) : null;
+      if (d && (d.getFullYear()+"-"+d.getMonth())===nowYM) s.cents += (n.aiCents||0);
+    });
+    s.readCorrect = s.readTotal - s.readWrong;
+    s.stepGood = s.stepTotal - s.stepFlagged;
+    s.readAcc = s.readTotal ? Math.round(s.readCorrect/s.readTotal*1000)/10 : null;
+    s.stepAcc = s.stepTotal ? Math.round(s.stepGood/s.stepTotal*1000)/10 : null;
+    var oT = s.readTotal + s.stepTotal, oC = s.readCorrect + s.stepGood;
+    s.overall = oT ? Math.round(oC/oT*1000)/10 : null;
+    s.poolCount = Object.keys(s.pools).length;
+    return s;
+  }
+
+  function bars(map){
+    var keys = Object.keys(map).sort(function(a,b){ return map[b]-map[a]; }).slice(0,8);
+    if (!keys.length) return '<p class="muted">None yet.</p>';
+    var max = Math.max.apply(null, keys.map(function(k){return map[k];}));
+    return keys.map(function(k){
+      var pct = Math.round(map[k]/max*100);
+      return '<div class="bar"><span class="lab">'+esc(k)+'</span><span class="track"><span class="fill" style="width:'+pct+'%"></span></span><span class="val">'+map[k]+'</span></div>';
+    }).join("");
+  }
+
+  function recentTable(rows){
+    if (!rows.length) return '<p class="muted">No scans yet.</p>';
+    var head = '<tr><th>When</th><th>Pool</th><th>AI read</th><th>Tech corrected</th><th>Flagged</th></tr>';
+    var body = rows.slice(0,40).map(function(r){
+      var n = parseNotes(r);
+      var ai = n.aiReadings && n.aiReadings.readings ? n.aiReadings.readings : {};
+      var readStr = Object.keys(ai).filter(function(k){return ai[k]!==null&&ai[k]!==undefined&&ai[k]!=="";})
+        .map(function(k){ return (TESTLABEL[k]||k)+" "+ai[k]; }).join(", ") || '<span class="muted">no strip read</span>';
+      var corr = (n.aiCorrections||[]).map(function(c){ return '<span class="pill fix">'+(TESTLABEL[c.key]||c.key)+": "+esc(c.ai)+"&rarr;"+esc(c.corrected||"?")+'</span>'; }).join(" ")
+        || '<span class="pill ok">all kept</span>';
+      var flagged = (n.closeSnapshot && typeof n.closeSnapshot.flaggedCount==="number") ? n.closeSnapshot.flaggedCount
+        : Object.keys(n.stepFlags||{}).filter(function(id){return n.stepFlags[id]&&n.stepFlags[id].flagged;}).length;
+      var when = r.created_at ? new Date(r.created_at).toLocaleDateString(undefined,{month:"short",day:"numeric"}) : "";
+      return '<tr><td>'+esc(when)+'</td><td>'+esc(r.pool_name||"-")+'</td><td>'+readStr+'</td><td>'+corr+'</td><td>'+(flagged?flagged:"-")+'</td></tr>';
+    }).join("");
+    return '<table>'+head+body+'</table>';
+  }
+
+  function render(rows){
+    var s = compute(rows);
+    if (!s.scans) { $("content").innerHTML = '<div class="panel empty">No scans yet. As Trin scans this week, accuracy shows up here.</div>'; return; }
+    var acc = s.overall===null ? "&mdash;" : s.overall + "%";
+    var html = "";
+    html += '<div class="hero"><div class="big">'+acc+'</div><div class="biglabel">Brain right rate (reads + steps kept)</div>'
+      + '<div class="sectwo">'
+      + '<div><b>'+(s.readAcc===null?"&mdash;":s.readAcc+"%")+'</b>strip reading accuracy ('+s.readCorrect+'/'+s.readTotal+')</div>'
+      + '<div><b>'+(s.stepAcc===null?"&mdash;":s.stepAcc+"%")+'</b>steps kept (not red-tapped)</div>'
+      + '</div></div>';
+    html += '<div class="cards">'
+      + '<div class="card"><div class="n">'+s.scans+'</div><div class="l">Total scans</div></div>'
+      + '<div class="card"><div class="n">'+s.last7+'</div><div class="l">Last 7 days</div></div>'
+      + '<div class="card"><div class="n">'+s.poolCount+'</div><div class="l">Pools</div></div>'
+      + '<div class="card"><div class="n">'+s.flaggedSteps+'</div><div class="l">Steps red-tapped</div></div>'
+      + '<div class="card"><div class="n">$'+(s.cents/100).toFixed(2)+'</div><div class="l">AI spend this month</div></div>'
+      + '</div>';
+    html += '<div class="panel"><h2>Most common issues</h2>'+bars(s.issues)+'</div>';
+    html += '<div class="panel"><h2>Recent scans &mdash; AI read vs tech correction</h2>'+recentTable(rows)+'</div>';
+    $("content").innerHTML = html;
+  }
+
+  async function load(){
+    var token = localStorage.getItem(TOKKEY);
+    if (!token) { showGate(); return; }
+    showDash();
+    $("status").textContent = "Loading...";
+    try {
+      var rows = await fetchRows(token);
+      render(rows);
+      $("status").textContent = "Updated " + new Date().toLocaleTimeString();
+    } catch (e) {
+      if (e.code === 401) { localStorage.removeItem(TOKKEY); showGate("That passcode didn't work. Try again."); }
+      else { $("status").textContent = ""; $("content").innerHTML = '<div class="panel err">Could not load ('+esc(e.message)+'). Tap Reload.</div>'; }
+    }
+  }
+
+  $("go").addEventListener("click", function(){
+    var v = $("tok").value.trim();
+    if (!v) { $("gateerr").textContent = "Enter the passcode."; return; }
+    localStorage.setItem(TOKKEY, v); $("tok").value = ""; load();
+  });
+  $("forget").addEventListener("click", function(){ localStorage.removeItem(TOKKEY); showGate("Saved passcode cleared."); });
+  $("reload").addEventListener("click", load);
+  $("tok").addEventListener("keydown", function(e){ if (e.key === "Enter") $("go").click(); });
+
+  load();
+</script>
+</body>
+</html>
