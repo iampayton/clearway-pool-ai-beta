@@ -3396,7 +3396,7 @@
         volumeBracket: setupDraft.volumeBracket || current.volumeBracket || "Not sure",
         volumeGallons: setupDraft.volumeGallons || current.volumeGallons || 0,
         volumeConfidence: "estimated",
-        productsOnHand: current.productsOnHand || [],
+        productsOnHand: (setupDraft.productsOnHand && setupDraft.productsOnHand.length) ? [...new Set([...(current.productsOnHand || []), ...setupDraft.productsOnHand])] : (current.productsOnHand || []),
         hasSpa: setupDraft.hasSpa || current.hasSpa || "Not sure",
         heater: setupDraft.heater || current.heater || "Not sure",
         filter: setupDraft.filter || current.filter || "Not sure",
@@ -4136,6 +4136,31 @@
         }
       } catch (err) {
         console.warn("pool photo read failed", err.status || "", err.detail || err.message);
+      }
+    }
+
+    // Log an AI cost that happens OUTSIDE a scan (e.g. reading a product/shelf photo in Settings).
+    function logAiCents(cents, tag) {
+      if (!cents) return;
+      try {
+        const ledger = JSON.parse(localStorage.getItem(costLedgerStorageKey) || "[]");
+        ledger.unshift({ at: new Date().toISOString(), checkId: tag || "product-read", engine: ENGINE_VERSION, aiCents: cents });
+        localStorage.setItem(costLedgerStorageKey, JSON.stringify(ledger.slice(0, 500)));
+      } catch { /* ledger is best effort */ }
+    }
+
+    // Read a chemical-container / shelf photo -> canonical product keys (matched to CHEM_PRODUCTS).
+    // The AI only proposes WHAT is on hand; the chips/forms stay the editable confirm surface and
+    // the deterministic engine still owns every dose. Never blocks the flow.
+    async function readProductPhoto(dataUrl) {
+      try {
+        const data = await callAiExtract(dataUrl, "");
+        if (typeof data.aiCents === "number") logAiCents(data.aiCents, "product-read");
+        const list = Array.isArray(data.products) ? data.products.filter((k) => CHEM_PRODUCTS[k]) : [];
+        return [...new Set(list)];
+      } catch (err) {
+        console.warn("product photo read failed", err.status || "", err.detail || err.message);
+        return [];
       }
     }
 
@@ -5075,6 +5100,16 @@
         if (dataUrl) {
           const shelf = getTechShelf();
           saveTechShelf({ ...shelf, photos: [dataUrl], updatedAt: new Date().toISOString() });
+          // Let the brain read the bottles on the shelf and pre-fill today's product chips.
+          readProductPhoto(dataUrl).then((keys) => {
+            if (!keys.length) return;
+            const cur = getTechShelf();
+            const merged = [...new Set([...(cur.products || []), ...keys])];
+            saveTechShelf({ ...cur, products: merged, updatedAt: new Date().toISOString() });
+            renderShelfCard();
+            const status = document.querySelector("[data-shelf-status]");
+            if (status) status.textContent = `Read ${keys.length} product${keys.length === 1 ? "" : "s"} from your photo - check the chips below.`;
+          });
         }
         renderShelfCard();
         if (pendingStartAfterShelf) {
@@ -5095,6 +5130,13 @@
         editPoolChemChanged = true;
         poolChemInput.value = "";
         renderPoolChemThumbs();
+        // Read the bottles in the photo and light up the matching product chips for review.
+        const lastEditChem = editPoolChemPhotos[editPoolChemPhotos.length - 1];
+        if (lastEditChem) readProductPhoto(lastEditChem).then((keys) => {
+          if (!keys.length) return;
+          editPoolProducts = [...new Set([...(editPoolProducts || []), ...keys])];
+          renderProductChips();
+        });
         return;
       }
 
@@ -5138,6 +5180,11 @@
         setupDraft.chemInventoryUpdatedAt = new Date().toISOString();
         setupChemInput.value = "";
         renderSetupPhotoThumbs();
+        // Read the product labels so the engine knows what this homeowner has on hand.
+        const lastSetupChem = setupDraft.chemInventoryPhotos[setupDraft.chemInventoryPhotos.length - 1];
+        if (lastSetupChem) readProductPhoto(lastSetupChem).then((keys) => {
+          if (keys.length) setupDraft.productsOnHand = [...new Set([...(setupDraft.productsOnHand || []), ...keys])];
+        });
         return;
       }
 
