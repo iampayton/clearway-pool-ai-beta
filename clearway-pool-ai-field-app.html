@@ -2025,6 +2025,7 @@
             <div class="setup-options" data-setup-options></div>
             <div class="setup-photo-thumbs" data-setup-photo-thumbs></div>
             <input class="hidden-file" data-setup-chem-input type="file" accept="image/*" capture="environment" multiple />
+            <input class="hidden-file" data-setup-equip-input type="file" accept="image/*" capture="environment" />
           </section>
 
           <div class="setup-actions">
@@ -2856,6 +2857,7 @@
       { key: "filter", question: "Filter type?", help: "This helps the filter reminder make sense.", options: ["Cartridge", "Sand", "DE", "Not sure"] },
       { key: "hasRobot", question: "Robot vacuum?", help: "If yes, ClearWay reminds you to clean its basket.", options: ["Yes", "No", "Not sure"] },
       { key: "chemInventory", question: "Products", help: "Take one photo of the products you have. You can update it later in settings.", photo: true, homeownerOnly: true },
+      { key: "equipment", question: "Equipment", help: "One photo of the pump/filter pad - ClearWay learns this pool's gear (one time). Skip if you can't see it.", photo: true, equip: true },
       { key: "filterCleanedAt", question: "Last filter clean?", help: "Tap the closest answer.", options: ["Today", "This week", "This month", "Not sure"], date: true },
       { key: "waterLevelCheckedAt", question: "Last water check?", help: "Normal target is around halfway up the skimmer.", options: ["Today", "This week", "Not sure"], date: true },
       { key: "saltCellCleanedAt", question: "Last salt cell clean?", help: "Skip if this is not a salt pool.", options: ["Today", "This month", "Not sure"], date: true, saltOnly: true }
@@ -3343,8 +3345,16 @@
     function renderSetupPhotoThumbs() {
       const thumbs = document.querySelector("[data-setup-photo-thumbs]");
       if (!thumbs) return;
+      const q = activeSetupQuestion();
+      thumbs.classList.toggle("active", Boolean(q?.photo));
+      if (q?.equip) {
+        const ep = setupDraft.equipmentPhotos || [];
+        thumbs.innerHTML = ep.length
+          ? ep.map((src, index) => `<div class="thumb"><img alt="Equipment ${index + 1}" src="${src}"><span>Equipment</span></div>`).join("")
+          : '<div class="empty" style="grid-column: 1 / -1;">No equipment photo yet.</div>';
+        return;
+      }
       const photos = setupDraft.chemInventoryPhotos || [];
-      thumbs.classList.toggle("active", Boolean(activeSetupQuestion()?.photo));
       thumbs.innerHTML = photos.length
         ? photos.map((src, index) => `<div class="thumb"><img alt="Products ${index + 1}" src="${src}"><span>Products</span><button class="thumb-x" data-remove-setup-chem="${index}" aria-label="Remove photo">&times;</button></div>`).join("")
         : '<div class="empty" style="grid-column: 1 / -1;">No product photo yet.</div>';
@@ -3407,7 +3417,12 @@
       answer.value = question.date ? "" : (question.allowInput ? "" : (setupDraft[question.key] || ""));
       answer.placeholder = question.placeholder || "Say it or tap one";
       answer.style.display = (question.options && !question.allowInput) || question.photo ? "none" : "block";
-      options.innerHTML = question.photo
+      options.innerHTML = question.equip
+        ? `
+          <button class="setup-option wide" data-setup-equip-camera>Take Photo</button>
+          <button class="setup-option" data-setup-option="Skip">Skip</button>
+        `
+        : question.photo
         ? `
           <button class="setup-option wide" data-setup-chem-camera>Take Photo</button>
           <button class="setup-option" data-setup-option="Products stocked">Products stocked</button>
@@ -3519,6 +3534,7 @@
         volumeGallons: setupDraft.volumeGallons || current.volumeGallons || 0,
         volumeConfidence: "estimated",
         productsOnHand: (setupDraft.productsOnHand && setupDraft.productsOnHand.length) ? [...new Set([...(current.productsOnHand || []), ...setupDraft.productsOnHand])] : (current.productsOnHand || []),
+        equipmentProfile: setupDraft.equipmentProfile || current.equipmentProfile || null,
         hasSpa: setupDraft.hasSpa || current.hasSpa || "Not sure",
         heater: setupDraft.heater || current.heater || "Not sure",
         filter: setupDraft.filter || current.filter || "Not sure",
@@ -5103,7 +5119,8 @@
       if (nameplate) {
         const poolScans = localChecks().filter((item) => item.poolId && item.poolId === check.poolId);
         const hasEquipPhoto = poolScans.some((item) => (item.photos?.equipment || []).length) || (check.photos?.equipment || []).length;
-        nameplate.hidden = Boolean(hasEquipPhoto || poolScans.length < 2);
+        const poolHasProfile = !!(localPools().find((p) => p.id === check.poolId)?.equipmentProfile);
+        nameplate.hidden = Boolean(hasEquipPhoto || poolHasProfile || poolScans.length < 2);
       }
       const dateTarget = document.querySelector("[data-guide-date]");
       if (dateTarget) dateTarget.textContent = check.createdAt ? new Date(check.createdAt).toLocaleString() : "";
@@ -5459,6 +5476,21 @@
         return;
       }
 
+      const setupEquipInput = event.target.closest("[data-setup-equip-input]");
+      if (setupEquipInput && setupEquipInput.files[0]) {
+        let dataUrl = null;
+        try { dataUrl = await compressImage(setupEquipInput.files[0]); }
+        catch { dataUrl = null; }
+        setupEquipInput.value = "";
+        if (dataUrl) {
+          setupDraft.equipmentPhotos = [dataUrl];
+          renderSetupPhotoThumbs();
+          // Read the gear once at setup so the brain knows this pool from visit #1.
+          readEquipmentPhoto(dataUrl).then((profile) => { if (profile) setupDraft.equipmentProfile = profile; });
+        }
+        return;
+      }
+
       const setupChemInput = event.target.closest("[data-setup-chem-input]");
       if (setupChemInput && setupChemInput.files[0]) {
         const files = [...setupChemInput.files];
@@ -5615,6 +5647,11 @@
         setupDraft.chemInventoryPhotos = setupDraft.chemInventoryPhotos || [];
         setupDraft.chemInventoryPhotos.splice(Number(removeSetupChem.dataset.removeSetupChem), 1);
         renderSetupPhotoThumbs();
+        return;
+      }
+
+      if (event.target.closest("[data-setup-equip-camera]")) {
+        document.querySelector("[data-setup-equip-input]")?.click();
         return;
       }
 
