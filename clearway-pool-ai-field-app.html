@@ -733,6 +733,31 @@
     .sync-banner.busy { opacity: 0.7; }
     .sync-banner.sent { background: #dff9ef; }
 
+    .arrival-brief {
+      border: 0;
+      border-radius: 18px;
+      padding: 13px 15px;
+      background: var(--seafoam-soft);
+      box-shadow: inset 0 0 0 1px var(--seafoam-dark);
+      color: var(--charcoal);
+      text-align: left;
+    }
+    .arrival-brief .arrival-title {
+      margin: 0 0 6px;
+      font-weight: 800;
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--seafoam-dark);
+    }
+    .arrival-brief .arrival-line {
+      margin: 0 0 4px;
+      font-size: 13.5px;
+      font-weight: 600;
+      line-height: 1.35;
+    }
+    .arrival-brief .arrival-line:last-child { margin-bottom: 0; }
+
     .home-stats {
       margin: 0;
       text-align: center;
@@ -1788,6 +1813,7 @@
           <button class="access-banner" data-access-banner hidden type="button"></button>
           <button class="sync-banner" data-sync-status hidden type="button"></button>
           <button class="retest-banner" data-retest-banner hidden>Retest reminder</button>
+          <div class="arrival-brief" data-arrival-brief hidden></div>
           <div class="home-status-row" aria-label="Maintenance status">
             <button class="home-maint gray" data-home-maintenance="filter">
               <svg class="home-status-svg" aria-hidden="true" viewBox="0 0 48 48" fill="none">
@@ -3482,6 +3508,7 @@
       renderRetestBanner();
       renderSyncStatus();
       renderAccessBanner(pool);
+      renderArrivalBrief(pool);
     }
 
     // Site access / hazard banner - shows gate code + dog warning before the visit starts.
@@ -3503,6 +3530,75 @@
       banner.innerHTML = parts.join(" · ");
       banner.classList.toggle("alert", hasPet);
       banner.hidden = false;
+    }
+
+    // ===== Arrival brief: hand the tech the veteran's memory of THIS pool before they start. =====
+    function relativeDay(iso) {
+      if (!iso) return "";
+      const then = new Date(iso);
+      if (isNaN(then.getTime())) return "";
+      const days = Math.floor((Date.now() - then.getTime()) / 86400000);
+      if (days <= 0) return "today";
+      if (days === 1) return "yesterday";
+      if (days < 7) return `${days} days ago`;
+      if (days < 14) return "last week";
+      return then.toLocaleDateString();
+    }
+
+    // Operating tips for THIS pool's specific gear (from the one-time equipment photo).
+    // Operation/maintenance guidance only - never repair/diagnosis, never chemical doses.
+    function equipmentTips(pool) {
+      const eq = pool && pool.equipmentProfile;
+      if (!eq) return [];
+      const tips = [];
+      if (eq.filter === "de") tips.push("DE filter: recharge the grids after backwashing, not just a backwash.");
+      else if (eq.filter === "sand") tips.push("Sand filter: backwash when pressure is 8-10 psi over clean.");
+      else if (eq.filter === "cartridge") tips.push("Cartridge filter: rinse the cartridge - there is no backwash valve.");
+      if (eq.pump === "variable_speed") tips.push("Variable-speed pump: run a longer low-speed cycle to turn the water over.");
+      if (eq.sanitizer === "salt") tips.push("Salt pool: check the cell for scale; clean it only per the cell's manual.");
+      if (eq.note) tips.push(`Gear on site: ${eq.note}`);
+      return tips.slice(0, 3);
+    }
+
+    function buildArrivalBrief(pool) {
+      if (!pool) return { lines: [] };
+      const lines = [];
+      const history = localChecks()
+        .filter((c) => c.poolId && c.poolId === pool.id)
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      const last = history[0];
+      if (last) {
+        const note = (last.notes || "").trim().replace(/\s+/g, " ");
+        const issue = last.mainIssue && last.mainIssue !== "Routine" ? last.mainIssue : "";
+        const snippet = note ? `"${note.slice(0, 90)}${note.length > 90 ? "..." : ""}"` : (issue || "routine scan");
+        lines.push(`Last visit ${relativeDay(last.createdAt)}: ${snippet}`);
+      }
+      const memory = buildPoolMemory(pool.id);
+      const tendencies = [];
+      Object.keys(CHEM_TARGETS).forEach((key) => {
+        const m = memory[key];
+        if (!m || m.count < 2) return;
+        if (m.highStreak >= 2) tendencies.push(`runs high ${CHEM_TARGETS[key].name.toLowerCase()}`);
+        else if (m.lowStreak >= 2) tendencies.push(`runs low ${CHEM_TARGETS[key].name.toLowerCase()}`);
+      });
+      if (tendencies.length) lines.push(`Heads up: this pool ${tendencies.slice(0, 2).join(" and ")}.`);
+      const labelMap = { filter: "Filter cleaning", saltCell: "Salt cell", vacuum: "Vacuum" };
+      const overdue = ["filter", "saltCell", "vacuum"]
+        .map((t) => ({ t, info: maintenanceInfo(pool, t) }))
+        .filter((x) => x.info && x.info.color === "red");
+      if (overdue.length) lines.push(`Due now: ${overdue.map((x) => labelMap[x.t]).join(", ")}.`);
+      equipmentTips(pool).forEach((tip) => lines.push(tip));
+      return { lines, count: history.length };
+    }
+
+    function renderArrivalBrief(pool) {
+      const card = document.querySelector("[data-arrival-brief]");
+      if (!card) return;
+      const brief = buildArrivalBrief(pool);
+      if (!brief.lines.length) { card.hidden = true; card.innerHTML = ""; return; }
+      card.innerHTML = `<p class="arrival-title">This pool</p>` +
+        brief.lines.map((l) => `<p class="arrival-line">${escapeHtml(l)}</p>`).join("");
+      card.hidden = false;
     }
 
     // Reflect the saved homeowner/tech mode on the Settings toggle.
@@ -4162,6 +4258,45 @@
         console.warn("product photo read failed", err.status || "", err.detail || err.message);
         return [];
       }
+    }
+
+    // Read an equipment-pad photo ONCE per pool -> normalized gear profile (filter/pump/heater/sanitizer).
+    // Describes the gear only (drives operating tips); never diagnoses condition or recommends repairs.
+    async function readEquipmentPhoto(dataUrl) {
+      try {
+        const data = await callAiExtract(dataUrl, "");
+        if (typeof data.aiCents === "number") logAiCents(data.aiCents, "equipment-read");
+        const e = data.equipment || {};
+        const norm = {
+          filter: ["sand", "cartridge", "de"].includes(e.filter) ? e.filter : null,
+          pump: ["single_speed", "variable_speed"].includes(e.pump) ? e.pump : null,
+          heater: ["gas", "heat_pump", "none"].includes(e.heater) ? e.heater : null,
+          sanitizer: ["salt", "chlorine"].includes(e.sanitizer) ? e.sanitizer : null,
+          note: typeof e.note === "string" ? e.note.slice(0, 80) : ""
+        };
+        return (norm.filter || norm.pump || norm.heater || norm.sanitizer || norm.note) ? norm : null;
+      } catch (err) {
+        console.warn("equipment photo read failed", err.status || "", err.detail || err.message);
+        return null;
+      }
+    }
+
+    function saveEquipmentProfile(poolId, profile) {
+      if (!poolId || !profile) return;
+      const pools = localPools();
+      const idx = pools.findIndex((p) => p.id === poolId);
+      if (idx < 0) return;
+      const prev = pools[idx].equipmentProfile || {};
+      pools[idx].equipmentProfile = {
+        filter: profile.filter || prev.filter || null,
+        pump: profile.pump || prev.pump || null,
+        heater: profile.heater || prev.heater || null,
+        sanitizer: profile.sanitizer || prev.sanitizer || null,
+        note: profile.note || prev.note || "",
+        readAt: new Date().toISOString()
+      };
+      pools[idx].updatedAt = new Date().toISOString();
+      saveLocalPools(pools);
     }
 
     function dataUrlToFile(dataUrl, fileName) {
@@ -5146,10 +5281,12 @@
         const slot = evidenceSlotOverride || (evidence?.key === "equipment" ? "equipment" : "pool");
         evidenceSlotOverride = "";
         const files = [...evidenceInput.files];
+        let equipReadUrl = null;
         for (const file of files) {
           let dataUrl = null;
           try { dataUrl = await compressImage(file); }
           catch { continue; }
+          if (slot === "equipment" && !equipReadUrl) equipReadUrl = dataUrl; // base64 for the AI, before upload swaps it to a URL
           try {
             dataUrl = await uploadOne(activeCheck.id, slot, dataUrl, (activeCheck.photos?.[slot] || []).length);
           } catch (error) {
@@ -5165,6 +5302,12 @@
         evidenceInput.value = "";
         await saveCheck(activeCheck);
         renderGuide(activeCheck);
+        // One-time equipment-pad photo -> read the gear and remember it on the pool profile.
+        if (equipReadUrl && activeCheck.poolId) readEquipmentPhoto(equipReadUrl).then((profile) => {
+          if (!profile) return;
+          saveEquipmentProfile(activeCheck.poolId, profile);
+          openSheet("Got it", "Saved this pool's equipment - ClearWay will remember the gear next time.", "");
+        });
         return;
       }
 
