@@ -1263,7 +1263,7 @@
       font-weight: 900;
     }
 
-    /* ===== Party mode â€” pool lights at night. Pool done. Party on. =====
+    /* ===== Party mode - pool lights at night. Pool done. Party on. =====
        Design system: blacked-out water surfaces + neon pool-light edges.
        Hue map: hero Scan = electric cyan (animated) - pool photo = seafoam Â·
        test photo = violet - talk = soft cyan - alerts = amber/red.
@@ -2063,12 +2063,12 @@
 
           <button class="btn full" type="button" data-toggle-tests>Add test numbers - get exact doses</button>
           <div class="test-grid" data-test-grid hidden>
-            <label>Chlorine <input data-test-current="free_chlorine" type="number" inputmode="decimal" step="0.5" min="0" placeholder="1â€“4" /></label>
-            <label>pH <input data-test-current="ph" type="number" inputmode="decimal" step="0.1" min="0" placeholder="7.2â€“7.8" /></label>
-            <label>Alkalinity <input data-test-current="alkalinity" type="number" inputmode="numeric" step="10" min="0" placeholder="80â€“120" /></label>
-            <label>Stabilizer <input data-test-current="cya" type="number" inputmode="numeric" step="5" min="0" placeholder="30â€“50" /></label>
-            <label>Hardness <input data-test-current="calcium" type="number" inputmode="numeric" step="10" min="0" placeholder="200â€“400" /></label>
-            <label>Salt <input data-test-current="salt" type="number" inputmode="numeric" step="100" min="0" placeholder="2700â€“3400" /></label>
+            <label>Chlorine <input data-test-current="free_chlorine" type="number" inputmode="decimal" step="0.5" min="0" placeholder="1-4" /></label>
+            <label>pH <input data-test-current="ph" type="number" inputmode="decimal" step="0.1" min="0" placeholder="7.2-7.8" /></label>
+            <label>Alkalinity <input data-test-current="alkalinity" type="number" inputmode="numeric" step="10" min="0" placeholder="80-120" /></label>
+            <label>Stabilizer <input data-test-current="cya" type="number" inputmode="numeric" step="5" min="0" placeholder="30-50" /></label>
+            <label>Hardness <input data-test-current="calcium" type="number" inputmode="numeric" step="10" min="0" placeholder="200-400" /></label>
+            <label>Salt <input data-test-current="salt" type="number" inputmode="numeric" step="100" min="0" placeholder="2700-3400" /></label>
           </div>
 
           <p class="muted" data-strip-read-status hidden style="margin-top: 8px;"></p>
@@ -5370,7 +5370,7 @@
         button.disabled = true;
         button.style.opacity = "0.72";
         const prevLabel = button.textContent;
-        button.textContent = "Thinkingâ€¦";
+        button.textContent = "Thinking...";
         try {
           const check = await createCheck();
           localStorage.removeItem(retestStorageKey);
