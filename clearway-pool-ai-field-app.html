@@ -2058,9 +2058,10 @@
             
           </button>
 
-          <textarea class="brain-note" data-check-field="brainInput" placeholder="Water clear. Chlorine looked low. Brushed walls and steps, emptied baskets, added product by label. Pump sounds normal."></textarea>
+          <p class="muted" data-talk-help style="margin-top: 12px;">Say what you saw and did today - the more detail, the sharper your Do Next. Add test numbers below for exact amounts.</p>
+          <textarea class="brain-note" data-check-field="brainInput" placeholder="e.g. Water looked a little cloudy. Brushed the walls, emptied the skimmer, ran the pump. Chlorine smelled low - didn't add anything yet."></textarea>
 
-          <button class="btn full" type="button" data-toggle-tests>Add test numbers (optional)</button>
+          <button class="btn full" type="button" data-toggle-tests>Add test numbers - get exact doses</button>
           <div class="test-grid" data-test-grid hidden>
             <label>Chlorine <input data-test-current="free_chlorine" type="number" inputmode="decimal" step="0.5" min="0" placeholder="1â€“4" /></label>
             <label>pH <input data-test-current="ph" type="number" inputmode="decimal" step="0.1" min="0" placeholder="7.2â€“7.8" /></label>
@@ -2070,6 +2071,7 @@
             <label>Salt <input data-test-current="salt" type="number" inputmode="numeric" step="100" min="0" placeholder="2700â€“3400" /></label>
           </div>
 
+          <p class="muted" data-strip-read-status hidden style="margin-top: 8px;"></p>
           <div class="note-actions">
             <button class="icon-action" data-clear-brain-input aria-label="Clear note">
               <svg aria-hidden="true" viewBox="0 0 48 48" fill="none">
@@ -2104,6 +2106,7 @@
             <button class="gps-suggest" data-nameplate-ask hidden type="button">One-time: snap the pump/filter label. ClearWay learns this pool's gear. Tap here.</button>
             <button class="why-link" type="button" data-why-button hidden>Why these steps?</button>
             <button class="btn full" type="button" data-fix-exact hidden style="margin-top: 12px;">Want exact amounts? Set pool size</button>
+            <p class="muted" data-add-numbers-hint hidden style="margin-top: 12px;">Add your test strip numbers next time and ClearWay gives exact amounts to add - not just the steps.</p>
           </section>
 
           <section class="card warning">
@@ -2860,6 +2863,19 @@
       return getUserMode() === "tech";
     }
 
+    // Mode-aware coaching copy on the TALK screen (homeowner vs tech) - gives a clear example to follow.
+    function applyTalkCopy() {
+      const tech = isTechMode();
+      const help = document.querySelector("[data-talk-help]");
+      const note = document.querySelector('[data-check-field="brainInput"]');
+      if (help) help.textContent = tech
+        ? "Say the pool's condition and what you did this stop - the more detail, the sharper the Do Next. Add test numbers below for exact amounts."
+        : "Say what you saw and did today - the more detail, the sharper your Do Next. Add test numbers below for exact amounts.";
+      if (note) note.setAttribute("placeholder", tech
+        ? "e.g. Light algae on the steps, water hazy. Brushed and vacuumed, emptied the baskets, backwashed the filter. Chlorine low - added liquid chlorine, pump running."
+        : "e.g. Water looked a little cloudy. Brushed the walls, emptied the skimmer, ran the pump. Chlorine smelled low - didn't add anything yet.");
+    }
+
     // Local calendar date key (device timezone) - used for the tech daily product shelf.
     function localDateKey(date = new Date()) {
       const d = new Date(date);
@@ -3350,8 +3366,13 @@
       });
       const testGrid = document.querySelector("[data-test-grid]");
       if (testGrid) testGrid.hidden = true;
+      applyTalkCopy();
+      pendingAiCents = 0;
+      lastStripRead = null;
+      const stripStatus = document.querySelector("[data-strip-read-status]");
+      if (stripStatus) { stripStatus.hidden = true; stripStatus.textContent = ""; }
       const testToggle = document.querySelector("[data-toggle-tests]");
-      if (testToggle) testToggle.textContent = "Add test numbers (optional)";
+      if (testToggle) testToggle.textContent = "Add test numbers - get exact doses";
       renderPhotoStep();
     }
 
@@ -3909,6 +3930,85 @@
       });
     }
 
+    // --- AI strip reader (extraction tier) ---
+    // Sends a test-strip/label photo to the deployed ai-extract edge function and gets
+    // back structured READINGS ONLY. The deterministic engine still owns every dose.
+    let pendingAiCents = 0;   // extraction cost accumulated for the current scan
+    let lastStripRead = null; // {readings, confidence, observations} from the photo
+
+    async function callAiExtract(dataUrl, noteText) {
+      const comma = dataUrl.indexOf(",");
+      const base64 = comma >= 0 ? dataUrl.slice(comma + 1) : dataUrl;
+      const res = await fetch(`${supabaseUrl}/functions/v1/ai-extract`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${supabaseAnonKey}`,
+          "apikey": supabaseAnonKey,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ imageBase64: base64, mediaType: "image/jpeg", text: (noteText || "").slice(0, 600) })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const err = new Error(data.error || `extract ${res.status}`);
+        err.status = res.status;
+        err.detail = data.detail || "";
+        throw err;
+      }
+      return data;
+    }
+
+    // Fill the test grid from AI-read values - ONLY empty fields (manual entry always wins).
+    function applyStripReadings(readings) {
+      if (!readings) return 0;
+      let filled = 0;
+      Object.keys(testMeta).forEach((key) => {
+        const value = readings[key];
+        if (value === null || value === undefined || value === "") return;
+        const input = document.querySelector(`[data-test-current="${key}"]`);
+        if (input && !input.value.trim()) {
+          input.value = String(value);
+          filled += 1;
+        }
+      });
+      if (filled) {
+        const grid = document.querySelector("[data-test-grid]");
+        const toggle = document.querySelector("[data-toggle-tests]");
+        if (grid) grid.hidden = false;
+        if (toggle) toggle.textContent = "Hide test numbers";
+      }
+      return filled;
+    }
+
+    // Read a strip photo, prefill the grid, surface a confirm note. Never blocks the flow.
+    async function readStripPhoto(dataUrl) {
+      const copy = document.querySelector("[data-photo-step-copy]");
+      const status = document.querySelector("[data-strip-read-status]");
+      const setCopy = (msg) => { if (copy) copy.textContent = msg; };
+      const setStatus = (msg) => { if (status) { status.textContent = msg || ""; status.hidden = !msg; } };
+      setCopy("Reading your strip…");
+      try {
+        const data = await callAiExtract(dataUrl, brainText());
+        const readings = data.readings || {};
+        const filled = applyStripReadings(readings);
+        if (typeof data.aiCents === "number") pendingAiCents += data.aiCents;
+        lastStripRead = { readings, confidence: data.confidence || "", observations: data.observations || "" };
+        if (filled) {
+          const conf = data.confidence === "low" ? " (low confidence - double-check)" : "";
+          setCopy("Strip read - numbers added. Tap Next to review.");
+          setStatus(`Read from your photo${conf} - check these, then Get Do Next.`);
+        } else {
+          setCopy("Couldn't read clear numbers - type them on the next screen.");
+          setStatus("");
+        }
+      } catch (err) {
+        if (err.status === 503) setCopy("Auto-read isn't on yet - type your numbers on the next screen.");
+        else if (err.status === 502) setCopy("Strip auto-read is warming up - type your numbers for now.");
+        else setCopy("Couldn't read the strip - type your numbers on the next screen.");
+        console.warn("strip extract failed", err.status, err.detail || err.message);
+      }
+    }
+
     function dataUrlToFile(dataUrl, fileName) {
       const [meta, base64] = dataUrl.split(",");
       const mime = meta.match(/data:(.*);base64/)?.[1] || "image/jpeg";
@@ -4236,12 +4336,14 @@
         engine,
         gps,
         extras,
-        aiCents: 0,
+        aiCents: pendingAiCents,
         stepFlags: {},
         photos,
         values,
         nextStep: engine.steps.length ? engine.steps[0].text : buildNextStep(values, mainIssue)
       };
+      check.aiReadings = lastStripRead || null;
+      pendingAiCents = 0; // consumed by this check
       check.report = homeownerReport(check);
       check.learning = learningQuality(check);
       logVisitCost(check);
@@ -4555,6 +4657,13 @@
           fixExact.textContent = `Want exact amounts? Set ${what}`;
         }
       }
+      const addNumbersHint = document.querySelector("[data-add-numbers-hint]");
+      if (addNumbersHint) {
+        const cap = check.engine?.capability;
+        const blk = check.engine?.exactBlockers || [];
+        // No test numbers were entered (and size/products aren't the blocker): nudge toward numbers for exact doses.
+        addNumbersHint.hidden = !(cap === "observe_only" && !blk.length);
+      }
       const cautionTarget = document.querySelector("[data-engine-cautions]");
       if (cautionTarget) {
         const cautions = check.engine?.cautions || [];
@@ -4838,6 +4947,7 @@
       if (!input || !input.files[0]) return;
       const step = photoSteps[activePhotoStep];
       const files = [...input.files];
+      let lastTestPhoto = null;
       for (const file of files) {
         let dataUrl = null;
         try { dataUrl = await compressImage(file); }
@@ -4846,10 +4956,15 @@
           if (!Array.isArray(draft.photos.pool)) draft.photos.pool = draft.photos.pool ? [draft.photos.pool] : [];
           draft.photos.pool.push(dataUrl);
         }
-        else draft.photos[step.key].push(dataUrl);
+        else {
+          draft.photos[step.key].push(dataUrl);
+          if (step.key === "tests") lastTestPhoto = dataUrl;
+        }
       }
       input.value = "";
       renderPhotoThumbs();
+      // Strip photo on the CHEM TEST step -> auto-read the numbers (graceful if offline/unfunded).
+      if (lastTestPhoto) readStripPhoto(lastTestPhoto);
     });
 
     document.addEventListener("input", async (event) => {
@@ -5038,6 +5153,7 @@
         setUserMode(modeOption.dataset.modeOption);
         renderModeToggle();
         renderHome();
+        applyTalkCopy();
         return;
       }
 
@@ -5136,7 +5252,7 @@
         const toggle = document.querySelector("[data-toggle-tests]");
         if (grid && toggle) {
           grid.hidden = !grid.hidden;
-          toggle.textContent = grid.hidden ? "Add test numbers (optional)" : "Hide test numbers";
+          toggle.textContent = grid.hidden ? "Add test numbers - get exact doses" : "Hide test numbers";
         }
         return;
       }
