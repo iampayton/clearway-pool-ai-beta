@@ -1854,6 +1854,7 @@
             </div>
           </section>
 
+          <p class="muted" data-ai-cost hidden style="margin: 0 4px 10px; font-size: 12px;"></p>
           <section class="card" data-tech-shelf-card hidden>
             <h3>Today's Truck Stock</h3>
             <p class="muted" style="margin-top: 6px;">One photo of the chemicals on your truck. ClearWay uses it for every pool today, so you only snap it once each morning.</p>
@@ -3429,6 +3430,29 @@
         button.classList.toggle("active", button.dataset.modeOption === mode);
       });
       renderShelfCard();
+      renderAiCost();
+    }
+
+    // Tiny running total of AI reading spend this month (from the cost ledger).
+    function renderAiCost() {
+      const el = document.querySelector("[data-ai-cost]");
+      if (!el) return;
+      let cents = 0;
+      try {
+        const ledger = JSON.parse(localStorage.getItem(costLedgerStorageKey) || "[]");
+        const now = new Date();
+        const ym = now.getFullYear() + "-" + now.getMonth();
+        ledger.forEach((row) => {
+          const d = new Date(row.at);
+          if (d.getFullYear() + "-" + d.getMonth() === ym) cents += (row.aiCents || 0);
+        });
+      } catch { /* ledger is best effort */ }
+      if (cents > 0) {
+        el.textContent = `AI reading this month: $${(cents / 100).toFixed(2)}`;
+        el.hidden = false;
+      } else {
+        el.hidden = true;
+      }
     }
 
     // ===== Pool picker: a simple, reliable way to switch the active pool =====
@@ -3937,8 +3961,12 @@
     let lastStripRead = null; // {readings, confidence, observations} from the photo
 
     async function callAiExtract(dataUrl, noteText) {
-      const comma = dataUrl.indexOf(",");
-      const base64 = comma >= 0 ? dataUrl.slice(comma + 1) : dataUrl;
+      const body = { text: (noteText || "").slice(0, 600) };
+      if (dataUrl) {
+        const comma = dataUrl.indexOf(",");
+        body.imageBase64 = comma >= 0 ? dataUrl.slice(comma + 1) : dataUrl;
+        body.mediaType = "image/jpeg";
+      }
       const res = await fetch(`${supabaseUrl}/functions/v1/ai-extract`, {
         method: "POST",
         headers: {
@@ -3946,7 +3974,7 @@
           "apikey": supabaseAnonKey,
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ imageBase64: base64, mediaType: "image/jpeg", text: (noteText || "").slice(0, 600) })
+        body: JSON.stringify(body)
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -3959,8 +3987,9 @@
     }
 
     // Fill the test grid from AI-read values - ONLY empty fields (manual entry always wins).
-    function applyStripReadings(readings) {
+    function applyStripReadings(readings, confidence) {
       if (!readings) return 0;
+      const lowConf = confidence && confidence !== "high";
       let filled = 0;
       Object.keys(testMeta).forEach((key) => {
         const value = readings[key];
@@ -3968,6 +3997,7 @@
         const input = document.querySelector(`[data-test-current="${key}"]`);
         if (input && !input.value.trim()) {
           input.value = String(value);
+          input.title = lowConf ? "Read by AI (low confidence) - please confirm" : "Read by AI - confirm";
           filled += 1;
         }
       });
@@ -3990,11 +4020,11 @@
       try {
         const data = await callAiExtract(dataUrl, brainText());
         const readings = data.readings || {};
-        const filled = applyStripReadings(readings);
+        const filled = applyStripReadings(readings, data.confidence);
         if (typeof data.aiCents === "number") pendingAiCents += data.aiCents;
         lastStripRead = { readings, confidence: data.confidence || "", observations: data.observations || "" };
         if (filled) {
-          const conf = data.confidence === "low" ? " (low confidence - double-check)" : "";
+          const conf = (data.confidence && data.confidence !== "high") ? " (please confirm each number)" : "";
           setCopy("Strip read - numbers added. Tap Next to review.");
           setStatus(`Read from your photo${conf} - check these, then Get Do Next.`);
         } else {
@@ -4029,39 +4059,23 @@
       return data.signedUrl;
     }
 
-    async function uploadPhotos(checkId) {
-      try {
-        return {
-          pool: await Promise.all((Array.isArray(draft.photos.pool) ? draft.photos.pool : [draft.photos.pool].filter(Boolean)).map((src, index) => uploadOne(checkId, "pool", src, index))),
-          tests: await Promise.all(draft.photos.tests.map((src, index) => uploadOne(checkId, "test", src, index))),
-          products: await Promise.all(draft.photos.products.map((src, index) => uploadOne(checkId, "product", src, index)))
-        };
-      } catch (error) {
-        console.warn("Photo upload failed, using local photo fallback", error);
-        return { ...draft.photos };
+    // One test value -> derived status/product. Shared by readValues (DOM) and the AI note path.
+    function valueItemFor(key, rawInput) {
+      const meta = testMeta[key];
+      const raw = (rawInput == null ? "" : String(rawInput)).trim();
+      const value = Number(raw);
+      let status = "Unknown / Not Tested";
+      let product = "Retest / confirm value";
+      if (raw && Number.isFinite(value)) {
+        if (value < meta.min) { status = "low"; product = meta.low; }
+        else if (value > meta.max) { status = "high"; product = meta.high; }
+        else { status = "in range"; product = "No product category flagged"; }
       }
+      return { key, label: meta.label, current: raw, target: `${meta.min}-${meta.max}${meta.unit ? " " + meta.unit : ""}`, status, product };
     }
 
     function readValues() {
-      return Object.entries(testMeta).map(([key, meta]) => {
-        const raw = document.querySelector(`[data-test-current="${key}"]`)?.value.trim() || "";
-        const value = Number(raw);
-        let status = "Unknown / Not Tested";
-        let product = "Retest / confirm value";
-        if (raw && Number.isFinite(value)) {
-          if (value < meta.min) {
-            status = "low";
-            product = meta.low;
-          } else if (value > meta.max) {
-            status = "high";
-            product = meta.high;
-          } else {
-            status = "in range";
-            product = "No product category flagged";
-          }
-        }
-        return { key, label: meta.label, current: raw, target: `${meta.min}-${meta.max}${meta.unit ? " " + meta.unit : ""}`, status, product };
-      });
+      return Object.keys(testMeta).map((key) => valueItemFor(key, document.querySelector(`[data-test-current="${key}"]`)?.value));
     }
 
     function brainText() {
@@ -4344,6 +4358,20 @@
         nextStep: engine.steps.length ? engine.steps[0].text : buildNextStep(values, mainIssue)
       };
       check.aiReadings = lastStripRead || null;
+      // Review-queue signal: where the human overrode an AI-read number (AI accuracy training data).
+      check.aiCorrections = [];
+      if (lastStripRead && lastStripRead.readings) {
+        const finalByKey = {};
+        (values || []).forEach((v) => { finalByKey[v.key] = v.current; });
+        Object.keys(lastStripRead.readings).forEach((k) => {
+          const aiVal = lastStripRead.readings[k];
+          if (aiVal === null || aiVal === undefined || aiVal === "") return;
+          const finalVal = finalByKey[k];
+          if (String(finalVal || "") !== String(aiVal)) {
+            check.aiCorrections.push({ key: k, ai: aiVal, corrected: finalVal || "" });
+          }
+        });
+      }
       pendingAiCents = 0; // consumed by this check
       check.report = homeownerReport(check);
       check.learning = learningQuality(check);
@@ -4364,6 +4392,23 @@
         const weatherLog = await quietWeatherLog(positionFix);
         if (gps) check.gps = gps;
         if (weatherLog) check.weatherLog = weatherLog;
+        // Brain note coverage: no numbers entered or read, but there IS a note -> let the AI pull
+        // readings from the spoken note. Engine still owns all dosing; AI only supplies readings.
+        const hasAnyValue = (check.values || []).some((v) => v.current);
+        const noteText = (brain || "").trim();
+        if (!hasAnyValue && noteText) {
+          try {
+            const noteData = await callAiExtract(null, noteText);
+            const r = noteData.readings || {};
+            check.values = (check.values || []).map((v) => {
+              const aiVal = r[v.key];
+              const empty = v.current === "" || v.current == null;
+              return (empty && aiVal !== null && aiVal !== undefined && aiVal !== "") ? valueItemFor(v.key, aiVal) : v;
+            });
+            if (typeof noteData.aiCents === "number") check.aiCents = (check.aiCents || 0) + noteData.aiCents;
+            check.aiNoteReadings = { readings: r, confidence: noteData.confidence || "", observations: noteData.observations || "" };
+          } catch (noteErr) { console.warn("note extract deferred", noteErr); }
+        }
         const engine = chemEngine(pool, check.values, brain, memory, weatherLog);
         if (gps && pool.gps && haversineMeters(gps, pool.gps) > 400) {
           engine.cautions = engine.cautions || [];
