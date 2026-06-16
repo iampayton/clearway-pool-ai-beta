@@ -772,6 +772,8 @@
     }
     .oi-actions button:active { transform: scale(0.96); }
     .oi-actions button[data-res="remove"] { box-shadow: inset 0 0 0 1px #e0a9a9; color: #9a3b3b; }
+    .oi-suggest { padding: 11px; border-radius: 14px; background: var(--seafoam-soft); box-shadow: inset 0 0 0 1px var(--seafoam-dark); margin-bottom: 12px; display: flex; flex-direction: column; gap: 10px; }
+    .oi-suggest .open-item { background: #fff; border-radius: 12px; padding: 10px; }
 
     .home-stats {
       margin: 0;
@@ -3036,6 +3038,11 @@
       } else if (resolution === "known") {
         it.status = "known";
         it.snoozeUntil = "";
+      } else if (resolution === "accept") {
+        it.status = "open"; // tech accepts an AI suggestion -> becomes a real open item
+        it.snoozeUntil = "";
+      } else if (resolution === "dismiss") {
+        it.status = "dismissed"; // kept (not resolved) so the AI won't re-suggest the same thing
       }
       it.updatedAt = new Date().toISOString();
       saveAllOpenItems(items);
@@ -3043,6 +3050,39 @@
     // Route-wide "pick these up before the week" = needs_fix items that name a part.
     function partsToPickUp() {
       return getAllOpenItems().filter((it) => it.status === "needs_fix" && it.part);
+    }
+
+    // ---- AI-suggested inspections (the "AI suggests, tech confirms" half of the loop) ----
+    // Match key ignores case, spaces, and punctuation so "o-ring" / "o ring" / "oring" all collapse.
+    function normTitle(s) { return (s || "").toLowerCase().replace(/[^a-z0-9]/g, ""); }
+    function titleMatches(a, b) {
+      const x = normTitle(a), y = normTitle(b);
+      if (!x || !y) return false;
+      if (x === y) return true;
+      // substring match only when the shorter key is meaningful (avoids tiny-token false matches)
+      return Math.min(x.length, y.length) >= 5 && (x.includes(y) || y.includes(x));
+    }
+    function suggestedOpenItems(poolId) {
+      return openItemsForPool(poolId).filter((it) => it.status === "suggested");
+    }
+    // Add an AI inspect suggestion - but NEVER re-nag: skip if a matching item already exists
+    // in any live state (open/needs_fix/snoozed/known/dismissed/suggested) for this pool.
+    function addSuggestedItem(poolId, title) {
+      if (!poolId || !title) return;
+      const clean = String(title).slice(0, 80);
+      if (openItemsForPool(poolId).some((it) => titleMatches(it.title, clean))) return;
+      const items = getAllOpenItems();
+      items.unshift({
+        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+        poolId, title: clean, kind: "inspect", part: "", cost: "",
+        source: "ai", status: "suggested", snoozeUntil: "",
+        createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
+      });
+      saveAllOpenItems(items);
+    }
+    function ingestSuggestions(poolId, list) {
+      if (!poolId || !Array.isArray(list)) return;
+      list.slice(0, 2).forEach((s) => { if (typeof s === "string" && s.trim()) addSuggestedItem(poolId, s.trim()); });
     }
 
     function localPools() {
@@ -3720,13 +3760,27 @@
     function renderOpenItems(poolId) {
       const list = document.querySelector("[data-open-items-list]");
       if (!list) return;
-      const items = openItemsForPool(poolId);
-      if (!items.length) {
+      const all = openItemsForPool(poolId);
+      const suggestions = all.filter((it) => it.status === "suggested");
+      const items = all.filter((it) => it.status !== "suggested" && it.status !== "dismissed");
+      if (!items.length && !suggestions.length) {
         list.innerHTML = '<div class="empty">No open items. Tap +Flag to log a noise, leak, or part to remember.</div>';
         return;
       }
       const now = Date.now();
-      list.innerHTML = items.map((it) => {
+      const suggestHtml = suggestions.length ? `
+        <div class="oi-suggest">
+          <p class="arrival-title" style="margin-bottom: 8px;">ClearWay noticed - worth a look</p>
+          ${suggestions.map((it) => `<div class="summary-item open-item">
+            <div class="oi-main"><span>Suggested</span><strong>${escapeHtml(it.title)}</strong></div>
+            <div class="oi-actions">
+              <button type="button" data-suggest-item="${it.id}" data-sres="accept">Add to list</button>
+              <button type="button" data-suggest-item="${it.id}" data-sres="dismiss">Not now</button>
+            </div>
+          </div>`).join("")}
+        </div>` : "";
+      if (!items.length) { list.innerHTML = suggestHtml; return; }
+      list.innerHTML = suggestHtml + items.map((it) => {
         const snoozed = it.status === "snoozed" && it.snoozeUntil && new Date(it.snoozeUntil).getTime() > now;
         const tag = it.status === "needs_fix" ? "Needs fix"
           : it.status === "known" ? "Known"
@@ -4386,6 +4440,7 @@
         if (wv.clarity || wv.tint || wv.algae || wv.note) {
           lastPoolVision = { clarity: wv.clarity || null, tint: wv.tint || null, algae: wv.algae || null, note: wv.note || "", observations: data.observations || "" };
         }
+        ingestSuggestions(selectedPool()?.id, data.suggestions); // AI inspect prompts -> suggested open items (tech confirms)
       } catch (err) {
         console.warn("pool photo read failed", err.status || "", err.detail || err.message);
       }
@@ -4418,10 +4473,11 @@
 
     // Read an equipment-pad photo ONCE per pool -> normalized gear profile (filter/pump/heater/sanitizer).
     // Describes the gear only (drives operating tips); never diagnoses condition or recommends repairs.
-    async function readEquipmentPhoto(dataUrl) {
+    async function readEquipmentPhoto(dataUrl, poolId) {
       try {
         const data = await callAiExtract(dataUrl, "");
         if (typeof data.aiCents === "number") logAiCents(data.aiCents, "equipment-read");
+        if (poolId) ingestSuggestions(poolId, data.suggestions); // pad photo may surface inspect prompts
         const e = data.equipment || {};
         const norm = {
           filter: ["sand", "cartridge", "de"].includes(e.filter) ? e.filter : null,
@@ -5468,7 +5524,7 @@
         await saveCheck(activeCheck);
         renderGuide(activeCheck);
         // One-time equipment-pad photo -> read the gear and remember it on the pool profile.
-        if (equipReadUrl && activeCheck.poolId) readEquipmentPhoto(equipReadUrl).then((profile) => {
+        if (equipReadUrl && activeCheck.poolId) readEquipmentPhoto(equipReadUrl, activeCheck.poolId).then((profile) => {
           if (!profile) return;
           saveEquipmentProfile(activeCheck.poolId, profile);
           openSheet("Got it", "Saved this pool's equipment - ClearWay will remember the gear next time.", "");
@@ -5964,6 +6020,13 @@
           addOpenItem(activeCheck.poolId, { title, source: "tech" });
           renderOpenItems(activeCheck.poolId);
         }
+        return;
+      }
+
+      const suggestBtn = event.target.closest("[data-suggest-item]");
+      if (suggestBtn && activeCheck) {
+        resolveOpenItem(suggestBtn.dataset.suggestItem, suggestBtn.dataset.sres === "accept" ? "accept" : "dismiss");
+        renderOpenItems(activeCheck.poolId);
         return;
       }
 
