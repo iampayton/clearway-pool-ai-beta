@@ -509,6 +509,12 @@
 
     .pool-picker-item:active { transform: scale(0.98); }
     .pool-picker-item.active { background: var(--seafoam-soft); box-shadow: inset 0 0 0 2px var(--seafoam-dark); }
+    .pool-picker-item.route-done { background: #e7f8ef; box-shadow: inset 0 0 0 2px var(--seafoam-dark); }
+    .pool-picker-item .route-tag { font-size: 12px; font-weight: 800; color: var(--seafoam-dark); }
+    .pool-picker-item .route-tag.todo { color: var(--charcoal-soft); }
+    .route-day { display: flex; justify-content: space-between; align-items: center; font-weight: 800; font-size: 13px; margin: 14px 2px 6px; color: var(--charcoal); }
+    .route-day:first-child { margin-top: 2px; }
+    .route-day.route-today { color: var(--seafoam-dark); }
     .pool-picker-item strong { font-size: 15px; }
     .pool-picker-item .muted { font-size: 12px; }
 
@@ -1804,6 +1810,11 @@
         <div class="app-top">
           <div class="brand"><span class="brand-dot" aria-hidden="true"></span><span class="brand-word"><span class="brand-clear">Clear</span><span class="brand-way">Way</span></span></div>
           <div class="top-icons">
+            <button class="icon-btn" data-route-open data-route-icon hidden aria-label="This week's route">
+              <svg aria-hidden="true" viewBox="0 0 48 48" fill="none">
+                <path d="M10 16h28M10 24h28M10 32h28" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+              </svg>
+            </button>
             <button class="icon-btn theme-pill" data-theme-toggle aria-label="Switch look">Party</button>
             <button class="icon-btn" data-go="history" aria-label="History">
               <svg aria-hidden="true" viewBox="0 0 48 48" fill="none">
@@ -1969,6 +1980,18 @@
                 <select data-pool-field="serviceCadence">
                   <option>Weekly</option>
                   <option>Every other week</option>
+                </select>
+              </label>
+              <label>Service Day (route)
+                <select data-pool-field="serviceDay">
+                  <option value="">Any day</option>
+                  <option>Monday</option>
+                  <option>Tuesday</option>
+                  <option>Wednesday</option>
+                  <option>Thursday</option>
+                  <option>Friday</option>
+                  <option>Saturday</option>
+                  <option>Sunday</option>
                 </select>
               </label>
               <label>Robot Vacuum
@@ -2243,6 +2266,17 @@
           <div class="sheet-actions">
             <button class="btn" data-pool-picker-close>Close</button>
             <button class="btn primary" data-pool-picker-add>Add new pool</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="sheet-backdrop" data-route hidden>
+        <div class="sheet" role="dialog" aria-modal="true">
+          <h3>This week's route</h3>
+          <p class="muted" data-route-progress style="margin-top: 6px;"></p>
+          <div class="pool-picker-list" data-route-list></div>
+          <div class="sheet-actions">
+            <button class="btn" data-route-close>Close</button>
           </div>
         </div>
       </div>
@@ -3343,6 +3377,7 @@
         chemInventoryPhotos: [],
         chemInventoryUpdatedAt: "",
         serviceCadence: "Weekly",
+        serviceDay: "",
         hasRobot: "Not sure",
         robotName: "",
         gateCode: "",
@@ -3664,6 +3699,8 @@
       renderAccessBanner(pool);
       renderArrivalBrief(pool);
       renderPartsToPickUp();
+      const routeIcon = document.querySelector("[data-route-icon]");
+      if (routeIcon) routeIcon.hidden = !isTechMode(); // route tracker is a tech tool
     }
 
     // Site access / hazard banner - shows gate code + dog warning before the visit starts.
@@ -3863,6 +3900,60 @@
     function closePoolPicker() {
       const overlay = document.querySelector("[data-pool-picker]");
       if (overlay) overlay.hidden = true;
+    }
+
+    // ===== Tech "this week's route" - pools grouped by service day =====
+    const ROUTE_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+    function startOfWeek() {
+      const d = new Date(); d.setHours(0, 0, 0, 0);
+      const day = (d.getDay() + 6) % 7; // Monday = 0 ... Sunday = 6
+      d.setDate(d.getDate() - day);
+      return d.getTime();
+    }
+    function todayDayName() { return ROUTE_DAYS[(new Date().getDay() + 6) % 7]; }
+    function lastScanFor(poolId) {
+      const mine = localChecks().filter((c) => c.poolId && c.poolId === poolId)
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      return mine[0] || null;
+    }
+    function doneThisWeek(poolId) {
+      const wk = startOfWeek();
+      return localChecks().some((c) => c.poolId === poolId && new Date(c.createdAt).getTime() >= wk);
+    }
+    function openRoute() { ensureStarterPool(); renderRoute(); const o = document.querySelector("[data-route]"); if (o) o.hidden = false; }
+    function closeRoute() { const o = document.querySelector("[data-route]"); if (o) o.hidden = true; }
+    function routeItemHtml(pool) {
+      const done = doneThisWeek(pool.id);
+      const last = lastScanFor(pool.id);
+      const sub = done
+        ? `<span class="route-tag">✓ Done ${last ? relativeDay(last.createdAt) : "this week"}</span>`
+        : `<span class="route-tag todo">Not done yet</span>`;
+      return `<button type="button" class="pool-picker-item ${done ? "route-done" : ""}" data-route-pick="${pool.id}" data-route-done="${done ? 1 : 0}"><strong>${escapeHtml(pool.poolName || "Unnamed Pool")}</strong>${sub}</button>`;
+    }
+    function renderRoute() {
+      const list = document.querySelector("[data-route-list]");
+      if (!list) return;
+      const real = localPools().filter((p) => p.profileComplete || (p.poolName && p.poolName !== "New Pool"));
+      const all = real.length ? real : localPools();
+      const doneCount = all.filter((p) => doneThisWeek(p.id)).length;
+      const prog = document.querySelector("[data-route-progress]");
+      if (prog) prog.textContent = all.length ? `${doneCount} of ${all.length} done this week` : "No pools on your route yet.";
+      const today = todayDayName();
+      let html = "";
+      ROUTE_DAYS.forEach((day) => {
+        const dayPools = all.filter((p) => (p.serviceDay || "") === day);
+        if (!dayPools.length) return;
+        const dDone = dayPools.filter((p) => doneThisWeek(p.id)).length;
+        html += `<div class="route-day ${day === today ? "route-today" : ""}"><span>${day}${day === today ? " · today" : ""}</span><span class="muted">${dDone}/${dayPools.length}</span></div>`;
+        html += dayPools.map(routeItemHtml).join("");
+      });
+      const unscheduled = all.filter((p) => !ROUTE_DAYS.includes(p.serviceDay || ""));
+      if (unscheduled.length) {
+        const uDone = unscheduled.filter((p) => doneThisWeek(p.id)).length;
+        html += `<div class="route-day"><span>Any day</span><span class="muted">${uDone}/${unscheduled.length}</span></div>`;
+        html += unscheduled.map(routeItemHtml).join("");
+      }
+      list.innerHTML = html || '<div class="empty">No pools yet. Add one from Home, then set its service day in Pool Details.</div>';
     }
 
     function renderPoolPicker() {
@@ -4169,6 +4260,7 @@
         chemInventoryPhotos: chemPhotos,
         chemInventoryUpdatedAt: editPoolChemChanged ? new Date().toISOString() : (existingPool?.chemInventoryUpdatedAt || ""),
         serviceCadence: get("serviceCadence") || existingPool?.serviceCadence || "Weekly",
+        serviceDay: get("serviceDay"),
         hasRobot: get("hasRobot") || existingPool?.hasRobot || "Not sure",
         robotName: get("robotName") || existingPool?.robotName || "",
         gateCode: get("gateCode") || existingPool?.gateCode || "",
@@ -4221,6 +4313,7 @@
         volumeGallons: pool?.volumeGallons || "",
         measurements: pool?.measurements || "",
         serviceCadence: pool?.serviceCadence || "Weekly",
+        serviceDay: pool?.serviceDay || "",
         hasRobot: pool?.hasRobot || "Not sure",
         robotName: pool?.robotName || "",
         gateCode: pool?.gateCode || "",
@@ -5868,6 +5961,34 @@
 
       if (event.target.closest("[data-selected-pool-text]")) {
         openPoolPicker();
+        return;
+      }
+
+      if (event.target.closest("[data-route-open]")) {
+        openRoute();
+        return;
+      }
+
+      const routePick = event.target.closest("[data-route-pick]");
+      if (routePick) {
+        const id = routePick.dataset.routePick;
+        const done = routePick.dataset.routeDone === "1";
+        const pool = localPools().find((p) => p.id === id);
+        closeRoute();
+        if (done) {
+          // Single tap on a completed stop -> show that pool's history.
+          const search = document.querySelector("[data-history-search]");
+          if (search) search.value = pool ? (pool.poolName || "") : "";
+          await showScreen("history");
+        } else if (pool) {
+          selectedPoolId = id; // not done yet -> make it the active pool, ready to scan
+          renderHome();
+        }
+        return;
+      }
+
+      if (event.target.closest("[data-route-close]") || (event.target.matches(".sheet-backdrop") && event.target.closest("[data-route]"))) {
+        closeRoute();
         return;
       }
 
