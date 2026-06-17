@@ -5150,7 +5150,7 @@
     }
 
     function closeLoopState(check) {
-      if (check.closedAt) return { mode: "done", label: "Visit closed", hint: "" };
+      if (check.closedAt) return { mode: "done", label: "✓ Saved · View history", hint: "This visit is logged in History." };
       const evidence = needsEvidence(check);
       if (evidence) return { mode: "photo", label: evidence.label, hint: evidence.reason, evidenceKey: evidence.key };
       if ((check.engine?.retestMinutes || 0) > 0) {
@@ -5177,12 +5177,14 @@
       if (setReminder) setRetestReminder(check, check.engine?.retestMinutes || 30);
       await saveCheck(check);
       await showScreen("home");
+      const poolName = check.poolName || "This pool";
       const doneMsg = setReminder
-        ? "Visit closed. Pump circulating - the retest reminder is set on Home."
+        ? `${poolName} is saved. The pump's circulating - we'll remind you on Home when it's time to retest.`
         : (isTechMode()
-          ? "Visit closed and saved. Retest at your next visit."
-          : "Visit closed and saved to pool history.");
-      openSheet("Done", doneMsg, "");
+          ? `${poolName} is saved and logged - it'll be ready for next week's visit.`
+          : `${poolName} is saved to your pool history.`);
+      sheetAction = () => showScreen("history"); // primary button = proof it landed
+      openSheet("Saved ✓", doneMsg, "View history");
     }
 
     function renderGuide(check) {
@@ -5295,7 +5297,7 @@
       if (closeButton) {
         const state = closeLoopState(check);
         closeButton.textContent = state.label;
-        closeButton.disabled = state.mode === "done";
+        closeButton.disabled = false; // 'done' stays tappable -> opens History (no dead grey button)
         closeButton.dataset.closeMode = state.mode;
         if (closeHint) {
           closeHint.hidden = !state.hint;
@@ -6096,6 +6098,8 @@
           await closeVisit(activeCheck, true);
         } else if (mode === "finish") {
           await closeVisit(activeCheck, false);
+        } else if (mode === "done") {
+          await showScreen("history");
         }
         return;
       }
