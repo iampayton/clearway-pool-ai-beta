@@ -2148,7 +2148,11 @@
             <div class="summary-list" data-step-guide-list style="margin-top: 14px;"></div>
             <p class="muted" data-flag-hint hidden style="margin-top: 10px;">Tap "Edit" to fix a step's wording, or tap the step text to flag it red.</p>
             <div class="summary-list" data-missing-list style="margin-top: 10px;"></div>
-            <button class="btn full" type="button" data-missing-step style="margin-top: 12px;">Missing step? Say it</button>
+            <button class="btn full" type="button" data-missing-step style="margin-top: 12px;">Missing step? Add it</button>
+            <div data-missing-input hidden style="margin-top: 8px; display: flex; gap: 8px;">
+              <input type="text" data-missing-text placeholder="Type the missing step" autocomplete="off" style="flex: 1; min-width: 0; padding: 11px 12px; border: 1px solid var(--line); border-radius: 12px; font-size: 15px;" />
+              <button class="btn" type="button" data-missing-save>Save</button>
+            </div>
             <button class="gps-suggest" data-nameplate-ask hidden type="button">One-time: snap the pump/filter label. ClearWay learns this pool's gear. Tap here.</button>
             <button class="why-link" type="button" data-why-button hidden>Why these steps?</button>
             <button class="btn full" type="button" data-fix-exact hidden style="margin-top: 12px;">Want exact amounts? Set pool size</button>
@@ -5402,20 +5406,46 @@
       dictateInto(document.querySelector(`[data-check-field="${fieldName}"]`));
     }
 
+    // Reveal an inline text box right inside the Do Next card. No speech, no popup, no navigation -
+    // this is the root fix for the field bug where the mic-permission prompt relaunched the iOS PWA
+    // and kicked the tech out to the start screen.
     function dictateMissingStep() {
       if (!activeCheck) return;
-      const saveMissing = async (said) => {
-        const text = (said || "").trim();
-        if (!text) return;
-        activeCheck.missingSteps = activeCheck.missingSteps || [];
-        activeCheck.missingSteps.push({ text, at: new Date().toISOString(), scope: "review" });
+      const row = document.querySelector("[data-missing-input]");
+      const input = document.querySelector("[data-missing-text]");
+      if (row) row.hidden = false;
+      if (input) { input.value = ""; try { input.focus(); } catch (e) { /* focus best-effort */ } }
+    }
+
+    async function saveMissingStep() {
+      if (!activeCheck) return;
+      const input = document.querySelector("[data-missing-text]");
+      const text = (input?.value || "").trim();
+      const row = document.querySelector("[data-missing-input]");
+      if (!text) { if (row) row.hidden = true; return; }
+      activeCheck.missingSteps = activeCheck.missingSteps || [];
+      activeCheck.missingSteps.push({ text, at: new Date().toISOString(), scope: "review" });
+      if (input) input.value = "";
+      if (row) row.hidden = true;
+      await saveCheck(activeCheck);
+      renderGuide(activeCheck);
+    }
+
+    function dictateFlagReason(stepId) {
+      if (!activeCheck || !stepId) return;
+      const saveReason = async (said) => {
+        const reason = (said || "").trim();
+        if (!reason) return;
+        activeCheck.stepFlags = activeCheck.stepFlags || {};
+        activeCheck.stepFlags[stepId] = { ...(activeCheck.stepFlags[stepId] || { flagged: true }), reason, at: new Date().toISOString() };
         await saveCheck(activeCheck);
         renderGuide(activeCheck);
       };
       const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
-      // No voice support (e.g. iOS standalone) -> type it. Never a dead end, never leaves the card.
-      if (!Speech) {
-        saveMissing(prompt("What step did ClearWay miss? Type it here."));
+      // iOS home-screen PWAs relaunch on the mic-permission prompt - type it there. Voice stays
+      // on regular browsers / Android where it doesn't kick the user out.
+      if (window.navigator.standalone === true || !Speech) {
+        saveReason(window.prompt("Why is this step off? Type a quick note for Payton."));
         return;
       }
       try {
@@ -5423,35 +5453,12 @@
         recognition.lang = "en-US";
         recognition.interimResults = false;
         recognition.maxAlternatives = 1;
-        recognition.onresult = (event) => { saveMissing(event.results?.[0]?.[0]?.transcript || ""); };
-        recognition.onerror = () => { saveMissing(prompt("Didn't catch that - type the missing step:")); };
+        recognition.onresult = (event) => { saveReason(event.results?.[0]?.[0]?.transcript || ""); };
+        recognition.onerror = () => { saveReason(window.prompt("Didn't catch that - type why:")); };
         recognition.start();
       } catch (err) {
-        saveMissing(prompt("Type the missing step:"));
+        saveReason(window.prompt("Type why this step is off:"));
       }
-    }
-
-    function dictateFlagReason(stepId) {
-      if (!activeCheck || !stepId) return;
-      const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!Speech) {
-        alert("Dictation is not supported here. The flag is saved - you can tell Payton why later.");
-        return;
-      }
-      const recognition = new Speech();
-      recognition.lang = "en-US";
-      recognition.interimResults = false;
-      recognition.maxAlternatives = 1;
-      recognition.onresult = async (event) => {
-        const said = event.results?.[0]?.[0]?.transcript || "";
-        if (!said) return;
-        activeCheck.stepFlags = activeCheck.stepFlags || {};
-        activeCheck.stepFlags[stepId] = { ...(activeCheck.stepFlags[stepId] || { flagged: true }), reason: said, at: new Date().toISOString() };
-        await saveCheck(activeCheck);
-        renderGuide(activeCheck);
-      };
-      recognition.onerror = () => alert("Did not catch that. Tap Say why again.");
-      recognition.start();
     }
 
     document.addEventListener("change", async (event) => {
@@ -5610,6 +5617,14 @@
     document.addEventListener("input", async (event) => {
       if (event.target.closest("[data-history-search]")) {
         await renderHistory(true);
+      }
+    });
+
+    // Enter / Go on the inline "missing step" box saves it (field keyboard friendly).
+    document.addEventListener("keydown", async (event) => {
+      if (event.key === "Enter" && event.target.closest("[data-missing-text]")) {
+        event.preventDefault();
+        await saveMissingStep();
       }
     });
 
@@ -6017,6 +6032,11 @@
 
       if (event.target.closest("[data-missing-step]") && activeCheck) {
         dictateMissingStep();
+        return;
+      }
+
+      if (event.target.closest("[data-missing-save]") && activeCheck) {
+        await saveMissingStep();
         return;
       }
 
