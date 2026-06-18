@@ -166,9 +166,10 @@
   function readingsFor(r, n){
     var out = {};
     var srcs = [];
+    // confirmed_values (the tech's final numbers) FIRST so a corrected value wins over the raw AI read.
+    if (r.confirmed_values){ try { srcs.push(typeof r.confirmed_values==="string"?JSON.parse(r.confirmed_values):r.confirmed_values); } catch(e){} }
     if (n.aiReadings && n.aiReadings.readings) srcs.push(n.aiReadings.readings);
     if (n.aiNoteReadings) srcs.push(n.aiNoteReadings);
-    if (r.confirmed_values){ try { srcs.push(typeof r.confirmed_values==="string"?JSON.parse(r.confirmed_values):r.confirmed_values); } catch(e){} }
     if (n.report && n.report.values) srcs.push(n.report.values);
     var alias = { chlorine:"free_chlorine", fc:"free_chlorine", free_chlorine:"free_chlorine", ph:"ph", alk:"alkalinity",
       alkalinity:"alkalinity", ta:"alkalinity", cya:"cya", stabilizer:"cya", calcium:"calcium", ch:"calcium", hardness:"calcium", salt:"salt" };

@@ -3677,6 +3677,8 @@
       pendingAiCents = 0;
       lastStripRead = null;
       lastPoolVision = null;
+      stripReadPromise = null;
+      poolReadPromise = null;
       const stripStatus = document.querySelector("[data-strip-read-status]");
       if (stripStatus) { stripStatus.hidden = true; stripStatus.textContent = ""; }
       const testToggle = document.querySelector("[data-toggle-tests]");
@@ -4486,6 +4488,8 @@
     let pendingAiCents = 0;   // extraction cost accumulated for the current scan
     let lastStripRead = null; // {readings, confidence, observations} from the strip/test photo
     let lastPoolVision = null; // {clarity, tint, algae, note, observations} from the pool photo
+    let stripReadPromise = null; // in-flight AI strip read - awaited in createCheck so it can't lose the race
+    let poolReadPromise = null;  // in-flight AI pool-water read
 
     async function callAiExtract(dataUrl, noteText) {
       const body = { text: (noteText || "").slice(0, 600) };
@@ -4921,6 +4925,13 @@
     }
 
     async function createCheck() {
+      // Field fix: the strip/pool AI read fires un-awaited at photo time. Give any in-flight read a
+      // chance to land (so its numbers fill the grid + feed the engine, and aiCorrections get captured)
+      // before we read it - but never hang: cap the wait so a slow/failed read just falls back to typed numbers.
+      if (stripReadPromise || poolReadPromise) {
+        const inflight = Promise.all([stripReadPromise, poolReadPromise].filter(Boolean)).catch(() => {});
+        await Promise.race([inflight, new Promise((resolve) => setTimeout(resolve, 4000))]);
+      }
       const pool = selectedPool() || { poolName: "Unnamed Pool", poolType: "Not sure", heater: "Not sure", filter: "Not sure" };
       const checkId = crypto.randomUUID ? crypto.randomUUID() : String(Date.now());
       // Tech mode: attach today's truck-stock photo to this scan for the AI to read.
@@ -5291,10 +5302,13 @@
     async function closeVisit(check, withPump) {
       check.closedAt = new Date().toISOString();
       // All-knowing snapshot: what was shown, what was confirmed-by-silence, what was corrected.
-      const engineSteps = check.engine?.steps || [];
+      // Snapshot the steps the tech ACTUALLY saw (buildDoNext = engine + note/open-item/retest steps,
+      // capped) - not just engine steps - so "steps kept" accuracy is measured against the real card
+      // and a red-tap on a note step can't push the flagged count past the shown count.
+      const shownSteps = buildDoNext(check);
       check.closeSnapshot = {
-        shownStepIds: engineSteps.map((step) => step.id),
-        doneStepIds: engineSteps.filter((step) => !(check.stepFlags?.[step.id]?.flagged)).map((step) => step.id),
+        shownStepIds: shownSteps.map((step) => step.id),
+        doneStepIds: shownSteps.filter((step) => !(check.stepFlags?.[step.id]?.flagged)).map((step) => step.id),
         flaggedCount: Object.values(check.stepFlags || {}).filter((flag) => flag.flagged).length,
         missingCount: (check.missingSteps || []).length,
         closedVia: withPump ? "pump" : "finish",
@@ -5744,8 +5758,9 @@
       input.value = "";
       renderPhotoThumbs();
       // CHEM TEST photo -> read the numbers (strip/drop-kit/digital). Pool photo -> read the water.
-      if (lastTestPhoto) readStripPhoto(lastTestPhoto);
-      if (lastPoolPhoto) readPoolPhoto(lastPoolPhoto);
+      // Keep the in-flight promise so createCheck can await it (don't lose the read on slow signal).
+      if (lastTestPhoto) stripReadPromise = readStripPhoto(lastTestPhoto);
+      if (lastPoolPhoto) poolReadPromise = readPoolPhoto(lastPoolPhoto);
     });
 
     document.addEventListener("input", async (event) => {
