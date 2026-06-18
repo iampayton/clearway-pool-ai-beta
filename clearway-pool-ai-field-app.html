@@ -5511,8 +5511,11 @@
       if (!field) return;
       field.focus();
       const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!Speech) {
-        alert("Use the phone keyboard mic here.");
+      // iOS home-screen PWAs relaunch when the in-app mic asks permission (kicks the tech out mid-scan).
+      // There, just open the keyboard and let them use ITS mic - no relaunch, no lost work.
+      if (window.navigator.standalone === true || !Speech) {
+        const help = document.querySelector("[data-talk-help]");
+        if (help) help.textContent = "Tap the mic on your keyboard to talk - or just type.";
         return;
       }
       const recognition = new Speech();
