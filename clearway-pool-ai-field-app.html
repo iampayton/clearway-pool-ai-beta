@@ -174,6 +174,43 @@
       height: 22px;
     }
 
+    /* Top-bar icons are bare glyphs (no white box); state colors live here. */
+    .top-icons .icon-btn { background: transparent; box-shadow: none; position: relative; }
+    .top-icons .icon-btn.needs-setup { color: #ff7a1f; }   /* pool details not filled in yet */
+    .top-icons .icon-btn.setup-done { color: #16c8b0; }    /* pool details complete */
+    .top-icons .icon-btn.attn {                            /* supervisor needs the tech's attention */
+      color: #ff7a1f;
+      animation: attnPulse 1.5s ease-in-out infinite;
+    }
+    @keyframes attnPulse {
+      0%, 100% { filter: drop-shadow(0 0 3px rgba(255, 122, 31, 0.55)); }
+      50% { filter: drop-shadow(0 0 10px rgba(255, 122, 31, 0.95)); }
+    }
+    .top-icons .icon-btn.has-note::after {                 /* a pending brain-dump note exists */
+      content: ""; position: absolute; top: 4px; right: 4px;
+      width: 9px; height: 9px; border-radius: 50%;
+      background: #ff7a1f; box-shadow: 0 0 6px rgba(255, 122, 31, 0.8);
+    }
+    .note-input {
+      width: 100%; margin-top: 12px; padding: 12px 14px;
+      border: 1px solid var(--line); border-radius: 14px;
+      font: inherit; font-size: 15px; resize: vertical; min-height: 84px;
+      background: var(--white); color: var(--charcoal);
+    }
+    .note-reply {
+      margin-top: 12px; padding: 12px 14px; border-radius: 14px;
+      background: var(--seafoam-soft); color: var(--charcoal);
+      font-size: 14px; line-height: 1.4; white-space: pre-wrap;
+    }
+    .note-reply[hidden] { display: none; }
+    .note-inbox {
+      margin-top: 10px; padding: 11px 14px; border-radius: 14px;
+      background: #fff1e2; color: #8a4b13;
+      box-shadow: inset 0 0 0 1px rgba(255, 122, 31, 0.45);
+      font-size: 14px; line-height: 1.4; font-weight: 700;
+    }
+    .note-inbox[hidden] { display: none; }
+
     .content {
       padding: 10px 18px 22px;
       display: flex;
@@ -1851,6 +1888,11 @@
         <div class="app-top">
           <div class="brand"><span class="brand-dot" data-theme-toggle aria-hidden="true"></span><span class="brand-word"><span class="brand-clear">Clear</span><span class="brand-way">Way</span></span></div>
           <div class="top-icons">
+            <button class="icon-btn" data-pool-note aria-label="Note or question about this pool">
+              <svg aria-hidden="true" viewBox="0 0 48 48" fill="none">
+                <path d="M9 11h30a4 4 0 0 1 4 4v15a4 4 0 0 1-4 4H21l-9 7v-7H9a4 4 0 0 1-4-4V15a4 4 0 0 1 4-4Z" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>
+              </svg>
+            </button>
             <button class="icon-btn" data-route-open data-route-icon hidden aria-label="This week's route">
               <svg aria-hidden="true" viewBox="0 0 48 48" fill="none">
                 <path d="M10 16h28M10 24h28M10 32h28" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
@@ -2320,6 +2362,21 @@
           <button class="btn full" type="button" data-route-add hidden style="margin-top: 10px;"></button>
           <div class="sheet-actions">
             <button class="btn" data-route-close>Close</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="sheet-backdrop" data-note-sheet hidden>
+        <div class="sheet" role="dialog" aria-modal="true">
+          <h3 data-note-title>Ask about this pool</h3>
+          <p class="muted" style="margin-top: 6px;">Talk (tap the mic on your keyboard) or type - ask a question or brain-dump a note. Answers are guidance only; exact amounts always come from a scan.</p>
+          <div class="note-inbox" data-note-inbox hidden></div>
+          <textarea class="note-input" data-note-input rows="3" placeholder="e.g. Gate code for 1010 Maple Ter? / Why does this one keep going cloudy?"></textarea>
+          <div class="note-reply" data-note-reply hidden></div>
+          <div class="sheet-actions">
+            <button class="btn" data-note-close>Close</button>
+            <button class="btn" data-note-save>Save note</button>
+            <button class="btn primary" data-note-ask>Ask</button>
           </div>
         </div>
       </div>
@@ -3744,7 +3801,25 @@
       renderArrivalBrief(pool);
       renderPartsToPickUp();
       const routeIcon = document.querySelector("[data-route-icon]");
-      if (routeIcon) routeIcon.hidden = !isTechMode(); // route tracker is a tech tool
+      if (routeIcon) {
+        routeIcon.hidden = !isTechMode(); // route tracker is a tech tool
+        routeIcon.classList.toggle("attn", isTechMode() && supervisorNeedsAttention());
+      }
+      // Pool-details gear: bright orange when the profile isn't filled in, bright seafoam when it is.
+      const gear = document.querySelector("[data-edit-pool]");
+      if (gear) {
+        const complete = !!(pool && pool.profileComplete);
+        gear.classList.toggle("needs-setup", !complete);
+        gear.classList.toggle("setup-done", complete);
+      }
+      // Chat bubble: orange glow when there's a message FOR the tech on this pool (supervisor/homeowner
+      // -> tech); a dot when a brain-dump note is waiting to ride the next scan.
+      const noteBtn = document.querySelector("[data-pool-note]");
+      if (noteBtn) {
+        const hasInbox = !!getPoolInbox(pool?.id || "");
+        noteBtn.classList.toggle("attn", hasInbox);
+        noteBtn.classList.toggle("has-note", !hasInbox && !!getPoolNote(pool?.id || ""));
+      }
     }
 
     // Site access / hazard banner - shows gate code + dog warning before the visit starts.
@@ -3952,6 +4027,159 @@
     function closePoolPicker() {
       const overlay = document.querySelector("[data-pool-picker]");
       if (overlay) overlay.hidden = true;
+    }
+
+    // ===== The top chat bubble = "Ask about this pool". Three jobs, all safe:
+    //  (1) brain-dump a note that rides the next scan, (2) instant ON-DEVICE answers for
+    //  gate code / access / pet / service day / last visit (offline + private - codes never
+    //  leave the phone or go to the AI), (3) AI answers for open care questions, grounded in
+    //  this pool's history, but NEVER a chemical dose (amounts only come from a scan). =====
+    const poolNotesKey = "clearwayPoolNotesV1";
+    const poolInboxKey = "clearwayPoolInboxV1"; // supervisor/homeowner -> tech messages per pool (ready to wire)
+    function getPoolNotes() { try { return JSON.parse(localStorage.getItem(poolNotesKey) || "{}"); } catch { return {}; } }
+    function getPoolNote(poolId) { return (getPoolNotes()[poolId || ""] || ""); }
+    function setPoolNote(poolId, text) {
+      const map = getPoolNotes();
+      if (text) map[poolId || ""] = text; else delete map[poolId || ""];
+      try { localStorage.setItem(poolNotesKey, JSON.stringify(map)); } catch { /* best effort */ }
+    }
+    function getPoolInbox(poolId) {
+      try { const m = JSON.parse(localStorage.getItem(poolInboxKey) || "{}"); const v = m[poolId || ""]; return v && v.text ? v : null; }
+      catch { return null; }
+    }
+    function showReply(text) {
+      const reply = document.querySelector("[data-note-reply]");
+      if (reply) { reply.hidden = false; reply.textContent = text; }
+    }
+    function openNoteSheet() {
+      const pool = selectedPool();
+      const input = document.querySelector("[data-note-input]");
+      const title = document.querySelector("[data-note-title]");
+      const inboxEl = document.querySelector("[data-note-inbox]");
+      const label = pool && pool.poolName && pool.poolName !== "New Pool" ? pool.poolName : "this pool";
+      if (title) title.textContent = `Ask about ${label}`;
+      // Show any message left FOR the tech on this pool (supervisor/homeowner -> tech).
+      const inbox = getPoolInbox(pool?.id || "");
+      if (inboxEl) {
+        if (inbox) { inboxEl.hidden = false; inboxEl.textContent = `Note for you${inbox.from ? " from " + inbox.from : ""}: ${inbox.text}`; }
+        else { inboxEl.hidden = true; inboxEl.textContent = ""; }
+      }
+      const reply = document.querySelector("[data-note-reply]");
+      if (reply) { reply.hidden = true; reply.textContent = ""; }
+      if (input) input.value = getPoolNote(pool?.id || "");
+      const overlay = document.querySelector("[data-note-sheet]");
+      if (overlay) overlay.hidden = false;
+      if (input) setTimeout(() => input.focus(), 50);
+    }
+    function closeNoteSheet() {
+      const overlay = document.querySelector("[data-note-sheet]");
+      if (overlay) overlay.hidden = true;
+    }
+    function saveNoteFromSheet() {
+      const pool = selectedPool();
+      const input = document.querySelector("[data-note-input]");
+      setPoolNote(pool?.id || "", (input?.value || "").trim());
+      closeNoteSheet();
+      renderHome();
+    }
+
+    // Instant on-device answer for the field-reference questions a tech asks walking up / at a gate.
+    // Matches the pool named/addressed in the question; gate codes + access notes stay LOCAL (never sent to AI).
+    function localAnswer(question) {
+      const q = (question || "").toLowerCase();
+      const pools = localPools();
+      if (!pools.length) return "";
+      function score(p) {
+        const name = (p.poolName || "").toLowerCase();
+        const addr = (p.address || "").toLowerCase();
+        let s = 0;
+        if (name && name !== "new pool" && q.includes(name)) s += 3;
+        if (addr && q.includes(addr)) s += 4;
+        addr.split(/[\s,]+/).filter((t) => t.length > 2).forEach((t) => { if (q.includes(t)) s += 1; });
+        name.split(/[\s,]+/).filter((t) => t.length > 2).forEach((t) => { if (q.includes(t)) s += 1; });
+        return s;
+      }
+      let best = null, bestScore = 0;
+      pools.forEach((p) => { const s = score(p); if (s > bestScore) { bestScore = s; best = p; } });
+      const target = bestScore >= 2 ? best : selectedPool();
+      if (!target) return "";
+      const label = target.poolName && target.poolName !== "New Pool" ? target.poolName : (target.address || "this pool");
+      const wantsGate = /\bgate\b|\bcode\b|passcode|pass code|combo|lockbox|lock box/.test(q);
+      const wantsPet = /\bdog\b|\bpet\b|animal/.test(q);
+      const wantsAccess = /access|get in|getting in|entry|\bkey\b|where.*enter/.test(q);
+      const wantsDue = /\bdue\b|service day|when.*(service|scheduled|come)|next visit/.test(q);
+      const wantsLast = /last (visit|time)|previously|what did i (do|add|use)/.test(q);
+      if (!(wantsGate || wantsPet || wantsAccess || wantsDue || wantsLast)) return "";
+      const out = [];
+      if (wantsGate) out.push(target.gateCode ? `Gate code for ${label}: ${target.gateCode}.` : `No gate code saved for ${label} yet.`);
+      if (wantsPet) out.push((target.petWarning === "Yes" || target.petWarning === true) ? `Heads up - dog on site at ${label}${target.petNote ? `: ${target.petNote}` : ""}.` : `No pet warning saved for ${label}.`);
+      if (wantsAccess && (target.accessNotes || "").trim()) out.push(`Access notes for ${label}: ${target.accessNotes}.`);
+      if (wantsDue) out.push(target.serviceDay ? `${label} is serviced on ${target.serviceDay}.` : `No service day set for ${label}.`);
+      if (wantsLast) {
+        const hist = localChecks().filter((c) => c.poolId && c.poolId === target.id).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        out.push(hist[0] ? `Last visit ${relativeDay(hist[0].createdAt)}: ${(hist[0].notes || "routine scan").slice(0, 120)}.` : `No visits logged yet for ${label}.`);
+      }
+      return out.join(" ");
+    }
+
+    // Sanitized history sent to the AI for open care questions - NO gate codes / access notes / pet info.
+    function buildAskContext(pool) {
+      if (!pool) return "";
+      const lines = [];
+      lines.push(`Pool: ${pool.poolName || "Unnamed"}${pool.poolType && pool.poolType !== "Not sure" ? " (" + pool.poolType + ")" : ""}.`);
+      if (pool.hasSpa === "Yes") lines.push("Has an attached spa.");
+      const eq = [];
+      if (pool.filter && pool.filter !== "Not sure") eq.push(`${pool.filter} filter`);
+      if (pool.heater && pool.heater !== "Not sure" && pool.heater !== "None") eq.push(`${pool.heater} heater`);
+      if (pool.equipmentProfile && pool.equipmentProfile.sanitizer) eq.push(`${pool.equipmentProfile.sanitizer} system`);
+      if (eq.length) lines.push("Equipment: " + eq.join(", ") + ".");
+      (buildArrivalBrief(pool).lines || []).forEach((l) => lines.push(l));
+      const hist = localChecks().filter((c) => c.poolId && c.poolId === pool.id).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 3);
+      hist.forEach((c) => {
+        const vals = (c.values || []).filter((v) => v.current).map((v) => `${v.label} ${v.current}`).join(", ");
+        if (vals) lines.push(`${new Date(c.createdAt).toLocaleDateString()}: ${vals}.`);
+      });
+      return lines.join("\n").slice(0, 3500);
+    }
+
+    async function askPool() {
+      const input = document.querySelector("[data-note-input]");
+      const askBtn = document.querySelector("[data-note-ask]");
+      const q = ((input && input.value) || "").trim();
+      if (!q) { if (input) input.focus(); return; }
+      const pool = selectedPool();
+      setPoolNote(pool?.id || "", q); // the question also rides the next scan as a note
+      renderHome();
+      // 1) instant on-device answer (gate code / access / pet / service / last visit) - offline + private
+      const local = localAnswer(q);
+      if (local) { showReply(local); return; }
+      // 2) otherwise ask the AI brain - grounded in this pool's history, never doses
+      showReply("Thinking...");
+      if (askBtn) askBtn.disabled = true;
+      try {
+        const res = await fetch(`${supabaseUrl}/functions/v1/ai-extract`, {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${supabaseAnonKey}`, "apikey": supabaseAnonKey, "Content-Type": "application/json" },
+          body: JSON.stringify({ ask: q, context: buildAskContext(pool) })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          showReply((res.status === 503 ? "The assistant isn't switched on yet." : res.status === 502 ? "The assistant is warming up - try again shortly." : "Couldn't reach the assistant.") + " Your note is saved for the next scan.");
+          return;
+        }
+        if (typeof data.aiCents === "number") logAiCents(data.aiCents, "ask");
+        showReply(data.answer || "Not sure on that one - a scan will tell you more.");
+      } catch {
+        showReply("No signal for the assistant right now. Your note is saved for the next scan.");
+      } finally {
+        if (askBtn) askBtn.disabled = false;
+      }
+    }
+
+    // Supervisor -> tech attention hook (route hamburger). Backend not built yet: reads a local flag
+    // (set clearwaySupervisorPingV1="1" to preview the glow); wire to the real supervisor queue later.
+    function supervisorNeedsAttention() {
+      try { return localStorage.getItem("clearwaySupervisorPingV1") === "1"; } catch { return false; }
     }
 
     // ===== Tech "this week's route" - day pills (Sun-Sat) + that day's pools =====
@@ -4983,7 +5211,10 @@
         }
       }
       const concern = draft.visitConcern ? `Visit concern: ${draft.visitConcern}. ` : "";
-      const brain = `${concern}${brainText()}`.trim();
+      const pendingNote = getPoolNote(pool.id || ""); // the chat-bubble brain dump rides along on this scan
+      const noteLead = pendingNote ? `Tech note: ${pendingNote}. ` : "";
+      const brain = `${noteLead}${concern}${brainText()}`.trim();
+      if (pendingNote) setPoolNote(pool.id || "", ""); // consumed - it's now in this scan's brain input
       const values = mergeSpokenReadings(readValues(), brain);
       const extras = extractExtras(brain);
       const mainIssue = inferIssueFromText(brain);
@@ -6055,6 +6286,23 @@
 
       if (event.target.closest("[data-selected-pool-text]")) {
         openPoolPicker();
+        return;
+      }
+
+      if (event.target.closest("[data-pool-note]")) {
+        openNoteSheet();
+        return;
+      }
+      if (event.target.closest("[data-note-ask]")) {
+        askPool();
+        return;
+      }
+      if (event.target.closest("[data-note-save]")) {
+        saveNoteFromSheet();
+        return;
+      }
+      if (event.target.closest("[data-note-close]") || (event.target.matches(".sheet-backdrop") && event.target.closest("[data-note-sheet]"))) {
+        closeNoteSheet();
         return;
       }
 
