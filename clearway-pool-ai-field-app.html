@@ -515,6 +515,14 @@
     .route-day { display: flex; justify-content: space-between; align-items: center; font-weight: 800; font-size: 13px; margin: 14px 2px 6px; color: var(--charcoal); }
     .route-day:first-child { margin-top: 2px; }
     .route-day.route-today { color: var(--seafoam-dark); }
+    .route-pills { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin: 12px 0 8px; }
+    .route-pill { border: 0; border-radius: 12px; padding: 12px 0; font-weight: 800; font-size: 14px; cursor: pointer; background: #eef3f2; color: #9fb3ad; position: relative; }
+    .route-pill:active { transform: scale(0.96); }
+    .route-pill.green { background: #cdeedd; color: var(--seafoam-dark); }
+    .route-pill.amber { background: #fcebcb; color: #9a6a16; }
+    .route-pill.red { background: #fbd9d2; color: #9a3b2f; }
+    .route-pill.sel { box-shadow: inset 0 0 0 2px var(--charcoal); }
+    .route-pill.today::after { content: ""; position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%); width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
     .pool-picker-item strong { font-size: 15px; }
     .pool-picker-item .muted { font-size: 12px; }
 
@@ -1810,12 +1818,12 @@
         <div class="app-top">
           <div class="brand"><span class="brand-dot" aria-hidden="true"></span><span class="brand-word"><span class="brand-clear">Clear</span><span class="brand-way">Way</span></span></div>
           <div class="top-icons">
+            <button class="icon-btn theme-pill" data-theme-toggle aria-label="Switch look">Party</button>
             <button class="icon-btn" data-route-open data-route-icon hidden aria-label="This week's route">
               <svg aria-hidden="true" viewBox="0 0 48 48" fill="none">
                 <path d="M10 16h28M10 24h28M10 32h28" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
               </svg>
             </button>
-            <button class="icon-btn theme-pill" data-theme-toggle aria-label="Switch look">Party</button>
             <button class="icon-btn" data-go="history" aria-label="History">
               <svg aria-hidden="true" viewBox="0 0 48 48" fill="none">
                 <circle cx="24" cy="24" r="17" stroke="currentColor" stroke-width="4"/>
@@ -2274,7 +2282,9 @@
         <div class="sheet" role="dialog" aria-modal="true">
           <h3>This week's route</h3>
           <p class="muted" data-route-progress style="margin-top: 6px;"></p>
+          <div class="route-pills" data-route-pills></div>
           <div class="pool-picker-list" data-route-list></div>
+          <button class="btn full" type="button" data-route-add hidden style="margin-top: 10px;"></button>
           <div class="sheet-actions">
             <button class="btn" data-route-close>Close</button>
           </div>
@@ -3902,15 +3912,17 @@
       if (overlay) overlay.hidden = true;
     }
 
-    // ===== Tech "this week's route" - pools grouped by service day =====
-    const ROUTE_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+    // ===== Tech "this week's route" - day pills (Sun-Sat) + that day's pools =====
+    const PILL_DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const PILL_LABELS = ["S", "M", "T", "W", "T", "F", "S"];
+    let selectedRouteDay = "";
+    let routeAddMode = false;
     function startOfWeek() {
       const d = new Date(); d.setHours(0, 0, 0, 0);
-      const day = (d.getDay() + 6) % 7; // Monday = 0 ... Sunday = 6
-      d.setDate(d.getDate() - day);
+      d.setDate(d.getDate() - d.getDay()); // Sunday start of week
       return d.getTime();
     }
-    function todayDayName() { return ROUTE_DAYS[(new Date().getDay() + 6) % 7]; }
+    function todayDayName() { return PILL_DAYS[new Date().getDay()]; }
     function lastScanFor(poolId) {
       const mine = localChecks().filter((c) => c.poolId && c.poolId === poolId)
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -3920,7 +3932,26 @@
       const wk = startOfWeek();
       return localChecks().some((c) => c.poolId === poolId && new Date(c.createdAt).getTime() >= wk);
     }
-    function openRoute() { ensureStarterPool(); renderRoute(); const o = document.querySelector("[data-route]"); if (o) o.hidden = false; }
+    function routePools() {
+      const real = localPools().filter((p) => p.profileComplete || (p.poolName && p.poolName !== "New Pool"));
+      return real.length ? real : localPools().filter((p) => p.poolName);
+    }
+    function poolsForDay(day) { return routePools().filter((p) => (p.serviceDay || "") === day); }
+    function dayStatus(day) {
+      const ps = poolsForDay(day);
+      if (!ps.length) return "none";
+      const done = ps.filter((p) => doneThisWeek(p.id)).length;
+      if (done === ps.length) return "green";
+      if (done > 0) return "amber";
+      return "red";
+    }
+    function openRoute() {
+      ensureStarterPool();
+      routeAddMode = false;
+      selectedRouteDay = todayDayName();
+      renderRoute();
+      const o = document.querySelector("[data-route]"); if (o) o.hidden = false;
+    }
     function closeRoute() { const o = document.querySelector("[data-route]"); if (o) o.hidden = true; }
     function routeItemHtml(pool) {
       const done = doneThisWeek(pool.id);
@@ -3931,29 +3962,34 @@
       return `<button type="button" class="pool-picker-item ${done ? "route-done" : ""}" data-route-pick="${pool.id}" data-route-done="${done ? 1 : 0}"><strong>${escapeHtml(pool.poolName || "Unnamed Pool")}</strong>${sub}</button>`;
     }
     function renderRoute() {
+      const pillWrap = document.querySelector("[data-route-pills]");
       const list = document.querySelector("[data-route-list]");
-      if (!list) return;
-      const real = localPools().filter((p) => p.profileComplete || (p.poolName && p.poolName !== "New Pool"));
-      const all = real.length ? real : localPools();
-      const doneCount = all.filter((p) => doneThisWeek(p.id)).length;
       const prog = document.querySelector("[data-route-progress]");
-      if (prog) prog.textContent = all.length ? `${doneCount} of ${all.length} done this week` : "No pools on your route yet.";
+      const addBtn = document.querySelector("[data-route-add]");
+      if (!pillWrap || !list) return;
+      if (!selectedRouteDay) selectedRouteDay = todayDayName();
+      const all = routePools();
+      const doneCount = all.filter((p) => doneThisWeek(p.id)).length;
+      if (prog) prog.textContent = all.length ? `${doneCount} of ${all.length} pools done this week` : "No pools yet - add one in Pool Details.";
       const today = todayDayName();
-      let html = "";
-      ROUTE_DAYS.forEach((day) => {
-        const dayPools = all.filter((p) => (p.serviceDay || "") === day);
-        if (!dayPools.length) return;
-        const dDone = dayPools.filter((p) => doneThisWeek(p.id)).length;
-        html += `<div class="route-day ${day === today ? "route-today" : ""}"><span>${day}${day === today ? " · today" : ""}</span><span class="muted">${dDone}/${dayPools.length}</span></div>`;
-        html += dayPools.map(routeItemHtml).join("");
-      });
-      const unscheduled = all.filter((p) => !ROUTE_DAYS.includes(p.serviceDay || ""));
-      if (unscheduled.length) {
-        const uDone = unscheduled.filter((p) => doneThisWeek(p.id)).length;
-        html += `<div class="route-day"><span>Any day</span><span class="muted">${uDone}/${unscheduled.length}</span></div>`;
-        html += unscheduled.map(routeItemHtml).join("");
+      pillWrap.innerHTML = PILL_DAYS.map((day, i) => {
+        const cls = `${dayStatus(day)} ${day === selectedRouteDay ? "sel" : ""} ${day === today ? "today" : ""}`;
+        return `<button type="button" class="route-pill ${cls}" data-route-day="${day}" aria-label="${day}">${PILL_LABELS[i]}</button>`;
+      }).join("");
+      if (routeAddMode) {
+        const candidates = routePools();
+        list.innerHTML = `<p class="muted" style="margin: 2px 0 8px;">Tap a pool to put it on ${selectedRouteDay}:</p>` +
+          (candidates.length
+            ? candidates.map((p) => `<button type="button" class="pool-picker-item" data-route-assign="${p.id}"><strong>${escapeHtml(p.poolName || "Unnamed Pool")}</strong><span class="route-tag todo">${(p.serviceDay || "") ? "now " + escapeHtml(p.serviceDay) : "unscheduled"}</span></button>`).join("")
+            : '<div class="empty">No pools yet.</div>');
+        if (addBtn) { addBtn.hidden = false; addBtn.textContent = "Cancel"; addBtn.dataset.routeAdd = "cancel"; }
+        return;
       }
-      list.innerHTML = html || '<div class="empty">No pools yet. Add one from Home, then set its service day in Pool Details.</div>';
+      const dayPools = poolsForDay(selectedRouteDay);
+      list.innerHTML = dayPools.length
+        ? dayPools.map(routeItemHtml).join("")
+        : `<div class="empty">No pools on ${selectedRouteDay} yet.</div>`;
+      if (addBtn) { addBtn.hidden = !isTechMode(); addBtn.textContent = `+ Add a pool to ${selectedRouteDay}`; addBtn.dataset.routeAdd = "add"; }
     }
 
     function renderPoolPicker() {
@@ -5966,6 +6002,32 @@
 
       if (event.target.closest("[data-route-open]")) {
         openRoute();
+        return;
+      }
+
+      const dayPill = event.target.closest("[data-route-day]");
+      if (dayPill) {
+        selectedRouteDay = dayPill.dataset.routeDay;
+        routeAddMode = false;
+        renderRoute();
+        return;
+      }
+
+      const routeAddBtn = event.target.closest("[data-route-add]");
+      if (routeAddBtn) {
+        routeAddMode = routeAddBtn.dataset.routeAdd !== "cancel";
+        renderRoute();
+        return;
+      }
+
+      const routeAssign = event.target.closest("[data-route-assign]");
+      if (routeAssign) {
+        const id = routeAssign.dataset.routeAssign;
+        const pools = localPools();
+        const idx = pools.findIndex((p) => p.id === id);
+        if (idx >= 0) { pools[idx].serviceDay = selectedRouteDay; pools[idx].updatedAt = new Date().toISOString(); saveLocalPools(pools); }
+        routeAddMode = false;
+        renderRoute();
         return;
       }
 
