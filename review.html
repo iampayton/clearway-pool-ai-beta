@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="robots" content="noindex, nofollow" />
-<title>ClearWay Review</title>
+<title>ClearWay Brain</title>
 <style>
   :root {
     --seafoam: #63d7c6; --seafoam-dark: #149d8d; --seafoam-soft: #e6fbf7;
@@ -13,7 +13,7 @@
   }
   * { box-sizing: border-box; }
   body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--charcoal); }
-  .wrap { max-width: 980px; margin: 0 auto; padding: 20px 16px 60px; }
+  .wrap { max-width: 1020px; margin: 0 auto; padding: 20px 16px 60px; }
   header { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
   .dot { width: 22px; height: 22px; border-radius: 50%; background: var(--seafoam); box-shadow: inset 0 0 0 4px var(--seafoam-dark); }
   h1 { font-size: 20px; margin: 0; }
@@ -28,32 +28,76 @@
   .hero .biglabel { font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase; opacity: 0.85; margin-top: 6px; }
   .hero .sectwo { margin-top: 14px; display: flex; gap: 22px; flex-wrap: wrap; font-size: 13px; }
   .hero .sectwo b { color: #fff; font-size: 18px; display: block; }
-  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 16px; }
   .card { background: #fff; border-radius: 16px; padding: 14px; box-shadow: inset 0 0 0 1px var(--line); }
   .card .n { font-size: 26px; font-weight: 800; }
   .card .l { font-size: 12px; color: var(--charcoal-soft); margin-top: 3px; }
   .panel { background: #fff; border-radius: 16px; padding: 16px; box-shadow: inset 0 0 0 1px var(--line); margin-bottom: 16px; }
-  .panel h2 { font-size: 14px; margin: 0 0 12px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--seafoam-dark); }
+  .panel h2 { font-size: 14px; margin: 0 0 4px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--seafoam-dark); }
+  .panel .hint { font-size: 12px; color: var(--charcoal-soft); margin: 0 0 12px; }
   .bar { display: flex; align-items: center; gap: 8px; margin: 5px 0; font-size: 13px; }
   .bar .track { flex: 1; height: 10px; background: var(--seafoam-soft); border-radius: 6px; overflow: hidden; }
   .bar .fill { height: 100%; background: var(--seafoam-dark); }
-  .bar .lab { width: 120px; } .bar .val { width: 34px; text-align: right; font-weight: 700; }
+  .bar .lab { width: 130px; } .bar .val { width: 34px; text-align: right; font-weight: 700; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
   th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
   th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em; color: var(--charcoal-soft); }
   .pill { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 8px; }
   .pill.ok { background: var(--seafoam-soft); color: var(--seafoam-dark); }
   .pill.fix { background: #fde7e3; color: var(--bad); }
+  .pill.warn { background: #fdf1dc; color: var(--warn); }
+  .pill.tag { background: #eef4f3; color: var(--charcoal-soft); margin: 2px 4px 0 0; }
   .muted { color: var(--charcoal-soft); }
-  .empty { text-align: center; color: var(--charcoal-soft); padding: 30px; }
+  .empty { text-align: center; color: var(--charcoal-soft); padding: 26px; }
   .toolbar { display: flex; gap: 8px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
   .err { color: var(--bad); font-size: 13px; margin-top: 8px; }
+  /* activity pulse */
+  .spark { display: flex; align-items: flex-end; gap: 5px; height: 60px; }
+  .spark .col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .spark .stk { width: 100%; max-width: 26px; background: var(--seafoam); border-radius: 4px 4px 0 0; min-height: 3px; }
+  .spark .stk.today { background: var(--seafoam-dark); }
+  .spark .d { font-size: 9px; color: var(--charcoal-soft); }
+  .spark .c { font-size: 10px; font-weight: 700; }
+  /* flags feed */
+  .feed { display: flex; flex-direction: column; gap: 0; }
+  .fi { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); align-items: flex-start; }
+  .fi:last-child { border-bottom: 0; }
+  .fi .ic { width: 26px; height: 26px; border-radius: 8px; flex: 0 0 auto; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; }
+  .fi .ic.flag { background: #fde7e3; color: var(--bad); }
+  .fi .ic.miss { background: #fdf1dc; color: var(--warn); }
+  .fi .ic.corr { background: var(--seafoam-soft); color: var(--seafoam-dark); }
+  .fi .body { flex: 1; font-size: 13px; }
+  .fi .body .top { display: flex; justify-content: space-between; gap: 8px; }
+  .fi .body .pool { font-weight: 700; }
+  .fi .body .when { color: var(--charcoal-soft); font-size: 12px; white-space: nowrap; }
+  .fi .body .what { margin-top: 2px; }
+  .fi .body .why { margin-top: 3px; color: var(--charcoal-soft); font-style: italic; }
+  /* pool grid */
+  .poolgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; }
+  .pcard { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 0; overflow: hidden; }
+  .pcard > summary { list-style: none; cursor: pointer; padding: 13px 14px; }
+  .pcard > summary::-webkit-details-marker { display: none; }
+  .pcard .pn { font-size: 15px; font-weight: 800; }
+  .pcard .pt { font-size: 12px; color: var(--charcoal-soft); margin-top: 1px; }
+  .pcard .prow { display: flex; gap: 10px; margin-top: 8px; flex-wrap: wrap; font-size: 12px; }
+  .pcard .prow .kv b { display: block; font-size: 15px; }
+  .pcard .tags { margin-top: 8px; }
+  .pcard .tend { margin-top: 8px; font-size: 12.5px; }
+  .pcard .tend .t { display: block; margin-top: 2px; }
+  .pcard .more { border-top: 1px solid var(--line); padding: 12px 14px; background: #fbfdfd; font-size: 12.5px; }
+  .pcard .more .ev { padding: 6px 0; border-bottom: 1px dashed var(--line); }
+  .pcard .more .ev:last-child { border-bottom: 0; }
+  .pcard .more .ev .d { color: var(--charcoal-soft); font-size: 11px; }
+  .dim { color: var(--charcoal-soft); }
+  .grn { color: var(--seafoam-dark); font-weight: 700; }
+  .amb { color: var(--warn); font-weight: 700; }
+  .red { color: var(--bad); font-weight: 700; }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header><span class="dot"></span><h1>ClearWay &mdash; Brain Review</h1></header>
-  <p class="sub">How often the brain reads right, what techs corrected, and what needs a look. Founder-only.</p>
+  <header><span class="dot"></span><h1>ClearWay &mdash; The Brain</h1></header>
+  <p class="sub">Living view of every pool the brain knows: what got flagged, what each pool is doing, and how often the brain reads right. Founder-only &middot; auto-updates.</p>
 
   <div id="gate" class="gate" hidden>
     <strong>Enter review passcode</strong>
@@ -76,6 +120,7 @@
   var SUPABASE_URL = "https://wwhbwhgnwmmlpvrjkjek.supabase.co";
   var ANON = "sb_publishable_CN_Z7T4c3zN66C7xKVuJ8g_rQe9FJNX";
   var TOKKEY = "cwReviewTokenV1";
+  var AUTO_MS = 10 * 60 * 1000; // auto-refresh every 10 min while open
 
   var $ = function (id) { return document.getElementById(id); };
   function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c];}); }
@@ -98,31 +143,60 @@
   var TESTLABEL = { free_chlorine:"Chlorine", ph:"pH", alkalinity:"Alkalinity", cya:"Stabilizer", calcium:"Hardness", salt:"Salt" };
 
   function parseNotes(row){ try { return JSON.parse(row.notes || "{}"); } catch (e) { return {}; } }
+  function poolKey(r, n){ return (n && n.poolId) || r.pool_name || "Unknown pool"; }
 
+  function relTime(dateStr){
+    if (!dateStr) return "";
+    var t = new Date(dateStr).getTime(); if (isNaN(t)) return "";
+    var diff = Date.now() - t, day = 86400000;
+    if (diff < 0) return "just now";
+    if (diff < 3600000) { var m = Math.round(diff/60000); return m<=1?"just now":m+" min ago"; }
+    if (diff < day) { var h = Math.round(diff/3600000); return h+"h ago"; }
+    var d = Math.round(diff/day);
+    if (d === 1) return "yesterday";
+    if (d < 7) return d+" days ago";
+    if (d < 14) return "last week";
+    return Math.round(d/7)+" weeks ago";
+  }
+  function shortDate(dateStr){ return dateStr ? new Date(dateStr).toLocaleDateString(undefined,{month:"short",day:"numeric"}) : ""; }
+  function num(v){ if (v===null||v===undefined||v==="") return null; var f=parseFloat(String(v).replace(/[^0-9.\-]/g,"")); return isNaN(f)?null:f; }
+  function median(arr){ if(!arr.length) return null; var a=arr.slice().sort(function(x,y){return x-y;}); var m=Math.floor(a.length/2); return a.length%2?a[m]:(a[m-1]+a[m])/2; }
+
+  // pull whatever numeric readings a scan has, from any source
+  function readingsFor(r, n){
+    var out = {};
+    var srcs = [];
+    if (n.aiReadings && n.aiReadings.readings) srcs.push(n.aiReadings.readings);
+    if (n.aiNoteReadings) srcs.push(n.aiNoteReadings);
+    if (r.confirmed_values){ try { srcs.push(typeof r.confirmed_values==="string"?JSON.parse(r.confirmed_values):r.confirmed_values); } catch(e){} }
+    if (n.report && n.report.values) srcs.push(n.report.values);
+    var alias = { chlorine:"free_chlorine", fc:"free_chlorine", free_chlorine:"free_chlorine", ph:"ph", alk:"alkalinity",
+      alkalinity:"alkalinity", ta:"alkalinity", cya:"cya", stabilizer:"cya", calcium:"calcium", ch:"calcium", hardness:"calcium", salt:"salt" };
+    srcs.forEach(function(s){ if(!s||typeof s!=="object") return; Object.keys(s).forEach(function(k){
+      var key = alias[k.toLowerCase()]; if(!key) return; var v = num(s[k]); if(v!==null && out[key]===undefined) out[key]=v;
+    }); });
+    return out;
+  }
+
+  // ---- accuracy + headline numbers ----
   function compute(rows){
-    var s = { scans: rows.length, last7: 0, pools: {}, issues: {},
-      readTotal: 0, readWrong: 0, stepTotal: 0, stepFlagged: 0, cents: 0, flaggedSteps: 0 };
+    var s = { scans: rows.length, last7: 0, issues: {}, readTotal: 0, readWrong: 0,
+      stepTotal: 0, stepFlagged: 0, cents: 0, flaggedSteps: 0, missing: 0, corrections: 0 };
     var weekAgo = Date.now() - 7*86400000;
     var nowYM = new Date().getFullYear() + "-" + new Date().getMonth();
     rows.forEach(function(r){
       var n = parseNotes(r);
       if (r.created_at && new Date(r.created_at).getTime() >= weekAgo) s.last7++;
-      if (n.poolId) s.pools[n.poolId] = 1;
       if (r.main_issue && r.main_issue !== "Routine") s.issues[r.main_issue] = (s.issues[r.main_issue]||0)+1;
-      // reading accuracy
       var ai = n.aiReadings && n.aiReadings.readings ? n.aiReadings.readings : null;
-      if (ai) {
-        Object.keys(ai).forEach(function(k){ var v = ai[k]; if (v!==null && v!==undefined && v!=="") s.readTotal++; });
-      }
-      var corr = n.aiCorrections || [];
-      s.readWrong += corr.length;
-      // step accuracy
+      if (ai) Object.keys(ai).forEach(function(k){ var v = ai[k]; if (v!==null && v!==undefined && v!=="") s.readTotal++; });
+      var corr = n.aiCorrections || []; s.readWrong += corr.length; s.corrections += corr.length;
       var shown = (n.closeSnapshot && n.closeSnapshot.shownStepIds) ? n.closeSnapshot.shownStepIds.length
         : (n.engine && n.engine.steps ? n.engine.steps.length : 0);
       var flagged = (n.closeSnapshot && typeof n.closeSnapshot.flaggedCount === "number") ? n.closeSnapshot.flaggedCount
         : Object.keys(n.stepFlags||{}).filter(function(id){ return n.stepFlags[id] && n.stepFlags[id].flagged; }).length;
       s.stepTotal += shown; s.stepFlagged += flagged; s.flaggedSteps += flagged;
-      // cost this month
+      s.missing += (n.missingSteps||[]).length;
       var d = r.created_at ? new Date(r.created_at) : null;
       if (d && (d.getFullYear()+"-"+d.getMonth())===nowYM) s.cents += (n.aiCents||0);
     });
@@ -132,13 +206,159 @@
     s.stepAcc = s.stepTotal ? Math.round(s.stepGood/s.stepTotal*1000)/10 : null;
     var oT = s.readTotal + s.stepTotal, oC = s.readCorrect + s.stepGood;
     s.overall = oT ? Math.round(oC/oT*1000)/10 : null;
-    s.poolCount = Object.keys(s.pools).length;
     return s;
+  }
+
+  // ---- 14-day activity pulse ----
+  function activity(rows){
+    var days = [];
+    for (var i=13; i>=0; i--){ var d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate()-i); days.push({ key:d.getTime(), label:d.toLocaleDateString(undefined,{weekday:"short"}).slice(0,1), date:d, n:0 }); }
+    var start = days[0].key;
+    rows.forEach(function(r){ if(!r.created_at) return; var t=new Date(r.created_at); t.setHours(0,0,0,0); var k=t.getTime(); if(k>=start){ var hit=days.find(function(x){return x.key===k;}); if(hit) hit.n++; } });
+    var max = Math.max(1, Math.max.apply(null, days.map(function(d){return d.n;})));
+    var todayK = days[days.length-1].key;
+    var html = days.map(function(d){
+      var h = Math.round(d.n/max*52);
+      return '<div class="col"><span class="c">'+(d.n||"")+'</span><span class="stk'+(d.key===todayK?" today":"")+'" style="height:'+Math.max(3,h)+'px"></span><span class="d">'+esc(d.label)+'</span></div>';
+    }).join("");
+    return '<div class="spark">'+html+'</div>';
+  }
+
+  // ---- flags + corrections feed ----
+  function buildFeed(rows){
+    var events = [];
+    rows.forEach(function(r){
+      var n = parseNotes(r);
+      var pool = r.pool_name || (n.poolId) || "Unknown pool";
+      var when = r.created_at || n.closedAt || null;
+      var stepText = {};
+      if (n.engine && Array.isArray(n.engine.steps)) n.engine.steps.forEach(function(st){ if(st && st.id) stepText[st.id] = st.text; });
+      var sf = n.stepFlags || {};
+      Object.keys(sf).forEach(function(id){ if (sf[id] && sf[id].flagged){
+        events.push({ type:"flag", pool:pool, when: sf[id].at || when, what: stepText[id] || "a recommended step", why: sf[id].reason || "" });
+      }});
+      (n.missingSteps||[]).forEach(function(ms){
+        var txt = typeof ms === "string" ? ms : (ms && (ms.text || ms.step)) || "(missing step)";
+        events.push({ type:"miss", pool:pool, when: (ms&&ms.at)||when, what: txt, why:"" });
+      });
+      (n.aiCorrections||[]).forEach(function(c){
+        events.push({ type:"corr", pool:pool, when: when, what:(TESTLABEL[c.key]||c.key||"a reading"), why:"AI read "+(c.ai==null?"?":c.ai)+" → tech set "+(c.corrected==null?"?":c.corrected) });
+      });
+    });
+    events.sort(function(a,b){ return new Date(b.when||0) - new Date(a.when||0); });
+    return events;
+  }
+  function feedHtml(events){
+    if (!events.length) return '<div class="empty">Nothing flagged yet. When a tech red-taps a step, adds a missing step, or corrects an AI reading, it shows up here.</div>';
+    var icon = { flag:["flag","⚑"], miss:["miss","+"], corr:["corr","✎"] };
+    var verb = { flag:"red-tapped", miss:"missing step", corr:"reading fix" };
+    return '<div class="feed">' + events.slice(0,60).map(function(e){
+      var ic = icon[e.type] || ["corr","•"];
+      return '<div class="fi"><div class="ic '+ic[0]+'">'+ic[1]+'</div><div class="body">'
+        + '<div class="top"><span class="pool">'+esc(e.pool)+' <span class="muted" style="font-weight:400">&middot; '+verb[e.type]+'</span></span><span class="when">'+esc(relTime(e.when)||shortDate(e.when))+'</span></div>'
+        + '<div class="what">'+esc(e.what)+'</div>'
+        + (e.why ? '<div class="why">'+esc(e.why)+'</div>' : '')
+        + '</div></div>';
+    }).join("") + '</div>';
+  }
+
+  // ---- per-pool brain ----
+  function buildPools(rows){
+    var map = {};
+    rows.forEach(function(r){
+      var n = parseNotes(r);
+      var key = poolKey(r, n);
+      if (!map[key]) map[key] = { key:key, name:r.pool_name||key, type:r.pool_type||"", checks:[], flags:0, corrections:0, missing:0 };
+      var p = map[key];
+      if (r.pool_name) p.name = r.pool_name;
+      if (r.pool_type) p.type = r.pool_type;
+      p.checks.push({ r:r, n:n, t: r.created_at ? new Date(r.created_at).getTime() : 0 });
+      p.flags += Object.keys(n.stepFlags||{}).filter(function(id){return n.stepFlags[id]&&n.stepFlags[id].flagged;}).length;
+      p.corrections += (n.aiCorrections||[]).length;
+      p.missing += (n.missingSteps||[]).length;
+    });
+    return Object.keys(map).map(function(k){
+      var p = map[k];
+      p.checks.sort(function(a,b){ return b.t - a.t; });
+      var latest = p.checks[0];
+      var ln = latest.n, lr = latest.r;
+      p.lastAt = lr.created_at;
+      p.count = p.checks.length;
+      // equipment / facts from latest scan
+      p.address = ln.address || "";
+      p.filter = ln.filter || (ln.equipmentProfile && ln.equipmentProfile.filter) || "";
+      p.heater = ln.heater || (ln.equipmentProfile && ln.equipmentProfile.heater) || "";
+      p.hasSpa = !!ln.hasSpa;
+      p.lastNote = ln.firstImpression || ln.notes || ln.whatChanged || "";
+      p.lastAdded = ln.whatAdded || "";
+      p.lastStep = lr.next_step || "";
+      p.lastIssue = (lr.main_issue && lr.main_issue!=="Routine") ? lr.main_issue : "";
+      // latest readings + water
+      p.lastReads = readingsFor(lr, ln);
+      p.water = ln.poolVision || null;
+      // tendencies across history
+      var phs = [], fcs = [];
+      p.checks.forEach(function(c){ var rd = readingsFor(c.r, c.n); if(rd.ph!=null) phs.push(rd.ph); if(rd.free_chlorine!=null) fcs.push(rd.free_chlorine); });
+      p.tend = [];
+      var mph = median(phs);
+      if (phs.length>=3 && mph!=null){ if (mph>7.8) p.tend.push({k:"amb",t:"Runs high pH (usually ~"+mph+")"}); else if (mph<7.2) p.tend.push({k:"amb",t:"Runs low pH (usually ~"+mph+")"}); }
+      var mfc = median(fcs);
+      if (fcs.length>=3 && mfc!=null && mfc<1) p.tend.push({k:"red",t:"Often low chlorine (usually ~"+mfc+")"});
+      p.readCount = phs.length;
+      return p;
+    }).sort(function(a,b){ return new Date(b.lastAt||0) - new Date(a.lastAt||0); });
+  }
+  function readChips(rd){
+    var keys = Object.keys(rd); if(!keys.length) return '';
+    return keys.map(function(k){ return '<span class="pill tag">'+(TESTLABEL[k]||k)+' '+rd[k]+'</span>'; }).join("");
+  }
+  function waterChip(w){
+    if (!w) return '';
+    var bits = [];
+    if (w.clarity) bits.push(w.clarity);
+    if (w.tint && w.tint!=="normal" && w.tint!=="none") bits.push(w.tint+" tint");
+    if (w.algae && w.algae!=="none") bits.push("algae: "+w.algae);
+    if (!bits.length) return '';
+    var cls = (w.algae==="widespread"||w.tint==="green") ? "fix" : (w.algae==="spots"||(w.tint&&w.tint!=="normal"&&w.tint!=="none")) ? "warn" : "ok";
+    return '<span class="pill '+cls+'">'+esc(bits.join(" · "))+'</span>';
+  }
+  function poolCardHtml(p){
+    var flagBadge = p.flags ? '<span class="pill fix">'+p.flags+' flagged</span>' : '';
+    var corrBadge = p.corrections ? '<span class="pill warn">'+p.corrections+' fixes</span>' : '';
+    var spaBadge = p.hasSpa ? '<span class="pill tag">spa</span>' : '';
+    var equip = [p.type, p.filter?("filter: "+p.filter):"", p.heater&&p.heater!=="none"?("heater: "+p.heater):""].filter(Boolean).join(" · ");
+    var reads = readChips(p.lastReads);
+    var water = waterChip(p.water);
+    var tend = p.tend.map(function(t){ return '<span class="t '+t.k+'">'+esc(t.t)+'</span>'; }).join("");
+    // expanded recent timeline
+    var ev = p.checks.slice(0,6).map(function(c){
+      var note = c.n.firstImpression || c.n.notes || c.r.next_step || c.n.whatAdded || "";
+      var added = c.n.whatAdded ? (" — added "+c.n.whatAdded) : "";
+      var fl = Object.keys(c.n.stepFlags||{}).filter(function(id){return c.n.stepFlags[id]&&c.n.stepFlags[id].flagged;}).length;
+      return '<div class="ev"><span class="d">'+esc(shortDate(c.r.created_at))+'</span> '
+        + (note ? esc(String(note).slice(0,140)) : '<span class="dim">no note</span>') + esc(added)
+        + (fl ? ' <span class="pill fix">'+fl+' flagged</span>' : '') + '</div>';
+    }).join("");
+    return '<details class="pcard"><summary>'
+      + '<div class="pn">'+esc(p.name)+'</div>'
+      + '<div class="pt">'+(equip?esc(equip):'<span class="dim">no equipment on file</span>')+(p.address?' · '+esc(p.address):'')+'</div>'
+      + '<div class="prow"><span class="kv"><b>'+esc(relTime(p.lastAt)||shortDate(p.lastAt)||"—")+'</b>last scan</span>'
+        + '<span class="kv"><b>'+p.count+'</b>scans</span>'
+        + (p.readCount?'<span class="kv"><b>'+p.readCount+'</b>with reads</span>':'')+'</div>'
+      + (reads||water||p.lastIssue ? '<div class="tags">'+water+reads+(p.lastIssue?'<span class="pill warn">'+esc(p.lastIssue)+'</span>':'')+'</div>' : '')
+      + (flagBadge||corrBadge||spaBadge ? '<div class="tags">'+flagBadge+corrBadge+spaBadge+'</div>' : '')
+      + (tend ? '<div class="tend">'+tend+'</div>' : '')
+      + '</summary>'
+      + '<div class="more">'
+        + (p.lastNote ? '<div style="margin-bottom:8px"><span class="dim">Last note:</span> '+esc(String(p.lastNote).slice(0,200))+'</div>' : '')
+        + '<div class="dim" style="margin-bottom:4px">Recent scans</div>'
+        + (ev || '<span class="dim">No history.</span>')
+      + '</div></details>';
   }
 
   function bars(map){
     var keys = Object.keys(map).sort(function(a,b){ return map[b]-map[a]; }).slice(0,8);
-    if (!keys.length) return '<p class="muted">None yet.</p>';
+    if (!keys.length) return '<p class="muted">None logged yet.</p>';
     var max = Math.max.apply(null, keys.map(function(k){return map[k];}));
     return keys.map(function(k){
       var pct = Math.round(map[k]/max*100);
@@ -146,46 +366,42 @@
     }).join("");
   }
 
-  function recentTable(rows){
-    if (!rows.length) return '<p class="muted">No scans yet.</p>';
-    var head = '<tr><th>When</th><th>Pool</th><th>AI read</th><th>Tech corrected</th><th>Flagged</th></tr>';
-    var body = rows.slice(0,40).map(function(r){
-      var n = parseNotes(r);
-      var ai = n.aiReadings && n.aiReadings.readings ? n.aiReadings.readings : {};
-      var readStr = Object.keys(ai).filter(function(k){return ai[k]!==null&&ai[k]!==undefined&&ai[k]!=="";})
-        .map(function(k){ return (TESTLABEL[k]||k)+" "+ai[k]; }).join(", ") || '<span class="muted">no strip read</span>';
-      var corr = (n.aiCorrections||[]).map(function(c){ return '<span class="pill fix">'+(TESTLABEL[c.key]||c.key)+": "+esc(c.ai)+"&rarr;"+esc(c.corrected||"?")+'</span>'; }).join(" ")
-        || '<span class="pill ok">all kept</span>';
-      var flagged = (n.closeSnapshot && typeof n.closeSnapshot.flaggedCount==="number") ? n.closeSnapshot.flaggedCount
-        : Object.keys(n.stepFlags||{}).filter(function(id){return n.stepFlags[id]&&n.stepFlags[id].flagged;}).length;
-      var when = r.created_at ? new Date(r.created_at).toLocaleDateString(undefined,{month:"short",day:"numeric"}) : "";
-      return '<tr><td>'+esc(when)+'</td><td>'+esc(r.pool_name||"-")+'</td><td>'+readStr+'</td><td>'+corr+'</td><td>'+(flagged?flagged:"-")+'</td></tr>';
-    }).join("");
-    return '<table>'+head+body+'</table>';
-  }
-
   function render(rows){
     var s = compute(rows);
-    if (!s.scans) { $("content").innerHTML = '<div class="panel empty">No scans yet. As Trin scans this week, accuracy shows up here.</div>'; return; }
+    if (!s.scans) { $("content").innerHTML = '<div class="panel empty">No scans yet. As Trin scans this week, the brain fills in here.</div>'; return; }
+    var pools = buildPools(rows);
+    var feed = buildFeed(rows);
     var acc = s.overall===null ? "&mdash;" : s.overall + "%";
     var html = "";
+
     html += '<div class="hero"><div class="big">'+acc+'</div><div class="biglabel">Brain right rate (reads + steps kept)</div>'
       + '<div class="sectwo">'
       + '<div><b>'+(s.readAcc===null?"&mdash;":s.readAcc+"%")+'</b>strip reading accuracy ('+s.readCorrect+'/'+s.readTotal+')</div>'
       + '<div><b>'+(s.stepAcc===null?"&mdash;":s.stepAcc+"%")+'</b>steps kept (not red-tapped)</div>'
       + '</div></div>';
+
     html += '<div class="cards">'
       + '<div class="card"><div class="n">'+s.scans+'</div><div class="l">Total scans</div></div>'
       + '<div class="card"><div class="n">'+s.last7+'</div><div class="l">Last 7 days</div></div>'
-      + '<div class="card"><div class="n">'+s.poolCount+'</div><div class="l">Pools</div></div>'
+      + '<div class="card"><div class="n">'+pools.length+'</div><div class="l">Pools</div></div>'
       + '<div class="card"><div class="n">'+s.flaggedSteps+'</div><div class="l">Steps red-tapped</div></div>'
+      + '<div class="card"><div class="n">'+(s.missing+s.corrections)+'</div><div class="l">Missing + fixes</div></div>'
       + '<div class="card"><div class="n">$'+(s.cents/100).toFixed(2)+'</div><div class="l">AI spend this month</div></div>'
       + '</div>';
+
+    html += '<div class="panel"><h2>Activity</h2><p class="hint">Scans per day, last 14 days.</p>'+activity(rows)+'</div>';
+
+    html += '<div class="panel"><h2>Flags &amp; corrections</h2><p class="hint">Every time a tech red-tapped a step (with their reason), flagged a missing step, or corrected an AI reading.</p>'+feedHtml(feed)+'</div>';
+
+    html += '<div class="panel"><h2>Pools &mdash; the brain</h2><p class="hint">What the brain knows about each pool. Tap a pool to see its recent history.</p><div class="poolgrid">'
+      + pools.map(poolCardHtml).join("") + '</div></div>';
+
     html += '<div class="panel"><h2>Most common issues</h2>'+bars(s.issues)+'</div>';
-    html += '<div class="panel"><h2>Recent scans &mdash; AI read vs tech correction</h2>'+recentTable(rows)+'</div>';
+
     $("content").innerHTML = html;
   }
 
+  var autoTimer = null;
   async function load(){
     var token = localStorage.getItem(TOKKEY);
     if (!token) { showGate(); return; }
@@ -194,12 +410,20 @@
     try {
       var rows = await fetchRows(token);
       render(rows);
-      $("status").textContent = "Updated " + new Date().toLocaleTimeString();
+      $("status").textContent = "Updated " + new Date().toLocaleTimeString() + " · auto-refreshes";
     } catch (e) {
       if (e.code === 401) { localStorage.removeItem(TOKKEY); showGate("That passcode didn't work. Try again."); }
       else { $("status").textContent = ""; $("content").innerHTML = '<div class="panel err">Could not load ('+esc(e.message)+'). Tap Reload.</div>'; }
     }
   }
+
+  function startAuto(){
+    if (autoTimer) clearInterval(autoTimer);
+    autoTimer = setInterval(function(){ if (!$("dash").hidden && document.visibilityState==="visible") load(); }, AUTO_MS);
+  }
+  document.addEventListener("visibilitychange", function(){
+    if (document.visibilityState==="visible" && !$("dash").hidden) load();
+  });
 
   $("go").addEventListener("click", function(){
     var v = $("tok").value.trim();
@@ -210,6 +434,7 @@
   $("reload").addEventListener("click", load);
   $("tok").addEventListener("keydown", function(e){ if (e.key === "Enter") $("go").click(); });
 
+  startAuto();
   load();
 </script>
 </body>
