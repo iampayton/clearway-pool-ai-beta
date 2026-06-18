@@ -581,9 +581,10 @@
       min-height: 500px;
       border-radius: 34px;
       display: grid;
-      place-content: center;
-      place-items: center;
-      gap: 16px;
+      grid-template-rows: 1fr auto auto; /* icon fills + centers up top; pool name then note pinned at the bottom */
+      justify-items: center;
+      align-items: center;
+      gap: 8px;
       text-align: center;
       padding: 34px 26px;
       font-size: 38px;
@@ -613,18 +614,16 @@
     /* Scan button carries the pool name (tap to change) up top and this pool's note at the bottom. */
     .start-cta .cta-pool {
       display: block;
-      font-size: 20px;
+      font-size: 18px;
       font-weight: 800;
-      line-height: 1.15;
+      line-height: 1.2;
       color: var(--charcoal);
-      background: rgba(255, 255, 255, 0.5);
-      box-shadow: inset 0 0 0 1px rgba(23, 36, 42, 0.12);
-      padding: 9px 18px;
-      border-radius: 999px;
+      padding: 6px 10px;
+      border-radius: 14px;
       max-width: 92%;
       cursor: pointer;
     }
-    .start-cta .cta-pool:active { transform: scale(0.97); }
+    .start-cta .cta-pool:active { transform: scale(0.98); background: var(--seafoam-soft); }
     .start-cta .cta-note {
       display: block;
       max-width: 300px;
@@ -1480,9 +1479,7 @@
     body.party .btn.primary.start-cta span { color: #9fd9e8; }
     body.party .btn.primary.start-cta .cta-pool {
       color: #7dff36;
-      background: rgba(125, 255, 54, 0.08);
-      box-shadow: inset 0 0 0 1px rgba(125, 255, 54, 0.4);
-      text-shadow: 0 0 8px rgba(125, 255, 54, 0.4);
+      text-shadow: 0 0 10px rgba(125, 255, 54, 0.45);
     }
     body.party .btn.primary.start-cta .cta-note {
       color: #9fd9e8;
@@ -1874,11 +1871,11 @@
         </div>
         <div class="content home-content">
           <button class="btn primary full start-cta" data-start-check>
-            <span class="cta-pool" data-selected-pool-text title="Tap to change pool">New Pool - Tap to change</span>
             <svg aria-hidden="true" viewBox="0 0 64 64" fill="none">
               <path d="M15 24h8l4-6h10l4 6h8a6 6 0 0 1 6 6v20a6 6 0 0 1-6 6H15a6 6 0 0 1-6-6V30a6 6 0 0 1 6-6Z" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>
               <circle cx="32" cy="40" r="10" stroke="currentColor" stroke-width="4"/>
             </svg>
+            <span class="cta-pool" data-selected-pool-text title="Tap to change pool">New Pool - Tap to change</span>
             <span class="cta-note" data-cta-note hidden></span>
           </button>
           <button class="access-banner" data-access-banner hidden type="button"></button>
