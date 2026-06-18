@@ -295,23 +295,24 @@
     }
 
     .photo-cta {
-      min-height: 460px;
+      min-height: 500px;
       border: 0;
       border-radius: 34px;
       color: var(--charcoal);
       background: var(--seafoam);
       box-shadow: 0 18px 38px rgba(26, 169, 152, 0.28);
       display: grid;
-      place-content: center;
-      place-items: center;
-      gap: 16px;
+      grid-template-rows: 1fr auto auto; /* icon fills + centers up top; the word drops to the bottom */
+      justify-items: center;
+      align-items: center;
+      gap: 8px;
       text-align: center;
       cursor: pointer;
     }
 
     .photo-main-icon {
-      width: 152px;
-      height: 152px;
+      width: 208px;
+      height: 208px;
       display: block;
       justify-self: center;
     }
