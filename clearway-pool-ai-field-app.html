@@ -578,7 +578,7 @@
     .btn.full { width: 100%; }
 
     .start-cta {
-      min-height: 460px;
+      min-height: 500px;
       border-radius: 34px;
       display: grid;
       place-content: center;
@@ -609,6 +609,31 @@
     .start-cta span,
     .photo-cta > span[data-photo-step-copy],
     .brain-cta > span { display: none; }
+
+    /* Scan button carries the pool name (tap to change) up top and this pool's note at the bottom. */
+    .start-cta .cta-pool {
+      display: block;
+      font-size: 20px;
+      font-weight: 800;
+      line-height: 1.15;
+      color: var(--charcoal);
+      background: rgba(255, 255, 255, 0.5);
+      box-shadow: inset 0 0 0 1px rgba(23, 36, 42, 0.12);
+      padding: 9px 18px;
+      border-radius: 999px;
+      max-width: 92%;
+      cursor: pointer;
+    }
+    .start-cta .cta-pool:active { transform: scale(0.97); }
+    .start-cta .cta-note {
+      display: block;
+      max-width: 300px;
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.35;
+      color: rgba(23, 36, 42, 0.66);
+    }
+    .start-cta .cta-note[hidden] { display: none; }
 
     .photo-symbols {
       display: flex;
@@ -1453,6 +1478,16 @@
       text-shadow: 0 0 18px rgba(46, 230, 255, 0.6), 0 0 4px rgba(46, 230, 255, 0.4);
     }
     body.party .btn.primary.start-cta span { color: #9fd9e8; }
+    body.party .btn.primary.start-cta .cta-pool {
+      color: #7dff36;
+      background: rgba(125, 255, 54, 0.08);
+      box-shadow: inset 0 0 0 1px rgba(125, 255, 54, 0.4);
+      text-shadow: 0 0 8px rgba(125, 255, 54, 0.4);
+    }
+    body.party .btn.primary.start-cta .cta-note {
+      color: #9fd9e8;
+      text-shadow: 0 0 6px rgba(80, 200, 255, 0.35);
+    }
 
     /* Step CTAs: each step gets its own pool-light hue. Light, not patterns. */
     body.party .photo-cta {
@@ -1816,9 +1851,8 @@
     <section class="phone" aria-label="ClearWay Pool AI app">
       <div class="screen active" data-screen="home">
         <div class="app-top">
-          <div class="brand"><span class="brand-dot" aria-hidden="true"></span><span class="brand-word"><span class="brand-clear">Clear</span><span class="brand-way">Way</span></span></div>
+          <div class="brand"><span class="brand-dot" data-theme-toggle aria-hidden="true"></span><span class="brand-word"><span class="brand-clear">Clear</span><span class="brand-way">Way</span></span></div>
           <div class="top-icons">
-            <button class="icon-btn theme-pill" data-theme-toggle aria-label="Switch look">Party</button>
             <button class="icon-btn" data-route-open data-route-icon hidden aria-label="This week's route">
               <svg aria-hidden="true" viewBox="0 0 48 48" fill="none">
                 <path d="M10 16h28M10 24h28M10 32h28" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
@@ -1840,12 +1874,13 @@
         </div>
         <div class="content home-content">
           <button class="btn primary full start-cta" data-start-check>
+            <span class="cta-pool" data-selected-pool-text title="Tap to change pool">New Pool - Tap to change</span>
             <svg aria-hidden="true" viewBox="0 0 64 64" fill="none">
               <path d="M15 24h8l4-6h10l4 6h8a6 6 0 0 1 6 6v20a6 6 0 0 1-6 6H15a6 6 0 0 1-6-6V30a6 6 0 0 1 6-6Z" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>
               <circle cx="32" cy="40" r="10" stroke="currentColor" stroke-width="4"/>
             </svg>
+            <span class="cta-note" data-cta-note hidden></span>
           </button>
-          <p class="home-pool-line" data-selected-pool-text title="Tap to change pool">New Pool · Tap to change</p>
           <button class="access-banner" data-access-banner hidden type="button"></button>
           <button class="sync-banner" data-sync-status hidden type="button"></button>
           <button class="retest-banner" data-retest-banner hidden>Retest reminder</button>
@@ -2356,8 +2391,7 @@
 
     function applyTheme(theme) {
       document.body.classList.toggle("party", theme === "party");
-      const pill = document.querySelector("[data-theme-toggle]");
-      if (pill) pill.textContent = theme === "party" ? "Day" : "Party";
+      // The party toggle is the brand water-drop now (hidden easter egg) - no Party/Day label to update.
       const themeMeta = document.querySelector('meta[name="theme-color"]');
       if (themeMeta) themeMeta.setAttribute("content", theme === "party" ? "#04121d" : "#63d7c6");
       if (theme === "party") {
@@ -3801,11 +3835,19 @@
 
     function renderArrivalBrief(pool) {
       const card = document.querySelector("[data-arrival-brief]");
-      if (!card) return;
+      const note = document.querySelector("[data-cta-note]");
       const brief = buildArrivalBrief(pool);
-      if (!brief.lines.length) { card.hidden = true; card.innerHTML = ""; return; }
-      card.innerHTML = `<p class="arrival-title">This pool</p>` +
-        brief.lines.map((l) => `<p class="arrival-line">${escapeHtml(l)}</p>`).join("");
+      const lines = brief.lines || [];
+      // Primary "this pool" note rides at the bottom of the scan button (the pool name is already on top).
+      if (note) {
+        if (lines.length) { note.textContent = lines[0]; note.hidden = false; }
+        else { note.textContent = ""; note.hidden = true; }
+      }
+      // The rest (tendencies / due / equipment / open items) stay in the card below.
+      if (!card) return;
+      const rest = lines.slice(1);
+      if (!rest.length) { card.hidden = true; card.innerHTML = ""; return; }
+      card.innerHTML = rest.map((l) => `<p class="arrival-line">${escapeHtml(l)}</p>`).join("");
       card.hidden = false;
     }
 
