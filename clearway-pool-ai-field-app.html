@@ -2892,6 +2892,20 @@
         }
       });
 
+      // Per-pool sanity check: a reading far from THIS pool's usual is probably a misread - catch it
+      // BEFORE it drives a dose. Flags only ("double-check"); never changes the dose. Needs >=3 prior
+      // reads so the baseline is real. Deltas tuned so normal week-to-week swings don't false-trigger.
+      const ANOMALY_DELTA = { free_chlorine: 5, ph: 0.6, alkalinity: 50, cya: 40, calcium: 120, salt: 800 };
+      Object.entries(memory || {}).forEach(([key, m]) => {
+        const val = readingByKey[key];
+        if (val === null || val === undefined || !m || m.count < 3 || m.usual == null) return;
+        const delta = ANOMALY_DELTA[key];
+        if (delta && Math.abs(val - m.usual) >= delta) {
+          rulesFired.push(`anomaly-${key}`);
+          cautions.push(`${CHEM_TARGETS[key].name} reads ${val}, but ${pool?.poolName || "this pool"} usually runs about ${m.usual}. Double-check the reading before dosing.`);
+        }
+      });
+
       // LSI water balance (pro-grade): needs pH + alkalinity + calcium
       let lsi = null;
       if (ph !== null && ta !== null && ch !== null && ph >= 6 && ph <= 9) {
