@@ -263,6 +263,45 @@
     }).join("") + '</div>';
   }
 
+  // ---- what the AI is learning (per-reading accuracy + bias direction) ----
+  function lnum(v){ var x = parseFloat(v); return isFinite(x) ? x : null; }
+  function buildLearning(rows){
+    var by = {};
+    function slot(k){ if(!by[k]) by[k]={key:k, reads:0, wrong:0, pos:0, neg:0, absSum:0, diffN:0}; return by[k]; }
+    rows.forEach(function(r){
+      var n = parseNotes(r);
+      var ai = n.aiReadings && n.aiReadings.readings ? n.aiReadings.readings : null;
+      if (ai) Object.keys(ai).forEach(function(k){ var v=ai[k]; if(v!==null&&v!==undefined&&v!=="") slot(k).reads++; });
+      (n.aiCorrections||[]).forEach(function(c){
+        var s = slot(c.key); s.wrong++;
+        var a = lnum(c.ai), t = lnum(c.corrected);
+        if (a!==null && t!==null){ var d = t-a; s.diffN++; s.absSum += Math.abs(d); if(d>0)s.pos++; else if(d<0)s.neg++; }
+      });
+    });
+    return Object.keys(by).map(function(k){ return by[k]; }).filter(function(x){ return x.reads||x.wrong; })
+      .sort(function(a,b){ return b.wrong - a.wrong; });
+  }
+  function learningHtml(items){
+    if (!items.length) return '<div class="empty">No AI reads corrected yet. Once techs confirm strip photos, the patterns the AI gets wrong show up here.</div>';
+    return '<div class="feed">' + items.map(function(x){
+      var name = TESTLABEL[x.key] || x.key;
+      var acc = x.reads ? Math.round((x.reads-x.wrong)/x.reads*100) : null;
+      var avgAbs = x.diffN ? Math.round(x.absSum/x.diffN*100)/100 : null;
+      var dir = "", verdict = "";
+      if (x.diffN){
+        var dom = Math.max(x.pos, x.neg) / x.diffN;
+        var lowhigh = x.pos >= x.neg ? "low" : "high"; // tech raised the number => AI had read it low
+        if (dom >= 0.7){ dir = "AI reads "+lowhigh+" by ~"+avgAbs+" on average"; verdict = "Systematic bias — a calibration nudge can correct this."; }
+        else { dir = "off by ~"+avgAbs+" on average, both directions"; verdict = "Noisy read — route to Opus + capture coaching; keep tech confirm on."; }
+      } else if (x.wrong){ dir = x.wrong+" correction(s)"; }
+      return '<div class="fi"><div class="ic corr">&#9998;</div><div class="body">'
+        + '<div class="top"><span class="pool">'+esc(name)+'</span><span class="when">'+(acc===null?"":acc+'% right ('+(x.reads-x.wrong)+'/'+x.reads+')')+'</span></div>'
+        + (dir ? '<div class="what">'+esc(dir)+'</div>' : '')
+        + (verdict ? '<div class="why">'+esc(verdict)+'</div>' : '')
+        + '</div></div>';
+    }).join("") + '</div>';
+  }
+
   // ---- per-pool brain ----
   function buildPools(rows){
     var map = {};
@@ -391,6 +430,8 @@
       + '</div>';
 
     html += '<div class="panel"><h2>Activity</h2><p class="hint">Scans per day, last 14 days.</p>'+activity(rows)+'</div>';
+
+    html += '<div class="panel"><h2>What the AI is learning</h2><p class="hint">Where the AI photo-read missed and the tech corrected it, grouped by reading so you see the pattern, not just the events. Doses always use the tech-confirmed number.</p>'+learningHtml(buildLearning(rows))+'</div>';
 
     html += '<div class="panel"><h2>Flags &amp; corrections</h2><p class="hint">Every time a tech red-tapped a step (with their reason), flagged a missing step, or corrected an AI reading.</p>'+feedHtml(feed)+'</div>';
 
