@@ -1,4 +1,4 @@
--- Rollback for 001_multitenant.sql (REV 2)
+-- Rollback for 001_multitenant.sql (REV 4)
 -- TWO paths. Pick deliberately.
 
 -- ════════════════════════════════════════════════════════════════════════════
@@ -31,10 +31,16 @@ drop function if exists enforce_org_membership_on_checks();
 drop function if exists add_owner_as_supervisor();
 drop function if exists is_org_supervisor(uuid);
 drop function if exists my_org_ids();
--- relax RLS on the new tables so they aren't locked deny-all after policies are gone
-alter table organizations disable row level security;
-alter table org_members  disable row level security;
-alter table pools        disable row level security;
+-- Deny-by-default on the new tenant tables (Codex REV3 #D).
+-- NEVER `disable row level security` here: once these tables carry `authenticated`
+-- grants, disabling RLS exposes EVERY org's rows to EVERY authenticated user. Instead
+-- we keep RLS enabled (with all policies dropped above, Postgres denies all row access
+-- by default) AND revoke the app grants as belt-and-suspenders. The legacy single-tenant
+-- pool_checks policies/grants are untouched, so the current app keeps working.
+revoke all on organizations from authenticated;
+revoke all on org_members  from authenticated;
+revoke all on pools        from authenticated;
+-- (RLS stays ENABLED on organizations/org_members/pools.)
 -- NOTE: tables, columns (pool_checks.org_id/tech_id), the org-pool-photos bucket,
 -- and ALL data are intentionally preserved here.
 
