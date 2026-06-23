@@ -1,5 +1,14 @@
--- ClearWay Pool AI — Multi-tenant backbone (migration 001, REV 4)
+-- ClearWay Pool AI — Multi-tenant backbone (migration 001, REV 5)
 -- STATUS: DRAFT for review. Do NOT apply live until Codex signs off.
+--
+-- REV 5 addresses the REV 4 re-review (P0):
+--   The live legacy pool_checks read policy still grants any row where
+--   user_id = auth.uid() regardless of org, so a tech REMOVED from an org could
+--   keep reading the org scans they authored. Fixed with a RESTRICTIVE membership
+--   policy (checks_org_membership_required) AND-ed onto every permissive path: an
+--   org-scoped row is reachable only by a CURRENT member of its org; org_id IS NULL
+--   legacy rows pass through untouched. No need to alter/drop the live legacy
+--   policies — the restrictive policy clamps them.
 --
 -- REV 4 addresses the REV 3 re-review (P0):
 --   Every org-scoped pool_checks write must stamp user_id = auth.uid(). The live
@@ -191,6 +200,19 @@ create policy checks_tech_rw on pool_checks for all to authenticated
   with check (org_id in (select my_org_ids()) and tech_id = auth.uid()
               and user_id = auth.uid());  -- (Codex REV4 P0) never write an unclaimed org row
 
+-- (Codex REV5 P0) RESTRICTIVE membership gate. While the legacy single-tenant
+-- pool_checks policies remain live, they grant access to ANY row where
+-- user_id = auth.uid() regardless of org_id — so a tech REMOVED from an org could
+-- still read the org scans they authored. A RESTRICTIVE policy is AND-ed with every
+-- permissive policy (legacy ones included), so it clamps ALL paths: an org-scoped
+-- row is reachable only by a CURRENT member of its org. Rows with org_id IS NULL
+-- (Trin's legacy single-tenant data) are explicitly allowed through, so nothing
+-- breaks pre-cutover. Removing the legacy policies later only loosens nothing here.
+create policy checks_org_membership_required on pool_checks
+  as restrictive for all to authenticated
+  using      (org_id is null or org_id in (select my_org_ids()))
+  with check (org_id is null or org_id in (select my_org_ids()));
+
 -- ───────────────────────────────────────────────────────────────────────────
 -- Storage: DEDICATED private bucket for multi-tenant photos (Codex #1 + #2)
 -- Separate bucket = the legacy bucket's broad "auth photo read" policy cannot apply
@@ -221,5 +243,6 @@ create index if not exists idx_checks_org   on pool_checks(org_id);
 --   • app: uploadOne() writes to org-pool-photos at <org_id>/<tech_id>/<check_id>/...
 --   • magic-link auth + supervisor "invite tech by email" flow
 --   • supervisor route-assignment UI; tech login -> server-side route
---   • cutover: retire the anonymous-auth single-tenant pool_checks policies
+--   • cutover: retire the anonymous-auth single-tenant pool_checks policies (the
+--     REV5 restrictive gate already makes org rows safe while they remain)
 --   • (separate) revoke the pre-existing public rls_auto_enable security-definer fn flagged by advisors

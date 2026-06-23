@@ -1,4 +1,4 @@
--- Rollback for 001_multitenant.sql (REV 4)
+-- Rollback for 001_multitenant.sql (REV 5)
 -- TWO paths. Pick deliberately.
 
 -- ════════════════════════════════════════════════════════════════════════════
@@ -13,8 +13,9 @@ drop policy if exists "org photos read"   on storage.objects;
 drop policy if exists "org photos insert" on storage.objects;
 drop policy if exists "org photos update" on storage.objects;
 -- pool_checks org policies
-drop policy if exists checks_org_supervisor on pool_checks;
-drop policy if exists checks_tech_rw        on pool_checks;
+drop policy if exists checks_org_supervisor          on pool_checks;
+drop policy if exists checks_tech_rw                 on pool_checks;
+drop policy if exists checks_org_membership_required on pool_checks;  -- REV5 restrictive gate
 -- pools / members / orgs policies
 drop policy if exists pools_supervisor on pools;
 drop policy if exists pools_tech_read  on pools;
