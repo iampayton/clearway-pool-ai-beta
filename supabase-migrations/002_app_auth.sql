@@ -1,7 +1,17 @@
--- ClearWay Pool AI — App/Auth layer, migration 002 (REV 2)
+-- ClearWay Pool AI — App/Auth layer, migration 002 (REV 3)
 -- STATUS: DRAFT for review. Do NOT apply live until Codex signs off.
 --
--- REV 2 addresses Codex review of REV 1:
+-- REV 3 addresses a gap found by the POST-APPLY verification of REV 2 on the live DB:
+--   Supabase's default privileges grant EXECUTE on new public-schema functions to
+--   BOTH `anon` and `authenticated` explicitly. `revoke ... from public` removes only
+--   the PUBLIC default, leaving an explicit `anon=X` grant (confirmed via pg_proc.proacl
+--   live: anon=X/postgres + authenticated=X/postgres). So `anon` could still EXECUTE the
+--   function. Low functional risk (an anon caller has no auth.uid()/email, so the body
+--   raises immediately), but it misses the "public/anon execute revoked" requirement.
+--   Fix: also `revoke execute ... from anon`. Re-running this file is idempotent.
+--   (Pattern note: every future SECURITY DEFINER fn should revoke from anon too.)
+--
+-- REV 2 addressed Codex review of REV 1:
 --   • accept_org_invite() only claims rows with status = 'invited' (so a revoked/
 --     removed/paused unclaimed row can't be silently reactivated by logging in)
 --   • trim + lowercase BOTH auth.email() and org_members.email before matching
@@ -65,7 +75,11 @@ begin
       and m.status = 'active';
 end $$;
 
+-- Lock execute down to signed-in users only. Both revokes are required: PUBLIC for
+-- the default grant, and anon for the explicit grant Supabase adds via default
+-- privileges (see REV 3 note above).
 revoke execute on function public.accept_org_invite() from public;
+revoke execute on function public.accept_org_invite() from anon;
 grant  execute on function public.accept_org_invite() to authenticated;
 
 -- ───────────────────────────────────────────────────────────────────────────
