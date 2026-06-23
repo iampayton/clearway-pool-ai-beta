@@ -2024,6 +2024,22 @@
             </div>
           </section>
 
+          <section class="card" data-pro-auth>
+            <h3>Company sign-in</h3>
+            <p class="muted" style="margin-top: 6px;">Pool pros: sign in with your work email to load your assigned route. Homeowners can skip this.</p>
+            <div data-pro-signedout>
+              <input type="email" data-pro-email placeholder="you@company.com" autocomplete="email" inputmode="email"
+                style="width:100%; margin-top:10px; padding:10px; border-radius:8px; border:1px solid #cdd8d6; box-sizing:border-box;" />
+              <button type="button" data-action="pro-login"
+                style="width:100%; margin-top:10px; padding:11px; border:0; border-radius:8px; background:#1aa998; color:#fff; font-weight:800; cursor:pointer;">Email me a sign-in link</button>
+            </div>
+            <div data-pro-signedin hidden>
+              <button type="button" data-action="pro-signout"
+                style="width:100%; margin-top:10px; padding:11px; border:1px solid #cdd8d6; border-radius:8px; background:#fff; color:#18242a; font-weight:800; cursor:pointer;">Sign out of company</button>
+            </div>
+            <p class="muted" data-pro-status style="margin-top:10px; font-weight:700;"></p>
+          </section>
+
           <p class="muted" data-ai-cost hidden style="margin: 0 4px 10px; font-size: 12px;"></p>
           <section class="card" data-tech-shelf-card hidden>
             <h3>Today's Truck Stock</h3>
@@ -2492,6 +2508,14 @@
       try { localStorage.setItem(themeStorageKey, theme); } catch { /* in-memory only */ }
     }
     let authUserId = "";
+    // ===== Org / pro-tech auth (additive; anonymous/household stays the default) =====
+    let authEmail = "";          // verified email of a magic-link (non-anonymous) user
+    let isAnonSession = true;    // true for anonymous sign-ins (the legacy default)
+    let authReady = false;       // true once auth + org bootstrap has resolved
+    let orgContext = null;       // {orgId, techId, role} ONLY when fully in org mode
+    let orgPools = [];           // pools assigned to this tech (RLS-backed)
+    const orgPhotoBucket = "org-pool-photos";
+    const proRedirectUrl = "https://iampayton.github.io/clearway-pool-ai-beta/clearway-pool-ai-field-app.html";
     const supabaseUrl = "https://wwhbwhgnwmmlpvrjkjek.supabase.co";
     const supabaseAnonKey = "sb_publishable_CN_Z7T4c3zN66C7xKVuJ8g_rQe9FJNX";
     const photoBucket = "pool-check-photos";
@@ -3052,20 +3076,44 @@
       .then(async ({ createClient }) => {
         supabase = createClient(supabaseUrl, supabaseAnonKey);
         try {
-          const { data: sessionData } = await supabase.auth.getSession();
-          if (sessionData?.session) {
-            authUserId = sessionData.session.user.id;
-          } else {
+          // Wait for the session before deciding the mode. supabase-js parses the
+          // magic-link hash on load, so a freshly-logged-in tech surfaces here.
+          // Guardrail: a session alone is NOT org mode — anonymous users have sessions too.
+          let { data: { session } } = await supabase.auth.getSession();
+          if (!session) {
             const { data, error } = await supabase.auth.signInAnonymously();
-            if (!error) authUserId = data?.user?.id || "";
+            if (!error) session = data?.session || null;
+          }
+          if (session?.user) {
+            authUserId = session.user.id;
+            authEmail = session.user.email || "";
+            isAnonSession = session.user.is_anonymous === true || !authEmail;
+            if (!isAnonSession) {
+              // Real email user → attempt org bootstrap. On zero memberships this
+              // sets orgContext=null and shows an error (does NOT enter org mode).
+              await bootstrapOrgContext();
+            }
           }
         } catch (error) {
-          console.warn("Anonymous sign-in unavailable", error);
+          console.warn("Auth bootstrap issue; staying on local/anonymous path", error);
         }
-        migrateLegacyChecks();
+        authReady = true;
+        // Only the anonymous/household path claims legacy local checks. An org user
+        // must never have their pre-login local checks stamped with org ids.
+        if (isAnonSession) migrateLegacyChecks();
         flushOutbox();
+        try { renderProAuth(); } catch (e) { /* UI optional */ }
+        try { renderSyncStatus(); } catch (e) {}
       })
-      .catch((error) => console.warn("Supabase unavailable, using local fallback", error));
+      .catch((error) => {
+        // Supabase failed to load (offline / blocked). Fall back to the anonymous local
+        // path and STILL resolve authReady, so the save gate never traps an offline user.
+        console.warn("Supabase unavailable, using local fallback", error);
+        isAnonSession = true;
+        authReady = true;
+        try { migrateLegacyChecks(); } catch (e) {}
+        try { renderSyncStatus(); } catch (e) {}
+      });
 
     function freshDraft() {
       return {
@@ -3082,6 +3130,96 @@
         try { localStorage.setItem(householdStorageKey, id); } catch { /* keep in-memory */ }
       }
       return id;
+    }
+
+    // ===== Org / pro-tech mode =====================================================
+    // Org mode is ON only when we have a fully-resolved org context: a real org_id
+    // AND the tech's id. Anything less is NOT org mode. (Guardrails 1, 3.)
+    function isOrgMode() {
+      return !!(orgContext && orgContext.orgId && orgContext.techId);
+    }
+    // Write state for the current session:
+    //   'pending' → auth/bootstrap not resolved yet. Defer the write (queue locally),
+    //               NO error — prevents committing a row before we know the mode.
+    //   'anon'    → legacy null-org/household write (unchanged behavior)
+    //   'org'     → org-scoped write (org_id + tech_id present)
+    //   'blocked' → a real-email user whose org context isn't ready / no invite.
+    //               We must NOT save their check as a legacy null-org row.
+    function orgWriteState() {
+      if (!authReady) return "pending";
+      if (isAnonSession) return "anon";
+      return isOrgMode() ? "org" : "blocked";
+    }
+    let orgAuthMessage = "";
+    function showOrgError(msg) { orgAuthMessage = msg || ""; try { renderProAuth(); } catch (e) {} }
+
+    // Claim invite + load org context. On zero memberships, stay OUT of org mode. (Guardrail 2.)
+    async function bootstrapOrgContext() {
+      orgContext = null; orgPools = [];
+      try {
+        const { data: memberships, error } = await supabase.rpc("accept_org_invite");
+        if (error) { console.warn("accept_org_invite failed", error); showOrgError("Could not verify your company invite — try again."); return; }
+        if (!memberships || memberships.length === 0) {
+          showOrgError("No company invite found for " + (authEmail || "this email") + ".");
+          return;
+        }
+        const m = memberships[0]; // single-org pilot
+        orgContext = { orgId: m.org_id, techId: authUserId, role: m.role || "tech" };
+        orgAuthMessage = "";
+        await loadAssignedPools();
+        // Point the active pool at the first assigned pool so the route/picker/check
+        // are driven by org pools (not a stale local selection).
+        if (orgPools.length) selectedPoolId = orgPools[0].id;
+        try { renderHome && renderHome(); } catch (e) {}
+      } catch (e) {
+        console.warn("bootstrapOrgContext error", e);
+        orgContext = null; // fail safe → not org mode
+      }
+    }
+
+    // RLS is the real boundary; this query is just the convenience filter. No service key, ever.
+    async function loadAssignedPools() {
+      try {
+        const { data, error } = await supabase.from("pools").select("*").eq("assigned_tech_id", authUserId);
+        orgPools = (error || !data) ? [] : data;
+      } catch (e) { orgPools = []; }
+    }
+
+    async function startProLogin(email) {
+      const clean = (email || "").trim().toLowerCase();
+      if (!supabase || !clean) { showOrgError("Enter your work email."); return; }
+      // Redirect back to wherever the app is actually served (localhost when testing,
+      // GitHub Pages when deployed) so the magic-link returns to THIS build. Each origin
+      // must be in Supabase Auth → Redirect URLs. Falls back to the canonical prod URL.
+      const redirectTo = (typeof window !== "undefined" && window.location)
+        ? (window.location.origin + window.location.pathname)
+        : proRedirectUrl;
+      try {
+        const { error } = await supabase.auth.signInWithOtp({ email: clean, options: { emailRedirectTo: redirectTo } });
+        showOrgError(error ? ("Could not send link: " + error.message) : ("Check " + clean + " for a sign-in link."));
+      } catch (e) { showOrgError("Could not send link — try again."); }
+    }
+
+    async function proSignOut() {
+      try { if (supabase) await supabase.auth.signOut(); } catch (e) {}
+      orgContext = null; orgPools = []; authEmail = ""; isAnonSession = true;
+      try { location.reload(); } catch (e) {}
+    }
+
+    // Renders the Settings "Company / pro sign-in" card to reflect current state.
+    function renderProAuth() {
+      const box = document.querySelector("[data-pro-auth]");
+      if (!box) return;
+      const status = box.querySelector("[data-pro-status]");
+      const signedOut = box.querySelector("[data-pro-signedout]");
+      const signedIn = box.querySelector("[data-pro-signedin]");
+      const inOrg = isOrgMode();
+      if (signedOut) signedOut.hidden = inOrg;
+      if (signedIn) signedIn.hidden = !inOrg;
+      if (status) {
+        if (inOrg) status.textContent = "Signed in as " + (authEmail || "your account") + " · " + orgPools.length + " pool(s) assigned";
+        else status.textContent = orgAuthMessage || "";
+      }
     }
 
     // ===== Account mode: homeowner (default) vs tech =====
@@ -3285,6 +3423,38 @@
       }
     }
 
+    // Org pools (from Supabase) mapped into the local pool shape so the existing
+    // picker / route / selectedPool UI is driven by the tech's assigned route.
+    // Stable id = the Supabase pool id, so saved checks carry the real pool id/name.
+    function orgPoolsAsLocal() {
+      return (orgPools || []).map((p) => ({
+        id: p.id,
+        poolName: p.name || "Pool",
+        address: p.address || "",
+        poolType: p.pool_type || "Not sure",
+        volumeGallons: p.volume_gallons || 0,
+        serviceDay: p.service_day || "",
+        serviceCadence: "Weekly",
+        profileComplete: true,
+        org: true
+      }));
+    }
+    // The active pool list: assigned org pools in org mode, else the local list.
+    function currentPools() {
+      return isOrgMode() ? orgPoolsAsLocal() : localPools();
+    }
+
+    // Does a queued/stored check belong to the CURRENTLY-resolved mode? Used to scope
+    // the shared outbox so a check is only ever synced under its own org/anon scope —
+    // never re-stamped into a different mode after login or sign-out. (Reviewer P1.)
+    function checkInCurrentMode(check) {
+      if (!check) return false;
+      // Org mode: must match BOTH the current org AND the current tech, so a queued
+      // check is never flushed under a different tech after same-org account switching.
+      if (isOrgMode()) return !!(check.orgId && check.orgId === orgContext.orgId && check.techId === authUserId);
+      return !check.orgId && (!check.householdId || check.householdId === householdId());
+    }
+
     function localChecks() {
       try { return JSON.parse(localStorage.getItem(checkStorageKey) || "[]"); }
       catch { return []; }
@@ -3425,7 +3595,7 @@
         next[label] = [];
         for (let i = 0; i < list.length; i += 1) {
           const src = list[i];
-          next[label].push(typeof src === "string" && src.startsWith("data:") ? await uploadOne(check.id, label, src, i) : src);
+          next[label].push(typeof src === "string" && src.startsWith("data:") ? await uploadOne(check.id, label, src, i, check.orgId, check.techId) : src);
         }
       }
       return next;
@@ -3434,6 +3604,10 @@
     let outboxFlushing = false;
     async function flushOutbox() {
       if (outboxFlushing || !supabase || (typeof navigator !== "undefined" && navigator.onLine === false)) return;
+      // Don't flush while the mode is unresolved or a real-email user has no org context,
+      // so queued checks are never written as null-org rows. They flush once 'anon'/'org'.
+      const wState = orgWriteState();
+      if (wState === "pending" || wState === "blocked") { try { renderSyncStatus(); } catch (e) {} return; }
       const ids = readOutbox();
       if (!ids.length) { renderSyncStatus(); return; }
       outboxFlushing = true;
@@ -3443,6 +3617,10 @@
         for (const id of ids) {
           const check = await getCheckForUpload(id);
           if (!check) { removeFromOutbox(id); continue; }
+          // Only sync checks that belong to the current mode; leave the others queued so
+          // they flush under their OWN scope later (e.g. an anon check queued before an
+          // org login must not be uploaded as an org row, and vice-versa). (Reviewer P1.)
+          if (!checkInCurrentMode(check)) continue;
           try {
             if (hasPendingPhotos(check)) {
               check.photos = await reUploadCheckPhotos(check);
@@ -3500,6 +3678,12 @@
     }
 
     function ensureStarterPool() {
+      // Org mode: the route is the assigned pools — never create a local "New Pool".
+      if (isOrgMode()) {
+        const op = currentPools();
+        if (op.length && (!selectedPoolId || !op.some((p) => p.id === selectedPoolId))) selectedPoolId = op[0].id;
+        return;
+      }
       const pools = localPools();
       if (pools.length) {
         if (!selectedPoolId) selectedPoolId = pools[0].id;
@@ -3538,7 +3722,7 @@
     }
 
     function selectedPool() {
-      const pools = localPools();
+      const pools = currentPools();
       return pools.find((pool) => pool.id === selectedPoolId) || pools[0] || null;
     }
 
@@ -4045,6 +4229,7 @@
       });
       renderShelfCard();
       renderAiCost();
+      try { renderProAuth(); } catch (e) {}
     }
 
     // Tiny running total of AI reading spend this month (from the cost ledger).
@@ -4256,8 +4441,9 @@
       return localChecks().some((c) => c.poolId === poolId && new Date(c.createdAt).getTime() >= wk);
     }
     function routePools() {
-      const real = localPools().filter((p) => p.profileComplete || (p.poolName && p.poolName !== "New Pool"));
-      return real.length ? real : localPools().filter((p) => p.poolName);
+      const src = currentPools();
+      const real = src.filter((p) => p.profileComplete || (p.poolName && p.poolName !== "New Pool"));
+      return real.length ? real : src.filter((p) => p.poolName);
     }
     function poolsForDay(day) { return routePools().filter((p) => (p.serviceDay || "") === day); }
     function dayStatus(day) {
@@ -4318,7 +4504,7 @@
     function renderPoolPicker() {
       const list = document.querySelector("[data-pool-picker-list]");
       if (!list) return;
-      const pools = localPools();
+      const pools = currentPools();
       list.innerHTML = pools.length
         ? pools.map((pool) => {
             const sub = pool.profileComplete
@@ -4983,13 +5169,26 @@
       return new File([bytes], fileName, { type: mime });
     }
 
-    async function uploadOne(checkId, label, dataUrl, index) {
+    async function uploadOne(checkId, label, dataUrl, index, checkOrgId, checkTechId) {
       if (!supabase || !dataUrl || dataUrl.startsWith("http")) return dataUrl;
-      const path = `${householdId()}/${checkId}/${label}-${index}-${Date.now()}.jpg`;
+      // Don't pick a bucket until the auth mode is resolved. If still 'pending' or a
+      // real-email user is 'blocked', keep the data: URL local — flushOutbox re-uploads
+      // it once the mode is 'anon'/'org', so a photo can never land in the wrong bucket.
+      const wState = orgWriteState();
+      if (wState === "pending" || wState === "blocked") return dataUrl;
+      // Bucket/path are derived from the CHECK's own scope (org + tech), not the global
+      // mode — so a queued photo always lands in the right bucket under the right tech.
+      // (Guardrail 5; Reviewer P1.) flushOutbox only re-uploads when check.techId===auth.uid,
+      // so checkTechId === authUserId there; the fallback covers live saves.
+      const isOrgPhoto = !!checkOrgId;
+      const bucket = isOrgPhoto ? orgPhotoBucket : photoBucket;
+      const path = isOrgPhoto
+        ? `${checkOrgId}/${checkTechId || authUserId}/${checkId}/${label}-${index}-${Date.now()}.jpg`
+        : `${householdId()}/${checkId}/${label}-${index}-${Date.now()}.jpg`;
       const file = dataUrlToFile(dataUrl, `${label}.jpg`);
-      const { error } = await supabase.storage.from(photoBucket).upload(path, file, { contentType: "image/jpeg", upsert: true });
+      const { error } = await supabase.storage.from(bucket).upload(path, file, { contentType: "image/jpeg", upsert: true });
       if (error) throw error;
-      const { data, error: signError } = await supabase.storage.from(photoBucket).createSignedUrl(path, 31536000);
+      const { data, error: signError } = await supabase.storage.from(bucket).createSignedUrl(path, 31536000);
       if (signError || !data?.signedUrl) throw signError || new Error("Could not sign photo URL");
       return data.signedUrl;
     }
@@ -5288,6 +5487,8 @@
         id: checkId,
         createdAt: new Date().toISOString(),
         householdId: householdId(),
+        orgId: isOrgMode() ? orgContext.orgId : "",
+        techId: isOrgMode() ? authUserId : "",
         poolId: pool.id || "",
         poolName: pool.poolName,
         address: pool.address || "",
@@ -5395,9 +5596,16 @@
     }
 
     function toDb(check) {
+      // Scope comes from the CHECK itself, not the global app mode — so a queued check
+      // always syncs under its own scope even if the mode changed after it was created.
+      // tech_id is the signed-in writer (auth.uid()); the DB trigger/RLS require that for
+      // non-supervisors, and flushOutbox only flushes a check whose scope matches the
+      // current mode, so this can never cross tenants. (Guardrails 3, 5; Reviewer P1.)
+      const orgFields = check.orgId ? { org_id: check.orgId, tech_id: check.techId || authUserId } : {};
       return {
         id: check.id,
         user_id: authUserId || null,
+        ...orgFields,
         created_at: check.createdAt,
         pool_name: check.poolName,
         pool_type: check.poolType,
@@ -5452,6 +5660,8 @@
         id: row.id,
         createdAt: row.created_at,
         householdId: noteData.householdId || "",
+        orgId: row.org_id || "",
+        techId: row.tech_id || "",
         poolId: noteData.poolId || "",
         poolName: row.pool_name,
         address: noteData.address || "",
@@ -5497,23 +5707,35 @@
 
     async function checks() {
       const local = localChecks();
+      const mine = householdId();
+      // Mode scope: org mode keeps this org's checks; anonymous keeps household (non-org)
+      // checks. Never mix the two views on a shared browser. (Reviewer P2.)
+      const inMode = (c) => isOrgMode()
+        ? (c.orgId && c.orgId === orgContext.orgId && c.techId === authUserId)
+        : (!c.orgId && (!c.householdId || c.householdId === mine));
+      const scopedLocal = local.filter(inMode);
       try {
         if (!supabase) throw new Error("Supabase unavailable");
         const { data, error } = await supabase.from("pool_checks").select("*").order("created_at", { ascending: false });
         if (error) throw error;
-        const mine = householdId();
-        const shared = (data || []).map(fromDb).filter((check) => check.householdId === mine);
+        // Org mode shows this tech's org rows (RLS already restricts to them); legacy
+        // mode shows this household's rows.
+        const shared = (data || []).map(fromDb).filter(inMode);
         const waiting = new Set(readOutbox());
-        const merged = mergeChecks(local.filter((check) => waiting.has(check.id)), mergeChecks(shared, local));
-        saveLocalChecks(merged);
-        return merged;
+        const mergedScoped = mergeChecks(scopedLocal.filter((check) => waiting.has(check.id)), mergeChecks(shared, scopedLocal));
+        // Persist the union (this mode's merged view + the OTHER mode's untouched local
+        // checks) so switching modes / signing out never loses the other history.
+        const others = local.filter((c) => !inMode(c));
+        saveLocalChecks(mergeChecks(others, mergedScoped));
+        return mergedScoped;
       } catch (error) {
         console.warn("Using local fallback checks", error);
-        return local;
+        return scopedLocal;
       }
     }
 
     async function migrateLegacyChecks() {
+      if (isOrgMode()) return; // never stamp an org user's pre-login local checks
       const mine = householdId();
       const local = localChecks();
       const legacyIds = local.filter((check) => !check.householdId).map((check) => check.id);
@@ -5540,6 +5762,16 @@
     async function saveCheck(check) {
       const existing = localChecks().filter((item) => item.id !== check.id);
       saveLocalChecks([check, ...existing]);
+      // Guardrail: do not write to the DB until we know the mode, and never write a
+      // real-email user's check as a legacy null-org row. Save locally + queue; the
+      // outbox flushes correctly once 'anon' or 'org' is resolved.
+      const writeState = orgWriteState();
+      if (writeState === "pending" || writeState === "blocked") {
+        addToOutbox(check.id);
+        if (writeState === "blocked") showOrgError("No company invite found for your account — this check is saved on this device but not synced.");
+        try { renderSyncStatus(); } catch (e) {}
+        return;
+      }
       try {
         if (!supabase) throw new Error("Supabase unavailable");
         const { error } = await supabase.from("pool_checks").upsert(toDb(check), { onConflict: "id" });
@@ -6001,7 +6233,7 @@
           catch { continue; }
           if (slot === "equipment" && !equipReadUrl) equipReadUrl = dataUrl; // base64 for the AI, before upload swaps it to a URL
           try {
-            dataUrl = await uploadOne(activeCheck.id, slot, dataUrl, (activeCheck.photos?.[slot] || []).length);
+            dataUrl = await uploadOne(activeCheck.id, slot, dataUrl, (activeCheck.photos?.[slot] || []).length, activeCheck.orgId || (isOrgMode() ? orgContext.orgId : ""), activeCheck.techId || (isOrgMode() ? authUserId : ""));
           } catch (error) {
             console.warn("Evidence photo stays local for now", error);
           }
@@ -6290,6 +6522,18 @@
         return;
       }
 
+      const proLoginBtn = event.target.closest('[data-action="pro-login"]');
+      if (proLoginBtn) {
+        const input = document.querySelector("[data-pro-email]");
+        await startProLogin(input ? input.value : "");
+        return;
+      }
+      const proSignoutBtn = event.target.closest('[data-action="pro-signout"]');
+      if (proSignoutBtn) {
+        await proSignOut();
+        return;
+      }
+
       if (event.target.closest("[data-access-banner]")) {
         await openEditPool();
         return;
@@ -6548,6 +6792,12 @@
         const hasValues = readValues().some((item) => item.current);
         if (!hasPhoto && !hasNote && !hasValues) {
           openSheet("Add one thing first", "Take one photo, say one note, or add one test number. Then ClearWay can help.", "");
+          return;
+        }
+        // Don't create/save a check until auth + org bootstrap has resolved, so a scan is
+        // never stamped under an unresolved (ambiguous) scope. This window is sub-second.
+        if (!authReady) {
+          openSheet("Getting your account ready…", "One sec — finishing sign-in so this check saves to the right place. Your photos and notes are safe. Tap Get Do Next again in a moment.", "");
           return;
         }
         button.disabled = true;
