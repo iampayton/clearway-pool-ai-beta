@@ -1,14 +1,16 @@
--- ClearWay Pool AI — Multi-tenant backbone (migration 001)
--- STATUS: DRAFT. Do NOT apply to live Supabase until Payton approves.
+-- ClearWay Pool AI — Multi-tenant backbone (migration 001, REV 2)
+-- STATUS: DRAFT for review. Do NOT apply live until Codex signs off.
 --
--- DESIGN GOAL: ADDITIVE. This adds the company/tech model WITHOUT breaking the
--- live single-tenant app Trin uses. New tables only + nullable columns on
--- pool_checks; the existing single-tenant RLS policies stay in place until we
--- deliberately cut over. Tenant isolation (one company can never see another's
--- data) is enforced by RLS on every table below — the one thing we never cut corners on.
+-- REV 2 addresses the Codex review:
+--   #1 separate private photo bucket (legacy broad read policy can't cover org photos)
+--   #2 no uuid casts on storage paths — text comparison only
+--   #3 scan writes require proven org membership (RLS + enforcement trigger)
+--   #4 security-definer fns: locked search_path = '' + execute revoked from public
+--   #5 rollback split into data-preserving + pre-production-destructive (see 001_rollback.sql)
 --
--- MODEL: organization (a pool company) -> org_members (users + role) -> pools
--- (owned by org, assignable to a tech + service day) -> pool_checks (scans).
+-- ADDITIVE + NON-BREAKING: new tables, a new bucket, and nullable columns only.
+-- The existing single-tenant app, the pool-check-photos bucket, and all current
+-- policies/data are left untouched. Tenant isolation is the boundary we never cut.
 
 -- ───────────────────────────────────────────────────────────────────────────
 -- 1. Organizations — one pool company = one org
@@ -44,9 +46,9 @@ create table if not exists pools (
   address          text,
   pool_type        text,
   volume_gallons   int,
-  service_day      text,                                -- '' | Mon..Sun
+  service_day      text,
   assigned_tech_id uuid references auth.users(id),
-  profile          jsonb not null default '{}',         -- equipment, heater, filter, products, gate code, etc.
+  profile          jsonb not null default '{}',
   created_at       timestamptz not null default now()
 );
 
@@ -55,108 +57,129 @@ alter table pool_checks add column if not exists org_id  uuid references organiz
 alter table pool_checks add column if not exists tech_id uuid references auth.users(id);
 
 -- ───────────────────────────────────────────────────────────────────────────
--- Helper functions (SECURITY DEFINER so RLS policies can call them safely)
+-- Helper functions  (Codex #4: SECURITY DEFINER + locked search_path + revoked public execute)
 create or replace function my_org_ids()
-  returns setof uuid language sql security definer stable as $$
-  select org_id from org_members where user_id = auth.uid() and status = 'active'
+  returns setof uuid language sql security definer stable
+  set search_path = '' as $$
+  select org_id from public.org_members
+  where user_id = auth.uid() and status = 'active'
 $$;
+revoke execute on function my_org_ids() from public;
+grant  execute on function my_org_ids() to authenticated;
 
 create or replace function is_org_supervisor(target_org uuid)
-  returns boolean language sql security definer stable as $$
+  returns boolean language sql security definer stable
+  set search_path = '' as $$
   select exists (
-    select 1 from org_members
+    select 1 from public.org_members
     where org_id = target_org and user_id = auth.uid()
       and role = 'supervisor' and status = 'active'
   )
 $$;
+revoke execute on function is_org_supervisor(uuid) from public;
+grant  execute on function is_org_supervisor(uuid) to authenticated;
 
--- Bootstrap: when an org is created, auto-add its owner as an active supervisor
--- (resolves the chicken-and-egg of "supervisor manages members" needing a supervisor).
+-- Bootstrap: new org auto-gets its owner as an active supervisor
 create or replace function add_owner_as_supervisor()
-  returns trigger language plpgsql security definer as $$
+  returns trigger language plpgsql security definer
+  set search_path = '' as $$
 begin
-  insert into org_members (org_id, user_id, email, role, status)
+  insert into public.org_members (org_id, user_id, email, role, status)
   values (new.id, new.owner_user_id,
           coalesce((select email from auth.users where id = new.owner_user_id), ''),
           'supervisor', 'active');
   return new;
 end $$;
+revoke execute on function add_owner_as_supervisor() from public;
 
 drop trigger if exists trg_org_owner on organizations;
 create trigger trg_org_owner after insert on organizations
   for each row execute function add_owner_as_supervisor();
 
+-- Integrity guard (Codex #3): ANY pool_checks write carrying an org_id must come from
+-- an active member of that org; a tech-written row must be the tech's own. Enforced by
+-- trigger so it holds even if the legacy permissive single-tenant insert policy allowed
+-- the row — closes the cross-org injection path.
+create or replace function enforce_org_membership_on_checks()
+  returns trigger language plpgsql security definer
+  set search_path = '' as $$
+begin
+  if new.org_id is not null then
+    if not exists (
+      select 1 from public.org_members
+      where org_id = new.org_id and user_id = auth.uid() and status = 'active'
+    ) then
+      raise exception 'pool_checks: writer % is not an active member of org %', auth.uid(), new.org_id;
+    end if;
+    if new.tech_id is not null and new.tech_id <> auth.uid()
+       and not public.is_org_supervisor(new.org_id) then
+      raise exception 'pool_checks: tech_id must equal the writer';
+    end if;
+  end if;
+  return new;
+end $$;
+revoke execute on function enforce_org_membership_on_checks() from public;
+
+drop trigger if exists trg_checks_org_guard on pool_checks;
+create trigger trg_checks_org_guard before insert or update on pool_checks
+  for each row execute function enforce_org_membership_on_checks();
+
 -- ───────────────────────────────────────────────────────────────────────────
--- Row-Level Security  (the isolation boundary)
+-- Row-Level Security
 alter table organizations enable row level security;
 alter table org_members  enable row level security;
 alter table pools        enable row level security;
 
--- organizations: any signed-in user can create one (becomes owner); members read; supervisor updates
-create policy org_create on organizations for insert
-  with check (auth.uid() = owner_user_id);
-create policy org_read   on organizations for select
-  using (id in (select my_org_ids()));
-create policy org_update on organizations for update
-  using (is_org_supervisor(id));
+create policy org_create on organizations for insert with check (auth.uid() = owner_user_id);
+create policy org_read   on organizations for select using (id in (select my_org_ids()));
+create policy org_update on organizations for update using (is_org_supervisor(id));
 
--- org_members: members of an org can see its roster; supervisors add/edit/remove members
-create policy members_read  on org_members for select
-  using (org_id in (select my_org_ids()));
+create policy members_read  on org_members for select using (org_id in (select my_org_ids()));
 create policy members_write on org_members for all
-  using (is_org_supervisor(org_id))
-  with check (is_org_supervisor(org_id));
+  using (is_org_supervisor(org_id)) with check (is_org_supervisor(org_id));
 
--- pools: supervisor sees/edits all org pools; a tech sees only pools assigned to them
 create policy pools_supervisor on pools for all
-  using (is_org_supervisor(org_id))
-  with check (is_org_supervisor(org_id));
+  using (is_org_supervisor(org_id)) with check (is_org_supervisor(org_id));
 create policy pools_tech_read on pools for select
   using (org_id in (select my_org_ids()) and assigned_tech_id = auth.uid());
 
--- pool_checks: ADD org-scoped policies (existing single-tenant policies remain for now).
--- Supervisor reads every scan in their org; a tech reads/writes only their own org scans.
+-- pool_checks org policies REQUIRE org membership (Codex #3). The trigger above is the
+-- belt-and-suspenders against the legacy permissive insert policy.
 create policy checks_org_supervisor on pool_checks for select
   using (org_id is not null and is_org_supervisor(org_id));
 create policy checks_tech_rw on pool_checks for all
-  using (org_id is not null and tech_id = auth.uid())
-  with check (org_id is not null and tech_id = auth.uid());
+  using      (org_id in (select my_org_ids()) and tech_id = auth.uid())
+  with check (org_id in (select my_org_ids()) and tech_id = auth.uid());
+
+-- ───────────────────────────────────────────────────────────────────────────
+-- Storage: DEDICATED private bucket for multi-tenant photos (Codex #1 + #2)
+-- Separate bucket = the legacy bucket's broad "auth photo read" policy cannot apply
+-- here. Text-only path comparison = no uuid-cast errors. Path: <org_id>/<tech_id>/<check_id>/...
+insert into storage.buckets (id, name, public)
+  values ('org-pool-photos', 'org-pool-photos', false)
+  on conflict (id) do nothing;
+
+create policy "org photos read" on storage.objects for select
+  using (bucket_id = 'org-pool-photos'
+    and (storage.foldername(name))[1] in (select t::text from my_org_ids() as t));
+create policy "org photos insert" on storage.objects for insert
+  with check (bucket_id = 'org-pool-photos'
+    and (storage.foldername(name))[1] in (select t::text from my_org_ids() as t));
+create policy "org photos update" on storage.objects for update
+  using (bucket_id = 'org-pool-photos'
+    and (storage.foldername(name))[1] in (select t::text from my_org_ids() as t));
 
 -- ───────────────────────────────────────────────────────────────────────────
 -- Indexes
-create index if not exists idx_pools_org     on pools(org_id);
-create index if not exists idx_pools_tech    on pools(assigned_tech_id);
-create index if not exists idx_members_user  on org_members(user_id);
-create index if not exists idx_members_org   on org_members(org_id);
-create index if not exists idx_checks_org    on pool_checks(org_id);
+create index if not exists idx_pools_org    on pools(org_id);
+create index if not exists idx_pools_tech   on pools(assigned_tech_id);
+create index if not exists idx_members_user on org_members(user_id);
+create index if not exists idx_members_org  on org_members(org_id);
+create index if not exists idx_checks_org   on pool_checks(org_id);
 
--- ───────────────────────────────────────────────────────────────────────────
--- Storage photo isolation  (bucket: pool-check-photos)
--- Multi-tenant uploads are pathed with org_id as the FIRST folder:
---   <org_id>/<tech_id>/<check_id>/<label>-<i>-<ts>.jpg
--- Only members of that org may read/write objects under that org's prefix —
--- this is the photo-side of the same tenant boundary as the table RLS above.
--- ADDITIVE: existing household-pathed photos keep their current authenticated
--- storage policies; these org policies govern new org-pathed uploads. The app's
--- uploadOne() switches to org_id paths at cutover (separate app change).
-create policy "org members read pool photos" on storage.objects for select
-  using (
-    bucket_id = 'pool-check-photos'
-    and (storage.foldername(name))[1]::uuid in (select my_org_ids())
-  );
-create policy "org members upload pool photos" on storage.objects for insert
-  with check (
-    bucket_id = 'pool-check-photos'
-    and (storage.foldername(name))[1]::uuid in (select my_org_ids())
-  );
-create policy "org members update pool photos" on storage.objects for update
-  using (
-    bucket_id = 'pool-check-photos'
-    and (storage.foldername(name))[1]::uuid in (select my_org_ids())
-  );
-
--- NEXT (separate steps, after this is approved + applied):
---   • magic-link auth + the supervisor "invite tech by email" flow
---   • supervisor route-assignment UI (assign pool -> tech + day)
---   • tech login -> server-side route (replaces localStorage routes)
---   • cutover: once orgs are live, retire the anonymous-auth single-tenant policies
+-- NEXT (separate steps, after approval + apply):
+--   • app: uploadOne() writes to org-pool-photos at <org_id>/<tech_id>/<check_id>/...
+--   • magic-link auth + supervisor "invite tech by email" flow
+--   • supervisor route-assignment UI; tech login -> server-side route
+--   • cutover: retire the anonymous-auth single-tenant pool_checks policies
+--   • (separate) revoke the pre-existing public rls_auto_enable security-definer fn flagged by advisors
