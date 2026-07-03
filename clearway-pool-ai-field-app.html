@@ -1941,6 +1941,10 @@
                 <span class="tmi-ic"><svg aria-hidden="true" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="7" stroke="currentColor" stroke-width="4"/><path d="M24 5v7M24 36v7M5 24h7M36 24h7M10.5 10.5l5 5M32.5 32.5l5 5M37.5 10.5l-5 5M15.5 32.5l-5 5" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg></span>
                 <span>Pool details</span>
               </button>
+              <button class="top-menu-item" data-company-signin role="menuitem">
+                <span class="tmi-ic"><svg aria-hidden="true" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="16" r="8" stroke="currentColor" stroke-width="4"/><path d="M9 41c2.6-8.2 8.3-12 15-12s12.4 3.8 15 12" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg></span>
+                <span data-company-signin-label>Company sign-in</span>
+              </button>
             </div>
           </div>
         </div>
@@ -1954,7 +1958,7 @@
             <span class="cta-note" data-cta-note hidden></span>
           </button>
           <button class="access-banner" data-access-banner hidden type="button"></button>
-          <button class="sync-banner" data-sync-status hidden type="button"></button>
+          <button class="sync-banner" data-sync-status hidden type="button" aria-live="polite"></button>
           <button class="retest-banner" data-retest-banner hidden>Retest reminder</button>
           <div class="arrival-brief" data-arrival-brief hidden></div>
           <div class="parts-card" data-parts-card hidden></div>
@@ -2164,6 +2168,7 @@
 
           <button class="btn primary full" data-save-pool>Save Pool</button>
           <button class="btn full" type="button" data-remove-pool hidden style="color: #c64235;">Remove This Pool</button>
+          <p class="muted" style="text-align: center; margin: 4px 8px 10px; font-size: 12px; line-height: 1.45;">ClearWay turns your readings into next steps. Recommendations only - always read and follow the product label, and when in doubt, talk to a qualified pool professional.</p>
         </div>
       </div>
 
@@ -2271,7 +2276,7 @@
             <label>Salt <input data-test-current="salt" type="number" inputmode="numeric" step="100" min="0" placeholder="2700-3400" /></label>
           </div>
 
-          <p class="muted" data-strip-read-status hidden style="margin-top: 8px;"></p>
+          <p class="muted" data-strip-read-status hidden aria-live="polite" style="margin-top: 8px;"></p>
           <div class="note-actions">
             <button class="icon-action" data-clear-brain-input aria-label="Clear note">
               <svg aria-hidden="true" viewBox="0 0 48 48" fill="none">
@@ -2420,7 +2425,7 @@
           <p class="muted" style="margin-top: 6px;">Talk (tap the mic on your keyboard) or type - ask a question or brain-dump a note. Answers are guidance only; exact amounts always come from a scan.</p>
           <div class="note-inbox" data-note-inbox hidden></div>
           <textarea class="note-input" data-note-input rows="3" placeholder="e.g. Gate code for 1010 Maple Ter? / Why does this one keep going cloudy?"></textarea>
-          <div class="note-reply" data-note-reply hidden></div>
+          <div class="note-reply" data-note-reply hidden aria-live="polite"></div>
           <div class="sheet-actions">
             <button class="btn" data-note-close>Close</button>
             <button class="btn" data-note-save>Save note</button>
@@ -2538,7 +2543,7 @@
     // ===== ClearWay Deterministic Chemistry Engine v1 =====
     // The engine owns ALL numbers. Doses come from industry-standard tables,
     // never from language guesses. Outputs are recommendations: always follow the product label.
-    const ENGINE_VERSION = "chem-v1.0";
+    const ENGINE_VERSION = "chem-v1.1";
 
     const VOLUME_BRACKETS = {
       "Under 10,000 gal": { gallons: 8000, confidence: "estimated" },
@@ -2586,11 +2591,16 @@
       return list.includes(key);
     }
 
-    function pickChlorineProduct(pool) {
-      if (hasProduct(pool, "liquid_chlorine")) return "liquid_chlorine";
-      if (hasProduct(pool, "cal_hypo")) return "cal_hypo";
-      if (hasProduct(pool, "dichlor")) return "dichlor";
-      return null;
+    function pickChlorineProduct(pool, readings = {}) {
+      // Water-aware pick (chem-v1.1): skip cal-hypo when calcium already runs high and
+      // skip dichlor when stabilizer already runs high - IF another chlorine product is
+      // on hand. Falls back to whatever is available; cautions cover the fallback cases.
+      const chHigh = readings.ch != null && readings.ch > CHEM_TARGETS.calcium.max;
+      const cyaHigh = readings.cya != null && readings.cya > CHEM_TARGETS.cya.max;
+      const order = ["liquid_chlorine", "cal_hypo", "dichlor"].filter((k) => hasProduct(pool, k));
+      if (!order.length) return null;
+      const fit = order.filter((k) => !(chHigh && k === "cal_hypo") && !(cyaHigh && k === "dichlor"));
+      return fit[0] || order[0];
     }
 
     function roundDose(amount, unit) {
@@ -2631,13 +2641,15 @@
 
     function acidDose(ph, alkalinity, gallons) {
       // Conservative muriatic acid (31.45%) chart, scaled by TA. Cap 1 quart per 10k per visit.
+      // chem-v1.1: capped now reflects the UNCLAMPED demand, so extreme pH (e.g. 8.6+)
+      // correctly carries the "today's max - retest before more" warning.
       const over = Math.max(0, ph - 7.5);
-      let ozPer10k = Math.min(32, Math.max(8, Math.round((over / 0.1) * 6)));
       const taFactor = alkalinity ? Math.min(1.3, Math.max(0.7, alkalinity / 100)) : 1;
-      ozPer10k = Math.round(ozPer10k * taFactor / 2) * 2;
+      const wantedPer10k = Math.round(((over / 0.1) * 6 * taFactor) / 2) * 2; // demand before the visit cap
+      const ozPer10k = Math.min(32, Math.max(8, wantedPer10k));
       const raw = ozPer10k * (gallons / 10000);
       const cap = 32 * (gallons / 10000);
-      return { dose: roundDose(Math.min(raw, cap), "fl oz"), capped: raw > cap };
+      return { dose: roundDose(Math.min(raw, cap), "fl oz"), capped: wantedPer10k > 32 || raw > cap };
     }
 
     function readingNumber(values, key) {
@@ -2673,7 +2685,8 @@
         if (Number.isFinite(value) && value >= min && value <= max) found[key] = value;
       };
       grab("ph", /\bp\.?\s?h\.?\s*(?:is|at|was|of|reads?|reading)?\s*(\d(?:\.\d+)?)/, 6, 9.5);
-      grab("free_chlorine", /\b(?:free\s*)?chlorine\s*(?:is|at|was|of|reads?|reading|level)?\s*(\d+(?:\.\d+)?)/, 0, 30);
+      // Negative lookahead so "added chlorine 2 gallons" is a QUANTITY, not a reading. (chem-v1.1)
+      grab("free_chlorine", /\b(?:free\s*)?chlorine\s*(?:is|at|was|of|reads?|reading|level)?\s*(\d+(?:\.\d+)?)(?!\s*(?:gal(?:lon)?|quart|qt|oz|ounce|lb|pound|cup|scoop|tab(?:let)?|bag|jug)s?\b)/, 0, 30);
       grab("alkalinity", /\b(?:total\s*)?alk(?:alinity)?\s*(?:is|at|was|of|reads?|reading)?\s*(\d{1,3})/, 0, 400);
       grab("cya", /\b(?:cya|stabilizer|cyanuric(?:\s*acid)?)\s*(?:is|at|was|of|reads?|reading)?\s*(\d{1,3})/, 0, 300);
       grab("calcium", /\b(?:calcium|hardness)\s*(?:hardness)?\s*(?:is|at|was|of|reads?|reading)?\s*(\d{2,4})/, 0, 1200);
@@ -2712,6 +2725,7 @@
       if (!poolId) return {};
       const history = localChecks()
         .filter((check) => check.poolId === poolId && (check.values || []).some((v) => v.current !== "" && v.current != null))
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) // newest first, guaranteed (streaks depend on it)
         .slice(0, 8);
       const memory = {};
       Object.keys(CHEM_TARGETS).forEach((key) => {
@@ -2791,7 +2805,14 @@
       // Hard blocks first
       if (ph !== null && (ph < 6.8 || ph > 8.4)) {
         rulesFired.push("ph-extreme");
-        cautions.push("pH reading is far out of range. Fix pH first and retest before any other chemical.");
+        cautions.push("pH reads far out of range. Fix pH first, then retest before adding anything else.");
+      }
+      // Very high chlorine bleaches pH indicator colors upward - an acid dose off that
+      // reading would be a mis-dose. Flag it and let the chlorine settle first. (chem-v1.1)
+      const phReliable = !(fc !== null && fc > 10);
+      if (ph !== null && ph > CHEM_TARGETS.ph.max && !phReliable) {
+        rulesFired.push("ph-unreliable");
+        cautions.push("Chlorine over 10 ppm makes pH read falsely high. Skip pH chemicals this visit and retest pH once chlorine drops.");
       }
 
       // 1) Alkalinity low (fix before pH)
@@ -2807,8 +2828,10 @@
         }
       }
 
-      // 2) pH
-      if (ph !== null && ph > CHEM_TARGETS.ph.max && ph <= 8.4) {
+      // 2) pH - the high side has NO upper cutoff (chem-v1.1: extreme highs used to get a
+      // warning with no action). acidDose caps at 1 qt/10k, so extreme pH gets a capped
+      // dose + "today's max" retest note. Skipped when very high FC makes pH unreliable.
+      if (ph !== null && ph > CHEM_TARGETS.ph.max && phReliable) {
         rulesFired.push("ph-high");
         const phMemory = memoryNote(memory, "ph", "high");
         if (exactAllowed && hasProduct(pool, "muriatic_acid")) {
@@ -2838,9 +2861,14 @@
       // 3) Chlorine (raise at or below the minimum - one sunny day from zero)
       if (fc !== null && fc <= CHEM_TARGETS.free_chlorine.min) {
         rulesFired.push(greenish ? "fc-low-algae" : "fc-low");
-        const target = greenish && cya ? Math.min(Math.round(cya * 0.4), 20) : CHEM_TARGETS.free_chlorine.ideal;
+        // Algae shock target: 40% of CYA when known (SLAM-style), capped at 20. With CYA
+        // unknown, 10 ppm is the standard shock level - the old fallback (ideal = 3 ppm)
+        // was too weak to kill a bloom. Doses stay capped by maxPer10k + retest notes. (chem-v1.1)
+        const target = greenish
+          ? (cya ? Math.min(Math.round(cya * 0.4), 20) : 10)
+          : CHEM_TARGETS.free_chlorine.ideal;
         const deficit = Math.max(1, Math.min(target - fc, greenish ? 10 : 5));
-        const productKey = pickChlorineProduct(pool);
+        const productKey = pickChlorineProduct(pool, { ch, cya });
         const fcMemory = memoryNote(memory, "free_chlorine", "low");
         if (exactAllowed && productKey) {
           const r = doseFor(productKey, deficit, gallons);
@@ -2893,6 +2921,26 @@
         }
       }
 
+      // 7) High-side flags (chem-v1.1) - no doses; lowering these is dilution/process work.
+      if (ta !== null && ta > CHEM_TARGETS.alkalinity.max) {
+        rulesFired.push("ta-high");
+        cautions.push("Alkalinity is high - pH will keep drifting up. Bringing it down is a gradual acid-then-retest process over visits, not one dose.");
+      }
+      if (cya !== null && cya > CHEM_TARGETS.cya.max) {
+        rulesFired.push("cya-high");
+        cautions.push(cya >= 100
+          ? "Stabilizer is very high (100+) - chlorine gets sluggish at this level. A partial drain and refill is usually the real fix."
+          : "Stabilizer is above target - chlorine works slower. Prefer liquid chlorine (adds no stabilizer) over dichlor or tabs for a while.");
+      }
+      if (ch !== null && ch > CHEM_TARGETS.calcium.max) {
+        rulesFired.push("ch-high");
+        cautions.push("Calcium is high - scale risk on heaters and salt cells. Prefer liquid chlorine over cal-hypo shock.");
+      }
+      if (isSalt && salt !== null && salt > CHEM_TARGETS.salt.max) {
+        rulesFired.push("salt-high");
+        cautions.push("Salt is above target - only fresh-water dilution brings it down. Check the system's max before adding anything.");
+      }
+
       // Sequencing + circulation
       const chemSteps = steps.filter((s) => /^(ta|ph|fc|cya|ch|salt)-/.test(s.id) && !/brush|high/.test(s.id));
       if (chemSteps.length > 1) {
@@ -2937,7 +2985,10 @@
           ? Math.min(104, Math.max(50, spokenExtras.waterTempF))
           : (weather?.tempF ? Math.min(92, Math.max(58, weather.tempF - 3)) : 78);
         const carbonateAlk = cya !== null ? Math.max(10, ta - cya / 3) : ta;
-        lsi = Math.round((ph + lsiTempFactor(waterTemp) + lsiCalciumFactor(ch) + lsiAlkFactor(carbonateAlk) - 12.1) * 100) / 100;
+        // TDS constant: 12.1 standard fresh-fill; 12.2 once dissolved solids run high
+        // (salt pools sit at ~3000+ ppm TDS by design). (chem-v1.1)
+        const tdsConst = (isSalt || (salt !== null && salt >= 1000)) ? 12.2 : 12.1;
+        lsi = Math.round((ph + lsiTempFactor(waterTemp) + lsiCalciumFactor(ch) + lsiAlkFactor(carbonateAlk) - tdsConst) * 100) / 100;
         if (lsi <= -0.31) {
           rulesFired.push("lsi-low");
           cautions.push(`Water balance (LSI ${lsi}) is in corrosive territory - hard on plaster and heaters. The steps above help correct it.`);
@@ -3017,6 +3068,11 @@
       "ph-high": "High pH makes chlorine weak and scales heaters.",
       "ph-low": "Low pH is harsh on equipment and skin.",
       "ph-extreme": "pH that far out makes every other number unreliable.",
+      "ph-unreliable": "Very high chlorine makes pH test colors read falsely high.",
+      "ta-high": "High alkalinity drags pH upward again and again.",
+      "cya-high": "Too much stabilizer smothers chlorine.",
+      "ch-high": "High calcium scales heaters and salt cells.",
+      "salt-high": "Only fresh-water dilution lowers salt.",
       "fc-low": "Low chlorine lets things start growing.",
       "fc-low-algae": "Algae needs a strong chlorine hit to die.",
       "fc-very-high": "Very high chlorine needs time, not more product.",
@@ -3166,6 +3222,7 @@
         const m = memberships[0]; // single-org pilot
         orgContext = { orgId: m.org_id, techId: authUserId, role: m.role || "tech" };
         orgAuthMessage = "";
+        try { setUserMode("tech"); } catch (e) {} // company sign-ins are pros - route/shelf/open-items on by default
         await loadAssignedPools();
         // Point the active pool at the first assigned pool so the route/picker/check
         // are driven by org pools (not a stale local selection).
@@ -3220,6 +3277,8 @@
         if (inOrg) status.textContent = "Signed in as " + (authEmail || "your account") + " · " + orgPools.length + " pool(s) assigned";
         else status.textContent = orgAuthMessage || "";
       }
+      const menuLabel = document.querySelector("[data-company-signin-label]");
+      if (menuLabel) menuLabel.textContent = inOrg ? "Company: signed in ✓" : "Company sign-in";
     }
 
     // ===== Account mode: homeowner (default) vs tech =====
@@ -3423,21 +3482,57 @@
       }
     }
 
+    // Local per-device overlay for ORG pools (maintenance taps, cadence, learned GPS).
+    // Org pools are server-owned and read-only in the app; these small field facts stay
+    // on-device WITHOUT forking the org pool into the local (anonymous) pool list. (Sweep P2.)
+    const orgPoolLocalKey = "clearwayOrgPoolLocalV1";
+    function getOrgPoolLocal() {
+      try { return JSON.parse(localStorage.getItem(orgPoolLocalKey) || "{}"); } catch { return {}; }
+    }
+    function setOrgPoolLocal(poolId, fields) {
+      if (!poolId) return;
+      const map = getOrgPoolLocal();
+      map[poolId] = { ...(map[poolId] || {}), ...fields };
+      try { localStorage.setItem(orgPoolLocalKey, JSON.stringify(map)); } catch { /* best effort */ }
+    }
+
     // Org pools (from Supabase) mapped into the local pool shape so the existing
     // picker / route / selectedPool UI is driven by the tech's assigned route.
     // Stable id = the Supabase pool id, so saved checks carry the real pool id/name.
+    // Concierge-loaded site facts (gate code, pets, equipment) ride in pools.profile
+    // (jsonb) so assigned pools get the access banner + the right engine context.
     function orgPoolsAsLocal() {
-      return (orgPools || []).map((p) => ({
-        id: p.id,
-        poolName: p.name || "Pool",
-        address: p.address || "",
-        poolType: p.pool_type || "Not sure",
-        volumeGallons: p.volume_gallons || 0,
-        serviceDay: p.service_day || "",
-        serviceCadence: "Weekly",
-        profileComplete: true,
-        org: true
-      }));
+      const overlay = getOrgPoolLocal();
+      return (orgPools || []).map((p) => {
+        const prof = p.profile || {};
+        return {
+          id: p.id,
+          poolName: p.name || "Pool",
+          address: p.address || "",
+          poolType: p.pool_type || "Not sure",
+          volumeGallons: p.volume_gallons || 0,
+          volumeConfidence: p.volume_gallons ? "estimated" : "unknown",
+          serviceDay: p.service_day || "",
+          serviceCadence: prof.serviceCadence || "Weekly",
+          gateCode: prof.gateCode || "",
+          accessNotes: prof.accessNotes || "",
+          petWarning: prof.petWarning || "No",
+          petNote: prof.petNote || "",
+          heater: prof.heater || "Not sure",
+          filter: prof.filter || "Not sure",
+          hasSpa: prof.hasSpa || "Not sure",
+          hasRobot: prof.hasRobot || "Not sure",
+          robotName: prof.robotName || "",
+          productsOnHand: Array.isArray(prof.productsOnHand) ? prof.productsOnHand : [],
+          filterCleanedAt: prof.filterCleanedAt || "",
+          waterLevelCheckedAt: prof.waterLevelCheckedAt || "",
+          saltCellCleanedAt: prof.saltCellCleanedAt || "",
+          vacuumedAt: prof.vacuumedAt || "",
+          profileComplete: true,
+          org: true,
+          ...(overlay[p.id] || {})
+        };
+      });
     }
     // The active pool list: assigned org pools in org mode, else the local list.
     function currentPools() {
@@ -3631,8 +3726,14 @@
             removeFromOutbox(id);
             sent += 1;
           } catch (error) {
-            console.warn("Outbox will retry when signal is steadier", error);
-            break;
+            // A permanently-rejected check (RLS/constraint/4xx) must not dam the queue
+            // for everything behind it - skip past it and keep flushing. Transient
+            // (network) errors stop this pass and retry later. (Sweep P1.)
+            const permanent = !!(error && (error.code
+              || (typeof error.status === "number" && error.status >= 400 && error.status < 500)
+              || (Number(error.statusCode) >= 400 && Number(error.statusCode) < 500)));
+            console.warn(permanent ? "Outbox item rejected by the server - skipping past it" : "Outbox will retry when signal is steadier", error);
+            if (!permanent) break;
           }
         }
       } finally {
@@ -4214,7 +4315,7 @@
       if (!isTechMode()) { card.hidden = true; card.innerHTML = ""; return; }
       const parts = partsToPickUp();
       if (!parts.length) { card.hidden = true; card.innerHTML = ""; return; }
-      const pools = localPools();
+      const pools = currentPools();
       const nameFor = (id) => (pools.find((p) => p.id === id) || {}).poolName || "A pool";
       card.innerHTML = `<p class="arrival-title">Parts to pick up</p>` +
         parts.slice(0, 12).map((it) => `<p class="arrival-line">${escapeHtml(it.part)} - ${escapeHtml(nameFor(it.poolId))}</p>`).join("");
@@ -4258,6 +4359,8 @@
     function openPoolPicker() {
       ensureStarterPool();
       renderPoolPicker();
+      const addBtn = document.querySelector("[data-pool-picker-add]");
+      if (addBtn) addBtn.hidden = isOrgMode(); // org routes are assigned by the company, not self-added
       const overlay = document.querySelector("[data-pool-picker]");
       if (overlay) overlay.hidden = false;
     }
@@ -4325,7 +4428,7 @@
     // Matches the pool named/addressed in the question; gate codes + access notes stay LOCAL (never sent to AI).
     function localAnswer(question) {
       const q = (question || "").toLowerCase();
-      const pools = localPools();
+      const pools = currentPools(); // org routes answer gate/access/pet questions too - still fully on-device
       if (!pools.length) return "";
       function score(p) {
         const name = (p.poolName || "").toLowerCase();
@@ -4498,7 +4601,7 @@
       list.innerHTML = dayPools.length
         ? dayPools.map(routeItemHtml).join("")
         : `<div class="empty">No pools on ${selectedRouteDay} yet.</div>`;
-      if (addBtn) { addBtn.hidden = !isTechMode(); addBtn.textContent = `+ Add a pool to ${selectedRouteDay}`; addBtn.dataset.routeAdd = "add"; }
+      if (addBtn) { addBtn.hidden = !isTechMode() || isOrgMode(); addBtn.textContent = `+ Add a pool to ${selectedRouteDay}`; addBtn.dataset.routeAdd = "add"; } // org routes are supervisor-assigned
     }
 
     function renderPoolPicker() {
@@ -4738,6 +4841,11 @@
 
     // One-tap service-plan switch from the vacuum tile sheet.
     function setPoolCadence(poolId, cadence) {
+      if (isOrgMode()) {
+        setOrgPoolLocal(poolId, { serviceCadence: cadence });
+        renderHome();
+        return;
+      }
       const pools = localPools();
       const pool = pools.find((item) => item.id === poolId);
       if (!pool) return;
@@ -4750,9 +4858,17 @@
     function logMaintenance(type) {
       const pool = selectedPool();
       if (!pool) return;
-      const pools = localPools();
       const key = { filter: "filterCleanedAt", waterLevel: "waterLevelCheckedAt", saltCell: "saltCellCleanedAt", vacuum: "vacuumedAt" }[type] || "filterCleanedAt";
-      const updated = { ...pool, [key]: new Date().toISOString(), updatedAt: new Date().toISOString() };
+      const stamp = new Date().toISOString();
+      if (isOrgMode()) {
+        // Org pools are server-owned - keep the tap in the per-device overlay instead of
+        // forking a ghost copy into the local (anonymous) pool list. (Sweep P2.)
+        setOrgPoolLocal(pool.id, { [key]: stamp });
+        renderHome();
+        return;
+      }
+      const pools = localPools();
+      const updated = { ...pool, [key]: stamp, updatedAt: stamp };
       saveLocalPools([updated, ...pools.filter((item) => item.id !== updated.id)]);
       selectedPoolId = updated.id;
       renderHome();
@@ -4781,6 +4897,12 @@
     }
 
     function savePoolFromForm() {
+      // Org pools are company-managed: saving here would fork a ghost local copy under
+      // the same id. Point the tech at their supervisor instead. (Sweep P2.)
+      if (isOrgMode() && editingPoolId && currentPools().some((p) => p.id === editingPoolId)) {
+        openSheet("Company pool", "This pool is managed by your company, so its details are set on the company side. Your scans and maintenance taps still save normally.", "");
+        return;
+      }
       const get = (name) => document.querySelector(`[data-pool-field="${name}"]`)?.value.trim() || "";
       const pools = localPools();
       const existingPool = pools.find((item) => item.id === editingPoolId);
@@ -4834,7 +4956,7 @@
       const chip = document.querySelector("[data-gps-suggest]");
       if (!chip) return;
       chip.hidden = true;
-      if (!localPools().some((pool) => pool.gps)) return;
+      if (!currentPools().some((pool) => pool.gps)) return;
       const fix = gpsFromPosition(await getPositionFix(5000));
       if (!fix) return;
       const current = selectedPool();
@@ -5382,6 +5504,20 @@
 
     function learnPoolGps(poolId, fix) {
       if (!poolId || !fix || (fix.acc && fix.acc > 120)) return;
+      if (isOrgMode()) {
+        // Assigned org pools learn their usual spot in the per-device overlay.
+        const cur = (getOrgPoolLocal()[poolId] || {}).gps;
+        if (!cur) { setOrgPoolLocal(poolId, { gps: fix }); return; }
+        if (haversineMeters(cur, fix) < 300) {
+          setOrgPoolLocal(poolId, { gps: {
+            lat: Math.round((cur.lat * 0.7 + fix.lat * 0.3) * 100000) / 100000,
+            lng: Math.round((cur.lng * 0.7 + fix.lng * 0.3) * 100000) / 100000,
+            acc: Math.min(cur.acc || 999, fix.acc || 999),
+            at: fix.at
+          } });
+        }
+        return;
+      }
       const pools = localPools();
       const pool = pools.find((item) => item.id === poolId);
       if (!pool) return;
@@ -5404,7 +5540,7 @@
     function nearestPool(fix, excludeId = "") {
       if (!fix) return null;
       let best = null;
-      localPools().forEach((pool) => {
+      currentPools().forEach((pool) => {
         if (!pool.gps || pool.id === excludeId) return;
         const meters = haversineMeters(fix, pool.gps);
         if (!best || meters < best.meters) best = { pool, meters };
@@ -5716,7 +5852,7 @@
       const scopedLocal = local.filter(inMode);
       try {
         if (!supabase) throw new Error("Supabase unavailable");
-        const { data, error } = await supabase.from("pool_checks").select("*").order("created_at", { ascending: false });
+        const { data, error } = await supabase.from("pool_checks").select("*").order("created_at", { ascending: false }).limit(300);
         if (error) throw error;
         // Org mode shows this tech's org rows (RLS already restricts to them); legacy
         // mode shows this household's rows.
@@ -5747,15 +5883,18 @@
       let claimed = false;
       try { claimed = localStorage.getItem(claimStorageKey) === authUserId; } catch { claimed = false; }
       if (claimed) return;
+      let allOk = true;
       for (const check of localChecks()) {
+        if (check.orgId) continue; // never claim/re-stamp org rows from the anonymous path (Sweep P2)
         try {
           const { error } = await supabase.from("pool_checks").upsert(toDb(check), { onConflict: "id" });
           if (error) throw error;
         } catch (error) {
           console.warn("Claim pass will retry next open", error);
-          return;
+          allOk = false;
         }
       }
+      if (!allOk) return;
       try { localStorage.setItem(claimStorageKey, authUserId); } catch { /* in-memory only */ }
     }
 
@@ -6534,6 +6673,13 @@
         return;
       }
 
+      if (event.target.closest("[data-company-signin]")) {
+        await showScreen("add-pool");
+        const proCard = document.querySelector("[data-pro-auth]");
+        if (proCard) { try { proCard.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) { /* best effort */ } }
+        return;
+      }
+
       if (event.target.closest("[data-access-banner]")) {
         await openEditPool();
         return;
@@ -6654,7 +6800,7 @@
       if (routePick) {
         const id = routePick.dataset.routePick;
         const done = routePick.dataset.routeDone === "1";
-        const pool = localPools().find((p) => p.id === id);
+        const pool = currentPools().find((p) => p.id === id);
         closeRoute();
         if (done) {
           // Single tap on a completed stop -> show that pool's history.
@@ -6676,7 +6822,7 @@
       const pickPool = event.target.closest("[data-pick-pool]");
       if (pickPool) {
         const id = pickPool.dataset.pickPool;
-        if (localPools().some((pool) => pool.id === id)) selectedPoolId = id;
+        if (currentPools().some((pool) => pool.id === id)) selectedPoolId = id; // org pools live in currentPools (Sweep P1)
         closePoolPicker();
         const chosen = selectedPool();
         if (chosen && !chosen.profileComplete) {
@@ -6826,7 +6972,7 @@
         if (check) {
           // Sticky home pool: reopening a scan makes its pool the active one,
           // and it stays on the home screen until the next Start.
-          if (check.poolId && localPools().some((pool) => pool.id === check.poolId)) {
+          if (check.poolId && currentPools().some((pool) => pool.id === check.poolId)) {
             selectedPoolId = check.poolId;
           }
           renderGuide(check);
