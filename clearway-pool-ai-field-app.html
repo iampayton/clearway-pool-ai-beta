@@ -1960,6 +1960,11 @@
           <button class="access-banner" data-access-banner hidden type="button"></button>
           <button class="sync-banner" data-sync-status hidden type="button" aria-live="polite"></button>
           <button class="retest-banner" data-retest-banner hidden>Retest reminder</button>
+          <div class="arrival-brief" data-brain-brief hidden>
+            <p class="arrival-title">ClearWay Brain</p>
+            <p class="arrival-line" data-brain-brief-text hidden></p>
+            <div data-brain-trend hidden style="margin-top: 8px;"></div>
+          </div>
           <div class="arrival-brief" data-arrival-brief hidden></div>
           <div class="parts-card" data-parts-card hidden></div>
           <div class="home-status-row" aria-label="Maintenance status">
@@ -2298,6 +2303,7 @@
           <section class="card pool-id-card">
             <h1 data-guide-pool>Unnamed Pool</h1>
             <p class="muted" data-guide-date style="margin-top: 7px;"></p>
+            <div data-guide-trend hidden style="margin-top: 10px;"></div>
           </section>
 
           <section class="card guide-card">
@@ -4129,6 +4135,8 @@
       renderRetestBanner();
       renderSyncStatus();
       renderAccessBanner(pool);
+      renderPoolBrief(pool);
+      refreshPoolBrief(pool); // async, cached daily, quiet on failure
       renderArrivalBrief(pool);
       renderPartsToPickUp();
       const routeIcon = document.querySelector("[data-route-icon]");
@@ -4261,6 +4269,99 @@
       card.innerHTML = rest.map((l) => `<p class="arrival-line">${escapeHtml(l)}</p>`).join("");
       card.hidden = false;
     }
+
+    // ===== ClearWay Brain surfaces: trend sparkline (deterministic) + daily AI brief =====
+    // The sparkline is pure local math. The brief is the ask-path AI reading THIS pool's
+    // sanitized history (no gate codes) - the server prompt hard-blocks doses and
+    // swim-safety claims. Cached one per pool per day; offline/error = quietly absent.
+    function trendPoints(poolId, key, count = 8) {
+      return localChecks()
+        .filter((c) => c.poolId === poolId)
+        .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+        .map((c) => {
+          const item = (c.values || []).find((v) => v.key === key && v.current !== "" && v.current != null);
+          const n = item ? Number(item.current) : NaN;
+          return Number.isFinite(n) ? n : null;
+        })
+        .filter((n) => n !== null)
+        .slice(-count);
+    }
+
+    function sparkHtml(poolId) {
+      if (!poolId) return "";
+      const fc = trendPoints(poolId, "free_chlorine");
+      const ph = trendPoints(poolId, "ph");
+      if (fc.length < 2 && ph.length < 2) return "";
+      const W = 260, H = 54, PAD = 5;
+      const line = (vals, min, max, color) => {
+        if (vals.length < 2) return "";
+        const pts = vals.map((v, i) => {
+          const x = PAD + (i * (W - 2 * PAD)) / (vals.length - 1);
+          const clamped = Math.min(max, Math.max(min, v));
+          const y = H - PAD - ((clamped - min) / (max - min)) * (H - 2 * PAD);
+          return Math.round(x) + "," + Math.round(y);
+        });
+        const last = pts[pts.length - 1].split(",");
+        return `<polyline points="${pts.join(" ")}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="${last[0]}" cy="${last[1]}" r="3" fill="${color}"/>`;
+      };
+      const bandTop = H - PAD - ((4 - 0) / 10) * (H - 2 * PAD);
+      const bandBot = H - PAD - ((1 - 0) / 10) * (H - 2 * PAD);
+      const band = `<rect x="${PAD}" y="${Math.round(bandTop)}" width="${W - 2 * PAD}" height="${Math.round(bandBot - bandTop)}" fill="rgba(20,157,141,0.10)" rx="3"/>`;
+      const n = Math.max(fc.length, ph.length);
+      return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" role="img" aria-label="Chlorine and pH trend, last ${n} visits">${band}${line(fc, 0, 10, "#149d8d")}${line(ph, 6.8, 8.4, "#ff7a24")}</svg>` +
+        `<p class="muted" style="margin: 2px 0 0; font-size: 11px;"><span style="color:#149d8d;font-weight:900;">&#8212;</span> Chlorine &nbsp;<span style="color:#ff7a24;font-weight:900;">&#8212;</span> pH &nbsp;&middot;&nbsp; last ${n} visits &middot; shaded = chlorine target</p>`;
+    }
+
+    const poolBriefKey = "clearwayPoolBriefV1";
+    let briefInFlight = "";
+    function getPoolBriefCache() { try { return JSON.parse(localStorage.getItem(poolBriefKey) || "{}"); } catch { return {}; } }
+    function setPoolBriefCache(poolId, entry) {
+      if (!poolId) return;
+      const map = getPoolBriefCache();
+      if (entry) map[poolId] = entry; else delete map[poolId];
+      try { localStorage.setItem(poolBriefKey, JSON.stringify(map)); } catch { /* best effort */ }
+    }
+
+    function renderPoolBrief(pool) {
+      const card = document.querySelector("[data-brain-brief]");
+      if (!card) return;
+      const entry = pool ? (getPoolBriefCache()[pool.id] || {}) : {};
+      const hasBrief = !!(entry.text && entry.date === localDateKey());
+      const textEl = card.querySelector("[data-brain-brief-text]");
+      if (textEl) { textEl.textContent = hasBrief ? entry.text : ""; textEl.hidden = !hasBrief; }
+      const trend = pool ? sparkHtml(pool.id) : "";
+      const trendEl = card.querySelector("[data-brain-trend]");
+      if (trendEl) { trendEl.innerHTML = trend; trendEl.hidden = !trend; }
+      card.hidden = !hasBrief && !trend;
+    }
+
+    async function refreshPoolBrief(pool) {
+      if (!pool || !pool.id) return;
+      if (typeof navigator !== "undefined" && navigator.onLine === false) return;
+      const cached = getPoolBriefCache()[pool.id];
+      if (cached && cached.date === localDateKey()) return; // one brief per pool per day
+      if (!localChecks().some((c) => c.poolId === pool.id)) return; // no history = nothing smart to say yet
+      if (briefInFlight === pool.id) return;
+      briefInFlight = pool.id;
+      try {
+        const res = await fetch(`${supabaseUrl}/functions/v1/ai-extract`, {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${supabaseAnonKey}`, "apikey": supabaseAnonKey, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ask: "Give me today's short arrival brief for this pool - 2 or 3 plain sentences before I start the visit. Lead with what matters most today (trends across visits, anything overdue, readings worth confirming). No greeting, no fluff.",
+            context: buildAskContext(pool)
+          })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.answer) {
+          if (typeof data.aiCents === "number") logAiCents(data.aiCents, "brief");
+          setPoolBriefCache(pool.id, { date: localDateKey(), text: String(data.answer).slice(0, 420), at: new Date().toISOString() });
+          renderPoolBrief(pool);
+        }
+      } catch (e) { /* quiet - the template arrival brief still stands */ }
+      finally { briefInFlight = ""; }
+    }
+    // ===== end ClearWay Brain surfaces =====
 
     // Open items list on the guide - tap an action to resolve (fast, in the field).
     function renderOpenItems(poolId) {
@@ -6013,6 +6114,7 @@
       // reminder. Techs work a weekly route, so we skip the short countdown for them.
       const setReminder = withPump && !isTechMode();
       if (setReminder) setRetestReminder(check, check.engine?.retestMinutes || 30);
+      setPoolBriefCache(check.poolId, null); // today's visit just happened - let the Brain re-brief with it
       await saveCheck(check);
       await showScreen("home");
       const poolName = check.poolName || "This pool";
@@ -6037,6 +6139,8 @@
       }
       const dateTarget = document.querySelector("[data-guide-date]");
       if (dateTarget) dateTarget.textContent = check.createdAt ? new Date(check.createdAt).toLocaleString() : "";
+      const guideTrend = document.querySelector("[data-guide-trend]");
+      if (guideTrend) { const t = sparkHtml(check.poolId); guideTrend.innerHTML = t; guideTrend.hidden = !t; }
       renderOpenItems(check.poolId);
 
       const steps = buildDoNext(check);
