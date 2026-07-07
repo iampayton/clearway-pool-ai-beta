@@ -1298,6 +1298,16 @@
       text-decoration: none;
     }
 
+    /* Collapsible Pool Details sections: the pro/admin extras fold away so the
+       screen reads as simple pool setup first (complexity-hotspot fix). */
+    details.card > summary { cursor: pointer; list-style: none; position: relative; padding-right: 26px; }
+    details.card > summary::-webkit-details-marker { display: none; }
+    details.card > summary::after {
+      content: "\25B8"; position: absolute; right: 2px; top: 2px;
+      color: var(--seafoam-dark); font-size: 15px; transition: transform 0.15s ease;
+    }
+    details[open].card > summary::after { transform: rotate(90deg); }
+
     .chip-row {
       display: flex;
       flex-wrap: wrap;
@@ -1960,7 +1970,7 @@
           </div>
         </div>
         <div class="content home-content">
-          <button class="btn primary full start-cta" data-start-check>
+          <button class="btn primary full start-cta" data-start-check aria-label="Start Pool Check">
             <svg aria-hidden="true" viewBox="0 0 64 64" fill="none">
               <path d="M15 24h8l4-6h10l4 6h8a6 6 0 0 1 6 6v20a6 6 0 0 1-6 6H15a6 6 0 0 1-6-6V30a6 6 0 0 1 6-6Z" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>
               <circle cx="32" cy="40" r="10" stroke="currentColor" stroke-width="4"/>
@@ -2044,9 +2054,9 @@
             </div>
           </section>
 
-          <section class="card" data-pro-auth>
-            <h3>Company sign-in</h3>
-            <p class="muted" style="margin-top: 6px;">Pool pros: sign in with your work email to load your assigned route. Homeowners can skip this.</p>
+          <details class="card" data-pro-details>
+            <summary><h3 style="display: inline;">Company sign-in</h3><p class="muted" style="margin-top: 6px;">Pool pros: load your assigned route. Homeowners skip this.</p></summary>
+            <div data-pro-auth style="margin-top: 4px;">
             <div data-pro-signedout>
               <input type="email" data-pro-email placeholder="you@company.com" autocomplete="email" inputmode="email" enterkeyhint="go"
                 style="width:100%; margin-top:10px; padding:10px; border-radius:8px; border:1px solid #cdd8d6; box-sizing:border-box;" />
@@ -2058,7 +2068,8 @@
                 style="width:100%; margin-top:10px; padding:11px; border:1px solid #cdd8d6; border-radius:8px; background:#fff; color:#18242a; font-weight:800; cursor:pointer;">Sign out of company</button>
             </div>
             <p class="muted" data-pro-status style="margin-top:10px; font-weight:700;"></p>
-          </section>
+            </div>
+          </details>
 
           <p class="muted" data-ai-cost hidden style="margin: 0 4px 10px; font-size: 12px;"></p>
           <section class="card" data-tech-shelf-card hidden>
@@ -2132,8 +2143,8 @@
             </div>
           </section>
 
-          <section class="card">
-            <h3>Service & Equipment</h3>
+          <details class="card">
+            <summary><h3 style="display: inline;">Service & Equipment</h3><p class="muted" style="margin-top: 6px;">Service plan, route day, robot vacuum.</p></summary>
             <div class="form-grid" style="margin-top: 14px;">
               <label>Service Plan
                 <select data-pool-field="serviceCadence">
@@ -2162,11 +2173,10 @@
               </label>
               <label data-robot-name-label hidden>Robot's Name (optional) <input data-pool-field="robotName" placeholder="ex: Doug" /></label>
             </div>
-          </section>
+          </details>
 
-          <section class="card">
-            <h3>Site Access</h3>
-            <p class="muted" style="margin-top: 6px;">Helps whoever services the pool get in safely.</p>
+          <details class="card">
+            <summary><h3 style="display: inline;">Site Access</h3><p class="muted" style="margin-top: 6px;">Gate code, pets, entry notes - stays on this phone.</p></summary>
             <div class="form-grid" style="margin-top: 14px;">
               <label>Gate / HOA Code <input data-pool-field="gateCode" placeholder="ex: 1842" /></label>
               <label>Access Notes <textarea data-pool-field="accessNotes" placeholder="Side gate, lockbox, where to enter, etc."></textarea></label>
@@ -2178,7 +2188,7 @@
               </label>
               <label>Pet Note (optional) <input data-pool-field="petNote" placeholder="ex: Friendly golden in back yard" /></label>
             </div>
-          </section>
+          </details>
 
           <section class="card">
             <h3>Products</h3>
@@ -2337,6 +2347,10 @@
             <div data-missing-input hidden style="margin-top: 8px; display: flex; gap: 8px;">
               <input type="text" data-missing-text placeholder="Type the missing step" autocomplete="off" style="flex: 1; min-width: 0; padding: 11px 12px; border: 1px solid var(--line); border-radius: 12px; font-size: 15px;" />
               <button class="btn" type="button" data-missing-save>Save</button>
+            </div>
+            <div data-step-input-row hidden style="margin-top: 8px; display: flex; gap: 8px;">
+              <input type="text" data-step-input autocomplete="off" style="flex: 1; min-width: 0; padding: 11px 12px; border: 1px solid var(--line); border-radius: 12px; font-size: 15px;" />
+              <button class="btn" type="button" data-step-input-save>Save</button>
             </div>
             <button class="gps-suggest" data-nameplate-ask hidden type="button">One-time: snap the pump/filter label. ClearWay learns this pool's gear. Tap here.</button>
             <button class="why-link" type="button" data-why-button hidden>Why these steps?</button>
@@ -3106,7 +3120,7 @@
       "cya-low": "Stabilizer is sunscreen for chlorine.",
       "ch-low": "Soft water pulls calcium out of plaster.",
       "salt-low": "The cell needs enough salt to make chlorine.",
-      "sequence": "Order matters: alkalinity first, then pH, then chlorine.",
+      "sequence": "Order matters: your card doses in the safe order - balance the water before sanitizer, one product at a time.",
       "heater-ph": "Heaters corrode fast outside the pH band.",
       "lsi-low": "LSI below -0.3 means corrosive water.",
       "lsi-high": "LSI above +0.3 means scale-forming water.",
@@ -4149,9 +4163,11 @@
       const pool = selectedPool();
       const selectedText = document.querySelector("[data-selected-pool-text]");
       if (selectedText) {
+        // The hero sells the core action, not setup (Codex P1): scanning works with zero
+        // details - the wizard collects them along the way.
         selectedText.textContent = !pool
-          ? "No pool yet. Tap to add."
-          : (pool.profileComplete ? `${pool.poolName} - Tap to change` : "Add pool details - Tap here");
+          ? "Start Pool Check"
+          : (pool.profileComplete ? `${pool.poolName} - Tap to change` : "Start Pool Check · details as you go");
       }
       renderHomeMaintenance(pool);
       renderRetestBanner();
@@ -6202,6 +6218,10 @@
 
     function renderGuide(check) {
       activeCheck = check;
+      // Reset any in-progress inline step edit when the card (re)renders.
+      const stepInputRow = document.querySelector("[data-step-input-row]");
+      if (stepInputRow) stepInputRow.hidden = true;
+      stepInputCtx = null;
       document.querySelector("[data-guide-pool]").textContent = check.poolName;
       const nameplate = document.querySelector("[data-nameplate-ask]");
       if (nameplate) {
@@ -6551,21 +6571,55 @@
       renderGuide(activeCheck);
     }
 
+    // Inline typed capture for step edits + flag reasons. window.prompt is BANNED here:
+    // iOS standalone PWAs can silently swallow it, which lost feedback exactly when the
+    // learning loop needed it (Codex P1). Voice rides on top only where the API works.
+    let stepInputCtx = null; // {kind:"edit"|"why", stepId}
+    function openStepInput(kind, stepId, prefill, placeholder) {
+      stepInputCtx = { kind, stepId };
+      const row = document.querySelector("[data-step-input-row]");
+      const input = document.querySelector("[data-step-input]");
+      if (!row || !input) return;
+      row.hidden = false;
+      input.value = prefill || "";
+      input.placeholder = placeholder || "";
+      try { input.focus(); } catch (e) { /* focus best-effort */ }
+    }
+    async function saveStepInput() {
+      if (!activeCheck || !stepInputCtx) return;
+      const input = document.querySelector("[data-step-input]");
+      const row = document.querySelector("[data-step-input-row]");
+      const text = (input?.value || "").trim();
+      const { kind, stepId } = stepInputCtx;
+      stepInputCtx = null;
+      if (row) row.hidden = true;
+      if (kind === "edit") {
+        activeCheck.stepEdits = activeCheck.stepEdits || {};
+        if (text) activeCheck.stepEdits[stepId] = text;
+        else delete activeCheck.stepEdits[stepId];
+      } else if (kind === "why") {
+        if (!text) return;
+        activeCheck.stepFlags = activeCheck.stepFlags || {};
+        activeCheck.stepFlags[stepId] = { ...(activeCheck.stepFlags[stepId] || { flagged: true }), reason: text, at: new Date().toISOString() };
+      }
+      await saveCheck(activeCheck);
+      renderGuide(activeCheck);
+    }
+
     function dictateFlagReason(stepId) {
       if (!activeCheck || !stepId) return;
       const saveReason = async (said) => {
         const reason = (said || "").trim();
-        if (!reason) return;
+        if (!reason) { openStepInput("why", stepId, "", "Why is this step off?"); return; }
         activeCheck.stepFlags = activeCheck.stepFlags || {};
         activeCheck.stepFlags[stepId] = { ...(activeCheck.stepFlags[stepId] || { flagged: true }), reason, at: new Date().toISOString() };
         await saveCheck(activeCheck);
         renderGuide(activeCheck);
       };
       const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
-      // iOS home-screen PWAs relaunch on the mic-permission prompt - type it there. Voice stays
-      // on regular browsers / Android where it doesn't kick the user out.
+      // iOS home-screen PWAs relaunch on the mic-permission prompt - typed inline there.
       if (window.navigator.standalone === true || !Speech) {
-        saveReason(window.prompt("Why is this step off? Type a quick note for Payton."));
+        openStepInput("why", stepId, (activeCheck.stepFlags?.[stepId]?.reason) || "", "Why is this step off?");
         return;
       }
       try {
@@ -6574,10 +6628,10 @@
         recognition.interimResults = false;
         recognition.maxAlternatives = 1;
         recognition.onresult = (event) => { saveReason(event.results?.[0]?.[0]?.transcript || ""); };
-        recognition.onerror = () => { saveReason(window.prompt("Didn't catch that - type why:")); };
+        recognition.onerror = () => { openStepInput("why", stepId, "", "Why is this step off?"); };
         recognition.start();
       } catch (err) {
-        saveReason(window.prompt("Type why this step is off:"));
+        openStepInput("why", stepId, "", "Why is this step off?");
       }
     }
 
@@ -6751,6 +6805,10 @@
         event.preventDefault();
         await startProLogin(event.target.value);
       }
+      if (event.key === "Enter" && event.target.closest("[data-step-input]")) {
+        event.preventDefault();
+        await saveStepInput();
+      }
     });
 
     document.addEventListener("click", async (event) => {
@@ -6776,16 +6834,13 @@
         const stepId = editStep.dataset.editStep;
         if (stepId) {
           const current = (buildDoNext(activeCheck).find((s) => s.id === stepId) || {}).text || "";
-          const next = window.prompt("Edit this step:", current);
-          if (next !== null) {
-            const trimmed = next.trim();
-            activeCheck.stepEdits = activeCheck.stepEdits || {};
-            if (trimmed) activeCheck.stepEdits[stepId] = trimmed;
-            else delete activeCheck.stepEdits[stepId];
-            await saveCheck(activeCheck);
-            renderGuide(activeCheck);
-          }
+          openStepInput("edit", stepId, current, "Edit this step");
         }
+        return;
+      }
+
+      if (event.target.closest("[data-step-input-save]") && activeCheck) {
+        await saveStepInput();
         return;
       }
 
@@ -6983,6 +7038,8 @@
 
       if (event.target.closest("[data-company-signin]")) {
         await showScreen("add-pool");
+        const proDetails = document.querySelector("[data-pro-details]");
+        if (proDetails) proDetails.open = true;
         const proCard = document.querySelector("[data-pro-auth]");
         if (proCard) { try { proCard.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) { /* best effort */ } }
         return;
