@@ -2048,7 +2048,7 @@
             <h3>Company sign-in</h3>
             <p class="muted" style="margin-top: 6px;">Pool pros: sign in with your work email to load your assigned route. Homeowners can skip this.</p>
             <div data-pro-signedout>
-              <input type="email" data-pro-email placeholder="you@company.com" autocomplete="email" inputmode="email"
+              <input type="email" data-pro-email placeholder="you@company.com" autocomplete="email" inputmode="email" enterkeyhint="go"
                 style="width:100%; margin-top:10px; padding:10px; border-radius:8px; border:1px solid #cdd8d6; box-sizing:border-box;" />
               <button type="button" data-action="pro-login"
                 style="width:100%; margin-top:10px; padding:11px; border:0; border-radius:8px; background:#1aa998; color:#fff; font-weight:800; cursor:pointer;">Email me a sign-in link</button>
@@ -2399,7 +2399,7 @@
           </section>
           <section class="card">
             <div class="history-toolbar" style="grid-template-columns: 1fr auto auto;">
-              <input class="history-search" data-history-search placeholder="Search pool or note" />
+              <input class="history-search" data-history-search type="search" enterkeyhint="search" placeholder="Search pool or note" />
               <button class="btn" data-export-billing title="Per-visit CSV for the office">CSV</button>
               <button class="btn" data-export-history>Export</button>
             </div>
@@ -6406,7 +6406,11 @@
     // My Day is the tech's end-of-day summary - one tap, copied, texted to the office.
     function csvCell(v) {
       const s = String(v ?? "");
-      return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+      // Formula-injection guard: Excel/Sheets execute cells that start with = + - @ (or
+      // tab/CR variants). A pool name or note must never become a live formula in the
+      // office's spreadsheet - the standard defense is a leading apostrophe.
+      const guarded = /^[=+\-@\t\r]/.test(s) ? "'" + s : s;
+      return /[",\n\r]/.test(guarded) ? '"' + guarded.replace(/"/g, '""') + '"' : guarded;
     }
 
     function dosesAddedLine(check) {
@@ -6471,7 +6475,11 @@
         openSheet("My day", "No stops logged today yet. Scans you finish today stack up here, ready to send to the office in one tap.", "");
         return;
       }
-      sheetAction = () => { try { navigator.clipboard.writeText(text); } catch (e) { /* best effort */ } };
+      sheetAction = () => {
+        try { navigator.clipboard.writeText(text); } catch (e) { /* best effort */ }
+        // Confirm the copy landed (the sheet closes right after the action runs).
+        setTimeout(() => openSheet("Copied ✓", "Paste it into your text or email to the office.", ""), 150);
+      };
       openSheet("My day", text, "Copy for office");
     }
 
@@ -6738,6 +6746,10 @@
       if (event.key === "Enter" && event.target.closest("[data-missing-text]")) {
         event.preventDefault();
         await saveMissingStep();
+      }
+      if (event.key === "Enter" && event.target.closest("[data-pro-email]")) {
+        event.preventDefault();
+        await startProLogin(event.target.value);
       }
     });
 
