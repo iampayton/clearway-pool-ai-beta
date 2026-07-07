@@ -2098,6 +2098,14 @@
                   <option>DE</option>
                 </select>
               </label>
+              <label>Test Kit (helps the photo reader)
+                <select data-pool-field="testKit">
+                  <option value="">Not sure</option>
+                  <option value="taylor_9056">Taylor slide comparator (Cl/Br + pH)</option>
+                  <option value="strips">Test strips</option>
+                  <option value="drops_other">Other drop kit</option>
+                </select>
+              </label>
               <label>Pool Size
                 <select data-pool-field="volumeBracket">
                   <option>Not sure</option>
@@ -3526,6 +3534,7 @@
           petNote: prof.petNote || "",
           heater: prof.heater || "Not sure",
           filter: prof.filter || "Not sure",
+          testKit: prof.testKit || "",
           hasSpa: prof.hasSpa || "Not sure",
           hasRobot: prof.hasRobot || "Not sure",
           robotName: prof.robotName || "",
@@ -5016,6 +5025,7 @@
         hasSpa: get("hasSpa") || "Not sure",
         heater: get("heater") || "Not sure",
         filter: get("filter") || "Not sure",
+        testKit: get("testKit") || existingPool?.testKit || "",
         volumeBracket: get("volumeBracket") || "Not sure",
         volumeGallons: Number(get("volumeGallons")) > 0 ? Number(get("volumeGallons")) : (existingPool?.volumeGallons || 0),
         volumeConfidence: Number(get("volumeGallons")) > 0 ? "estimated" : (existingPool?.volumeConfidence || "estimated"),
@@ -5077,6 +5087,7 @@
         hasSpa: pool?.hasSpa || "Not sure",
         heater: pool?.heater || "Not sure",
         filter: pool?.filter || "Not sure",
+        testKit: pool?.testKit || "",
         volumeBracket: pool?.volumeBracket || "Not sure",
         volumeGallons: pool?.volumeGallons || "",
         measurements: pool?.measurements || "",
@@ -5185,12 +5196,17 @@
     function renderPhotoThumbs() {
       const step = photoSteps[activePhotoStep];
       const items = currentPhotoArray();
+      const kitHint = step.key === "tests" && poolTestKit() === "taylor_9056"
+        ? "Shoot the comparator straight-on and close up - both tubes AND the color chart in frame, something white behind it."
+        : "No photo yet. Skip if you need to.";
       document.querySelector("[data-photo-thumbs]").innerHTML = items.length
         ? items.map((src, index) => `<div class="thumb"><img alt="${step.label} ${index + 1}" src="${src}"><span>${step.label}</span><button class="thumb-x" data-remove-photo="${index}" aria-label="Remove photo">&times;</button></div>`).join("")
-        : '<div class="empty" style="grid-column: 1 / -1;">No photo yet. Skip if you need to.</div>';
+        : `<div class="empty" style="grid-column: 1 / -1;">${kitHint}</div>`;
     }
 
-    function compressImage(file) {
+    function compressImage(file, maxSide = 1100, quality = 0.72) {
+      // Test photos get a higher-res pass (1600px/q0.8): comparator tubes and strip pads
+      // are small - downscaling them was feeding the reader blurry evidence. (chem-v1.1)
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onerror = reject;
@@ -5198,13 +5214,12 @@
           const image = new Image();
           image.onerror = reject;
           image.onload = () => {
-            const maxSide = 1100;
             const scale = Math.min(1, maxSide / Math.max(image.width, image.height));
             const canvas = document.createElement("canvas");
             canvas.width = Math.round(image.width * scale);
             canvas.height = Math.round(image.height * scale);
             canvas.getContext("2d").drawImage(image, 0, 0, canvas.width, canvas.height);
-            resolve(canvas.toDataURL("image/jpeg", 0.72));
+            resolve(canvas.toDataURL("image/jpeg", quality));
           };
           image.src = reader.result;
         };
@@ -5221,8 +5236,36 @@
     let stripReadPromise = null; // in-flight AI strip read - awaited in createCheck so it can't lose the race
     let poolReadPromise = null;  // in-flight AI pool-water read
 
-    async function callAiExtract(dataUrl, noteText) {
+    // Kit-aware reading (chem-v1.1): known kits get a geometry/scale profile server-side
+    // (the reader is told EXACTLY what device it's looking at), and their readings are
+    // SNAPPED to the kit's discrete scale client-side - belt and suspenders, so an
+    // off-scale number (like "6.8" on a comparator with no 6.8) can never reach the grid.
+    const KIT_SCALES = {
+      taylor_9056: { free_chlorine: [1, 2, 3, 5, 7.5, 10], ph: [7.0, 7.2, 7.4, 7.6, 7.8, 8.0] }
+    };
+    function poolTestKit() {
+      return selectedPool()?.testKit || "";
+    }
+    function snapKitReadings(readings, kit, confidences) {
+      const scales = KIT_SCALES[kit];
+      if (!scales || !readings) return readings;
+      Object.entries(scales).forEach(([key, scale]) => {
+        const raw = readings[key];
+        const v = Number(raw);
+        if (raw === null || raw === undefined || raw === "" || !Number.isFinite(v)) return;
+        let best = scale[0];
+        for (const s of scale) if (Math.abs(s - v) < Math.abs(best - v)) best = s;
+        if (best !== v) {
+          readings[key] = best;
+          if (confidences) confidences[key] = "low"; // off-scale read got snapped - worth a double-check
+        }
+      });
+      return readings;
+    }
+
+    async function callAiExtract(dataUrl, noteText, kit = "") {
       const body = { text: (noteText || "").slice(0, 600) };
+      if (kit) body.kit = kit;
       if (dataUrl) {
         const comma = dataUrl.indexOf(",");
         body.imageBase64 = comma >= 0 ? dataUrl.slice(comma + 1) : dataUrl;
@@ -5279,8 +5322,10 @@
       const setStatus = (msg) => { if (status) { status.textContent = msg || ""; status.hidden = !msg; } };
       setCopy("Reading your strip…");
       try {
-        const data = await callAiExtract(dataUrl, brainText());
-        const readings = data.readings || {};
+        const kit = poolTestKit();
+        const data = await callAiExtract(dataUrl, brainText(), kit);
+        data.confidences = data.confidences || {};
+        const readings = snapKitReadings(data.readings || {}, kit, data.confidences);
         const filled = applyStripReadings(readings, data.confidence, data.confidences);
         if (typeof data.aiCents === "number") pendingAiCents += data.aiCents;
         lastStripRead = { readings, confidence: data.confidence || "", confidences: data.confidences || {}, observations: data.observations || "" };
@@ -6542,7 +6587,7 @@
       let lastPoolPhoto = null;
       for (const file of files) {
         let dataUrl = null;
-        try { dataUrl = await compressImage(file); }
+        try { dataUrl = await compressImage(file, step.key === "tests" ? 1600 : 1100, step.key === "tests" ? 0.8 : 0.72); }
         catch { continue; }
         if (step.key === "pool") {
           if (!Array.isArray(draft.photos.pool)) draft.photos.pool = draft.photos.pool ? [draft.photos.pool] : [];
