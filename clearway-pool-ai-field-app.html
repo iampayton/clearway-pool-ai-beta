@@ -1291,6 +1291,13 @@
       padding: 4px 2px;
     }
 
+    .added-chip.on {
+      background: var(--seafoam) !important;
+      color: var(--charcoal) !important;
+      box-shadow: none !important;
+      text-decoration: none;
+    }
+
     .chip-row {
       display: flex;
       flex-wrap: wrap;
@@ -1933,6 +1940,10 @@
                 <span class="tmi-ic"><svg aria-hidden="true" viewBox="0 0 48 48" fill="none"><path d="M10 16h28M10 24h28M10 32h28" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg></span>
                 <span>This week's route</span>
               </button>
+              <button class="top-menu-item" data-my-day data-my-day-item hidden role="menuitem">
+                <span class="tmi-ic"><svg aria-hidden="true" viewBox="0 0 48 48" fill="none"><rect x="9" y="10" width="30" height="30" rx="6" stroke="currentColor" stroke-width="4"/><path d="M9 19h30M17 6v7M31 6v7M16 28l5 5 11-11" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                <span>My day &mdash; send to office</span>
+              </button>
               <button class="top-menu-item" data-go="history" role="menuitem">
                 <span class="tmi-ic"><svg aria-hidden="true" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="17" stroke="currentColor" stroke-width="4"/><path d="M24 14v10l7 5" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
                 <span>History</span>
@@ -2318,6 +2329,7 @@
             <p class="setup-label">Do Next</p>
             <div class="big-step" data-next-step style="margin-top: 4px;">Retest before you add more.</div>
             <button class="step-edit-btn first-step-edit" data-edit-first-step hidden style="margin-top: 8px;">Edit this step</button>
+            <button class="step-edit-btn first-step-edit added-chip" data-first-dose hidden style="margin-top: 8px; margin-left: 10px;">Added?</button>
             <div class="summary-list" data-step-guide-list style="margin-top: 14px;"></div>
             <p class="muted" data-flag-hint hidden style="margin-top: 10px;">Tap "Edit" to fix a step's wording, or tap the step text to flag it red.</p>
             <div class="summary-list" data-missing-list style="margin-top: 10px;"></div>
@@ -2386,8 +2398,9 @@
             <p class="muted">Tap a scan to reopen it.</p>
           </section>
           <section class="card">
-            <div class="history-toolbar">
+            <div class="history-toolbar" style="grid-template-columns: 1fr auto auto;">
               <input class="history-search" data-history-search placeholder="Search pool or note" />
+              <button class="btn" data-export-billing title="Per-visit CSV for the office">CSV</button>
               <button class="btn" data-export-history>Export</button>
             </div>
             <p class="muted" style="margin-top: 10px;"><span data-history-count>0</span> saved. <span data-history-shown>0</span> showing.</p>
@@ -2399,7 +2412,7 @@
       <div class="sheet-backdrop" data-sheet hidden>
         <div class="sheet" role="dialog" aria-modal="true">
           <h3 data-sheet-title>Status</h3>
-          <p class="muted" data-sheet-body style="margin-top: 8px;"></p>
+          <p class="muted" data-sheet-body style="margin-top: 8px; white-space: pre-line; max-height: 320px; overflow-y: auto;"></p>
           <button class="btn full" type="button" data-sheet-alt hidden style="margin-top: 12px;"></button>
           <div class="sheet-actions">
             <button class="btn" data-sheet-close>Close</button>
@@ -2557,7 +2570,7 @@
     // ===== ClearWay Deterministic Chemistry Engine v1 =====
     // The engine owns ALL numbers. Doses come from industry-standard tables,
     // never from language guesses. Outputs are recommendations: always follow the product label.
-    const ENGINE_VERSION = "chem-v1.1";
+    const ENGINE_VERSION = "chem-v1.2"; // v1.2: exact-dose steps carry structured dose metadata (for Added-confirm + billing export)
 
     const VOLUME_BRACKETS = {
       "Under 10,000 gal": { gallons: 8000, confidence: "estimated" },
@@ -2835,7 +2848,7 @@
         const deficit = CHEM_TARGETS.alkalinity.ideal - ta;
         if (exactAllowed && hasProduct(pool, "baking_soda")) {
           const r = doseFor("baking_soda", deficit, gallons);
-          steps.push({ id: "ta-raise", text: `Add ${r.dose.text} of baking soda${estTag}. ${CHEM_PRODUCTS.baking_soda.note}${r.capped ? " That is today's max - retest before more." : ""}` });
+          steps.push({ id: "ta-raise", text: `Add ${r.dose.text} of baking soda${estTag}. ${CHEM_PRODUCTS.baking_soda.note}${r.capped ? " That is today's max - retest before more." : ""}`, dose: { product: "baking_soda", label: CHEM_PRODUCTS.baking_soda.label, amount: r.dose.amount, unit: CHEM_PRODUCTS.baking_soda.unit, doseText: r.dose.text } });
         } else {
           if (exactAllowed) productsMissing = true;
           steps.push({ id: "ta-raise", text: "Alkalinity is low. Raise it with baking soda - follow the label for your pool size." });
@@ -2850,7 +2863,7 @@
         const phMemory = memoryNote(memory, "ph", "high");
         if (exactAllowed && hasProduct(pool, "muriatic_acid")) {
           const r = acidDose(ph, ta, gallons);
-          steps.push({ id: "ph-lower", text: `Add ${r.dose.text} of muriatic acid${estTag}.${phMemory} ${CHEM_PRODUCTS.muriatic_acid.note}${r.capped ? " That is today's max - retest before more." : ""}` });
+          steps.push({ id: "ph-lower", text: `Add ${r.dose.text} of muriatic acid${estTag}.${phMemory} ${CHEM_PRODUCTS.muriatic_acid.note}${r.capped ? " That is today's max - retest before more." : ""}`, dose: { product: "muriatic_acid", label: CHEM_PRODUCTS.muriatic_acid.label, amount: r.dose.amount, unit: "fl oz", doseText: r.dose.text } });
         } else {
           if (exactAllowed) productsMissing = true;
           steps.push({ id: "ph-lower", text: `pH is high.${phMemory} Lower it with muriatic acid or pH decreaser - follow the label.` });
@@ -2864,7 +2877,7 @@
         if (exactAllowed && hasProduct(pool, "soda_ash")) {
           const ozPer10k = Math.min(16, Math.round(((CHEM_TARGETS.ph.ideal - ph) / 0.2) * 6));
           const r = roundDose(ozPer10k * (gallons / 10000), "oz");
-          steps.push({ id: "ph-raise", text: `Add ${r.text} of soda ash${estTag}. ${CHEM_PRODUCTS.soda_ash.note}` });
+          steps.push({ id: "ph-raise", text: `Add ${r.text} of soda ash${estTag}. ${CHEM_PRODUCTS.soda_ash.note}`, dose: { product: "soda_ash", label: CHEM_PRODUCTS.soda_ash.label, amount: r.amount, unit: "oz", doseText: r.text } });
         } else {
           if (exactAllowed) productsMissing = true;
           steps.push({ id: "ph-raise", text: "pH is low. Raise it with soda ash / pH increaser - follow the label." });
@@ -2886,7 +2899,7 @@
         const fcMemory = memoryNote(memory, "free_chlorine", "low");
         if (exactAllowed && productKey) {
           const r = doseFor(productKey, deficit, gallons);
-          steps.push({ id: "fc-raise", text: `Add ${r.dose.text} of ${r.product.label}${estTag}.${fcMemory} ${r.product.note}${r.capped || greenish ? " Retest before adding more." : ""}` });
+          steps.push({ id: "fc-raise", text: `Add ${r.dose.text} of ${r.product.label}${estTag}.${fcMemory} ${r.product.note}${r.capped || greenish ? " Retest before adding more." : ""}`, dose: { product: productKey, label: r.product.label, amount: r.dose.amount, unit: r.product.unit, doseText: r.dose.text } });
           if (productKey === "dichlor" && cya !== null && cya > CHEM_TARGETS.cya.max) {
             cautions.push("Stabilizer is already high - prefer liquid chlorine or cal-hypo over dichlor.");
           }
@@ -2905,7 +2918,7 @@
         rulesFired.push("cya-low");
         if (exactAllowed && hasProduct(pool, "stabilizer")) {
           const r = doseFor("stabilizer", CHEM_TARGETS.cya.ideal - cya, gallons);
-          steps.push({ id: "cya-raise", text: `Add ${r.dose.text} of stabilizer${estTag}. ${CHEM_PRODUCTS.stabilizer.note}` });
+          steps.push({ id: "cya-raise", text: `Add ${r.dose.text} of stabilizer${estTag}. ${CHEM_PRODUCTS.stabilizer.note}`, dose: { product: "stabilizer", label: CHEM_PRODUCTS.stabilizer.label, amount: r.dose.amount, unit: CHEM_PRODUCTS.stabilizer.unit, doseText: r.dose.text } });
         } else {
           if (exactAllowed) productsMissing = true;
           steps.push({ id: "cya-raise", text: "Stabilizer is low - sun burns chlorine off fast. Add stabilizer per the label." });
@@ -2917,7 +2930,7 @@
         rulesFired.push("ch-low");
         if (exactAllowed && hasProduct(pool, "calcium_chloride")) {
           const r = doseFor("calcium_chloride", CHEM_TARGETS.calcium.ideal - ch, gallons);
-          steps.push({ id: "ch-raise", text: `Add ${r.dose.text} of calcium increaser${estTag}. ${CHEM_PRODUCTS.calcium_chloride.note}` });
+          steps.push({ id: "ch-raise", text: `Add ${r.dose.text} of calcium increaser${estTag}. ${CHEM_PRODUCTS.calcium_chloride.note}`, dose: { product: "calcium_chloride", label: CHEM_PRODUCTS.calcium_chloride.label, amount: r.dose.amount, unit: CHEM_PRODUCTS.calcium_chloride.unit, doseText: r.dose.text } });
         } else {
           if (exactAllowed) productsMissing = true;
           steps.push({ id: "ch-raise", text: "Calcium hardness is low. Raise it with calcium increaser per the label." });
@@ -2929,7 +2942,7 @@
         rulesFired.push("salt-low");
         if (exactAllowed) {
           const r = doseFor("pool_salt", CHEM_TARGETS.salt.ideal - salt, gallons);
-          steps.push({ id: "salt-raise", text: `Add ${r.dose.text} of pool salt${estTag}. ${CHEM_PRODUCTS.pool_salt.note}` });
+          steps.push({ id: "salt-raise", text: `Add ${r.dose.text} of pool salt${estTag}. ${CHEM_PRODUCTS.pool_salt.note}`, dose: { product: "pool_salt", label: CHEM_PRODUCTS.pool_salt.label, amount: r.dose.amount, unit: CHEM_PRODUCTS.pool_salt.unit, doseText: r.dose.text } });
         } else {
           steps.push({ id: "salt-raise", text: "Salt is low. Add pool salt per the label and your system's manual." });
         }
@@ -4153,6 +4166,8 @@
         routeIcon.hidden = !isTechMode(); // route tracker is a tech tool
         routeIcon.classList.toggle("attn", isTechMode() && supervisorNeedsAttention());
       }
+      const myDayItem = document.querySelector("[data-my-day-item]");
+      if (myDayItem) myDayItem.hidden = !isTechMode(); // end-of-day recap is a tech tool
       // Pool-details gear: bright orange when the profile isn't filled in, bright seafoam when it is.
       const gear = document.querySelector("[data-edit-pool]");
       if (gear) {
@@ -5533,17 +5548,17 @@
       const text = `${check.brainInput || ""} ${check.nextStep || ""}`.toLowerCase();
       const edits = check.stepEdits || {};
       const steps = [];
-      const add = (id, stepText) => {
+      const add = (id, stepText, dose) => {
         const finalText = edits[id] || stepText; // honor any in-place edits
         const lower = finalText.toLowerCase();
         const dupe = steps.some((item) => {
           const existing = item.text.toLowerCase();
           return existing === lower || existing.includes(lower) || lower.includes(existing);
         });
-        if (!dupe) steps.push({ id, text: finalText });
+        if (!dupe) steps.push({ id, text: finalText, dose: dose || null });
       };
       const engineSteps = check.engine?.steps || [];
-      engineSteps.forEach((step) => add(step.id, step.text));
+      engineSteps.forEach((step) => add(step.id, step.text, step.dose));
       const hasEngine = engineSteps.length > 0;
 
       // Note-driven observations - these work even when no test numbers were entered,
@@ -5927,7 +5942,8 @@
           aiReadings: check.aiReadings || null,
           aiCorrections: check.aiCorrections || [],
           aiNoteReadings: check.aiNoteReadings || null,
-          poolVision: check.poolVision || null
+          poolVision: check.poolVision || null,
+          dosesAdded: check.dosesAdded || []
         }),
         photos: check.photos || {},
         confirmed_values: check.values || [],
@@ -5973,6 +5989,7 @@
         aiCorrections: noteData.aiCorrections || [],
         aiNoteReadings: noteData.aiNoteReadings || null,
         poolVision: noteData.poolVision || null,
+        dosesAdded: noteData.dosesAdded || [],
         mainIssue: row.main_issue,
         testType: row.test_type,
         brainInput: noteData.brainInput || noteData.notes || "",
@@ -6152,6 +6169,7 @@
         doneStepIds: shownSteps.filter((step) => !(check.stepFlags?.[step.id]?.flagged)).map((step) => step.id),
         flaggedCount: Object.values(check.stepFlags || {}).filter((flag) => flag.flagged).length,
         missingCount: (check.missingSteps || []).length,
+        dosesAdded: (check.dosesAdded || []).length,
         closedVia: withPump ? "pump" : "finish",
         visitSeconds: Math.max(0, Math.round((Date.now() - new Date(check.createdAt).getTime()) / 1000))
       };
@@ -6200,17 +6218,33 @@
         bigEdit.hidden = !first;
         if (first) bigEdit.dataset.editStep = first.id;
       }
+      // "Added ✓" confirm chips: the tap that turns a recommendation into the visit's
+      // record - it feeds the billing export, My Day, and the pool's dosing history.
+      const dosed = (id) => (check.dosesAdded || []).some((d) => d.stepId === id);
+      const firstChip = document.querySelector("[data-first-dose]");
+      if (firstChip) {
+        const hasDose = !!(first && first.dose);
+        firstChip.hidden = !hasDose;
+        if (first) firstChip.dataset.doseAdded = first.id;
+        const on = !!(first && dosed(first.id));
+        firstChip.classList.toggle("on", on);
+        firstChip.textContent = on ? "Added ✓" : "Added?";
+      }
       const stepList = document.querySelector("[data-step-guide-list]");
       if (stepList) {
         stepList.innerHTML = steps.slice(1).map((step, index) => {
           const flag = flags[step.id];
           const isFlagged = Boolean(flag?.flagged);
+          const on = dosed(step.id);
           return `
           <div class="step-row ${isFlagged ? "flagged" : ""}" data-flag-step="${step.id}">
             <span class="step-num">${index + 2}</span>
             <strong>${escapeHtml(step.text)}</strong>
-            <button class="step-edit-btn" data-edit-step="${step.id}" aria-label="Edit step">Edit</button>
-            ${isFlagged ? `<button class="why-btn" data-flag-why="${step.id}">${flag?.reason ? "Why saved" : "Say why"}</button>` : ""}
+            <div style="display: grid; gap: 6px; justify-items: end;">
+              <button class="step-edit-btn" data-edit-step="${step.id}" aria-label="Edit step">Edit</button>
+              ${step.dose ? `<button class="step-edit-btn added-chip ${on ? "on" : ""}" data-dose-added="${step.id}">${on ? "Added ✓" : "Added?"}</button>` : ""}
+              ${isFlagged ? `<button class="why-btn" data-flag-why="${step.id}">${flag?.reason ? "Why saved" : "Say why"}</button>` : ""}
+            </div>
           </div>`;
         }).join("");
       }
@@ -6353,6 +6387,80 @@
         : (saved.length
           ? '<div class="empty">Nothing matches that search.</div>'
           : '<div class="empty">No scans yet. Tap Scan My Pool.</div>');
+    }
+
+    // ===== Office-shaped outputs: billing CSV + the tech's My Day recap ===========
+    // The CSV is the concierge export (per-visit record the office can invoice from);
+    // My Day is the tech's end-of-day summary - one tap, copied, texted to the office.
+    function csvCell(v) {
+      const s = String(v ?? "");
+      return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+    }
+
+    function dosesAddedLine(check) {
+      return (check.dosesAdded || [])
+        .map((x) => `${x.doseText || ""} ${x.label || x.product || ""}`.trim())
+        .filter(Boolean).join("; ");
+    }
+
+    function buildBillingCsv(list) {
+      const keys = Object.keys(testMeta);
+      const header = ["Date", "Time", "Pool", "Address", "Visit type", "Chemicals added",
+        ...keys.map((k) => testMeta[k].label), "Next step", "Steps flagged", "Photos", "Note", "Check ID"];
+      const rows = (list || []).map((c) => {
+        const d = new Date(c.createdAt);
+        const readingFor = (k) => { const item = (c.values || []).find((v) => v.key === k && v.current !== ""); return item ? item.current : ""; };
+        const flagCount = Object.values(c.stepFlags || {}).filter((f) => f && f.flagged).length;
+        return [
+          d.toLocaleDateString(), d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          c.poolName || "", c.address || "", c.mainIssue || "",
+          dosesAddedLine(c), ...keys.map(readingFor),
+          c.nextStep || "", flagCount || "", historyPhotoCount(c) || "",
+          (c.brainInput || "").slice(0, 200), c.id || ""
+        ];
+      });
+      return [header, ...rows].map((r) => r.map(csvCell).join(",")).join("\r\n");
+    }
+
+    async function exportBillingCsv() {
+      const blob = new Blob(["﻿" + buildBillingCsv(await checks())], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `clearway-visits-${new Date().toISOString().slice(0, 10)}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function buildMyDayText(list, now = new Date()) {
+      const dayKey = localDateKey(now);
+      const today = (list || [])
+        .filter((c) => c.createdAt && localDateKey(new Date(c.createdAt)) === dayKey)
+        .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+      if (!today.length) return "";
+      const doses = today.reduce((n, c) => n + (c.dosesAdded || []).length, 0);
+      const flags = today.reduce((n, c) => n + Object.values(c.stepFlags || {}).filter((f) => f && f.flagged).length, 0);
+      const lines = today.map((c) => {
+        const t = new Date(c.createdAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+        const added = dosesAddedLine(c);
+        const bits = [c.mainIssue || "Routine Scan"];
+        if (added) bits.push("Added: " + added);
+        const fl = Object.values(c.stepFlags || {}).filter((f) => f && f.flagged).length;
+        if (fl) bits.push(fl + " step" + (fl === 1 ? "" : "s") + " flagged");
+        return `• ${t} — ${c.poolName || "Pool"} — ${bits.join(". ")}`;
+      });
+      const head = now.toLocaleDateString([], { weekday: "short", month: "numeric", day: "numeric" });
+      return `My day — ${head}\n${today.length} stop${today.length === 1 ? "" : "s"} · ${doses} dose${doses === 1 ? "" : "s"} confirmed · ${flags} flag${flags === 1 ? "" : "s"}\n\n${lines.join("\n")}`;
+    }
+
+    async function openMyDay() {
+      const text = buildMyDayText(await checks());
+      if (!text) {
+        openSheet("My day", "No stops logged today yet. Scans you finish today stack up here, ready to send to the office in one tap.", "");
+        return;
+      }
+      sheetAction = () => { try { navigator.clipboard.writeText(text); } catch (e) { /* best effort */ } };
+      openSheet("My day", text, "Copy for office");
     }
 
     async function exportHistory() {
@@ -6653,6 +6761,33 @@
             await saveCheck(activeCheck);
             renderGuide(activeCheck);
           }
+        }
+        return;
+      }
+
+      const doseAddedBtn = event.target.closest("[data-dose-added]");
+      if (doseAddedBtn && activeCheck) {
+        const stepId = doseAddedBtn.dataset.doseAdded;
+        if (stepId) {
+          activeCheck.dosesAdded = activeCheck.dosesAdded || [];
+          const existing = activeCheck.dosesAdded.findIndex((d) => d.stepId === stepId);
+          if (existing >= 0) {
+            activeCheck.dosesAdded.splice(existing, 1); // un-confirm (mis-tap)
+          } else {
+            const step = buildDoNext(activeCheck).find((s) => s.id === stepId);
+            activeCheck.dosesAdded.push({
+              stepId,
+              product: step?.dose?.product || "",
+              label: step?.dose?.label || "",
+              amount: step?.dose?.amount ?? null,
+              unit: step?.dose?.unit || "",
+              doseText: step?.dose?.doseText || "",
+              stepText: step?.text || "",
+              at: new Date().toISOString()
+            });
+          }
+          await saveCheck(activeCheck);
+          renderGuide(activeCheck);
         }
         return;
       }
@@ -7204,6 +7339,16 @@
         } else if (mode === "done") {
           await showScreen("history");
         }
+        return;
+      }
+
+      if (event.target.closest("[data-export-billing]")) {
+        await exportBillingCsv();
+        return;
+      }
+
+      if (event.target.closest("[data-my-day]")) {
+        await openMyDay();
         return;
       }
 

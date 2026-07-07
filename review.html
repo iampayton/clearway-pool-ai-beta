@@ -263,6 +263,45 @@
     }).join("") + '</div>';
   }
 
+  // ---- "Needs eyes" - the app equivalent of the address turning red on the office board.
+  // Brain events from the last 48h that an admin would want to know about today.
+  function buildAttention(rows){
+    var out = [];
+    var cutoff = Date.now() - 48*3600000;
+    rows.forEach(function(r){
+      var t = r.created_at ? new Date(r.created_at).getTime() : 0;
+      if (t < cutoff) return;
+      var n = parseNotes(r);
+      var pool = r.pool_name || "Unknown pool";
+      var fired = (n.engine && n.engine.rulesFired) || [];
+      var pv = n.poolVision || {};
+      var why = [];
+      if (pv.algae === "widespread" || pv.tint === "green" || r.main_issue === "Green Water") why.push("pool showing green / widespread algae");
+      if (fired.indexOf("ph-extreme") >= 0) why.push("pH far out of range");
+      if (fired.indexOf("fc-very-high") >= 0) why.push("chlorine very high - swim hold");
+      fired.forEach(function(f){ if (f.indexOf("anomaly-") === 0) why.push("reading far from this pool's usual (" + f.slice(8).replace(/_/g," ") + ")"); });
+      if (n.extras && n.extras.psi >= 25) why.push("filter pressure " + n.extras.psi + " psi");
+      var fl = Object.keys(n.stepFlags||{}).filter(function(id){ return n.stepFlags[id] && n.stepFlags[id].flagged; }).length;
+      if (fl >= 2) why.push(fl + " steps red-tapped this visit");
+      if (why.length) out.push({ pool: pool, when: r.created_at, why: why });
+    });
+    out.sort(function(a,b){ return new Date(b.when||0) - new Date(a.when||0); });
+    return out;
+  }
+  function attentionHtml(items){
+    if (!items.length) return "";
+    return '<div class="panel" style="box-shadow: inset 0 0 0 2px var(--bad);"><h2 style="color: var(--bad);">Needs eyes (last 48h)</h2>'
+      + '<p class="hint">The brain saw something at these pools an admin would want to act on - the app-side version of the address turning red.</p>'
+      + '<div class="feed">'
+      + items.slice(0,10).map(function(a){
+          return '<div class="fi"><div class="ic flag">!</div><div class="body">'
+            + '<div class="top"><span class="pool">'+esc(a.pool)+'</span><span class="when">'+esc(relTime(a.when)||shortDate(a.when))+'</span></div>'
+            + '<div class="what">'+esc(a.why.join(" · "))+'</div>'
+            + '</div></div>';
+        }).join("")
+      + '</div></div>';
+  }
+
   // ---- what the AI is learning (per-reading accuracy + bias direction) ----
   function lnum(v){ var x = parseFloat(v); return isFinite(x) ? x : null; }
   function buildLearning(rows){
@@ -413,6 +452,8 @@
     var feed = buildFeed(rows);
     var acc = s.overall===null ? "&mdash;" : s.overall + "%";
     var html = "";
+
+    html += attentionHtml(buildAttention(rows));
 
     html += '<div class="hero"><div class="big">'+acc+'</div><div class="biglabel">Brain right rate (reads + steps kept)</div>'
       + '<div class="sectwo">'
