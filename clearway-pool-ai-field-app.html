@@ -5584,7 +5584,9 @@
       if (text.includes("cloudy") || text.includes("hazy") || text.includes("murky") || text.includes("milky")) {
         add("note-clear", "Cloudy water: run the pump and let the filter clear it. Don't shock blindly.");
       }
-      if (text.includes("leaf") || text.includes("leaves") || text.includes("debris") || text.includes("dirty")) {
+      // Chore coaching is homeowner-only: telling a pro to skim baskets read as rookie
+      // filler in field testing (Trin). Pros keep judgment steps, lose the chore list.
+      if (!isTechMode() && (text.includes("leaf") || text.includes("leaves") || text.includes("debris") || text.includes("dirty"))) {
         add("note-skim", "Skim the surface and empty the skimmer and pump baskets.");
       }
       if ((text.includes("filter") || text.includes("psi") || text.includes("pressure")) && !hasEngine) {
@@ -5594,15 +5596,17 @@
         add("note-water", "Top the water up to about halfway up the skimmer.");
       }
 
-      // Circulation is the safe baseline action almost every visit.
-      if (!steps.some((step) => /pump/i.test(step.text))) {
-        add("circulate", isTechMode()
-          ? "Run the pump after service so everything mixes before you leave."
-          : "Run the pump 6-8 hours today so the water turns over and clears.");
+      // Circulation is the homeowner's safe baseline action. Techs run the pump by
+      // reflex - the field verdict was that this line reads as filler to a pro.
+      if (!isTechMode() && !steps.some((step) => /pump/i.test(step.text))) {
+        add("circulate", "Run the pump 6-8 hours today so the water turns over and clears.");
       }
 
-      // If neither readings nor the note produced a concrete step, give a real first move.
-      if (!hasEngine && steps.length <= 1) {
+      // If neither readings nor the note produced a concrete step, give the homeowner a
+      // real first move. Techs already have the add-numbers hint on the card instead -
+      // and NOBODY who just entered readings should be told to go test the water.
+      const enteredAny = (check.values || []).some((v) => v && v.current);
+      if (!isTechMode() && !hasEngine && !enteredAny && steps.length <= 1) {
         add("baseline-test", "Test the water with a strip so the next step is exact - chlorine, pH, and alkalinity.");
       }
 
@@ -5613,10 +5617,16 @@
           : `Follow up: take a look at ${it.title}.`);
       });
 
-      // Retest ALWAYS survives, even on a crowded card.
+      // Context-aware close (field feedback: "retest before adding more" on a visit
+      // where nothing was added read as canned filler). Retest survives every card that
+      // DOSED something; a clean pro visit ends on real steps instead of boilerplate.
       const sliced = steps.slice(0, 6);
+      const dosedSomething = sliced.some((step) => /^(ta|ph|fc|cya|ch|salt)-/.test(step.id));
       const hasRetest = sliced.some((step) => step.text.toLowerCase().includes("retest"));
-      if (!hasRetest) sliced.push({ id: "retest", text: edits["retest"] || doNextRetestLine() });
+      if (!hasRetest) {
+        if (dosedSomething) sliced.push({ id: "retest", text: edits["retest"] || doNextRetestLine() });
+        else if (!isTechMode()) sliced.push({ id: "retest", text: edits["retest"] || "Levels look on track - retest before your next swim." });
+      }
       return sliced;
     }
 
@@ -6210,7 +6220,9 @@
       const flags = check.stepFlags || {};
       const first = steps[0];
       const bigStep = document.querySelector("[data-next-step]");
-      bigStep.textContent = first ? first.text : "Retest before you add more.";
+      bigStep.textContent = first ? first.text : (isTechMode()
+        ? "All readings in range - nothing to add this stop. Log it and roll."
+        : "Levels look in range - no chemicals needed today. Retest before your next swim.");
       bigStep.classList.toggle("flagged", Boolean(first && flags[first.id]?.flagged));
       if (first) bigStep.setAttribute("data-flag-step", first.id);
       const bigEdit = document.querySelector("[data-edit-first-step]");
