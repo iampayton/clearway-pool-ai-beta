@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Founding Pilot for Pool Companies — ClearWay Pool AI</title>
+<meta name="description" content="2 weeks free calibration, then $49/tech/month. Your techs scan or speak readings poolside and get one card: what's wrong, what to do first, what not to add, when to retest.">
+<style>
+  :root{--sea:#3ec9ac;--sea-d:#1f8f77;--ink:#2a2e33;--mut:#6b7280;--bg:#f6fbf9}
+  *{box-sizing:border-box}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:var(--ink);background:#fff;margin:0;line-height:1.55}
+  .wrap{max-width:640px;margin:0 auto;padding:28px 20px 64px}
+  .badge{display:inline-block;background:#e7f8f3;color:var(--sea-d);border-radius:999px;padding:4px 12px;font-size:.8rem;font-weight:600}
+  h1{font-size:1.7rem;line-height:1.2;margin:.4em 0 .3em}
+  .sub{color:var(--mut);font-size:1.02rem;margin:0 0 18px}
+  .card{background:var(--bg);border:1px solid #d9f0e8;border-radius:14px;padding:18px 18px 8px;margin:18px 0}
+  .card h3{margin:.1em 0 .5em;font-size:1rem}
+  ul{padding-left:1.15em;margin:.4em 0 1em}
+  li{margin:.35em 0}
+  label{display:block;font-weight:600;font-size:.9rem;margin:14px 0 4px}
+  input,textarea,select{width:100%;padding:11px 12px;border:1px solid #cfd8d6;border-radius:9px;font-size:1rem;font-family:inherit;background:#fff}
+  input:focus,textarea:focus{outline:2px solid var(--sea);border-color:var(--sea)}
+  .btn{display:block;width:100%;background:var(--sea);color:#fff;font-weight:700;font-size:1.05rem;border:0;border-radius:10px;padding:14px;margin-top:20px;cursor:pointer}
+  .btn:hover{background:var(--sea-d)}
+  .fine{color:var(--mut);font-size:.8rem;margin-top:10px}
+  .footer{color:var(--mut);font-size:.78rem;margin-top:40px;border-top:1px solid #e5e7eb;padding-top:14px}
+  a{color:var(--sea-d)}
+  .thanks{display:none;background:#e7f8f3;border:1px solid var(--sea);border-radius:14px;padding:22px;text-align:center}
+  .thanks h2{color:var(--sea-d);margin:.2em 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <span class="badge">Founding Pilot · Pool Service Companies</span>
+  <h1>Your techs scan the water. They get the next step.</h1>
+  <p class="sub">ClearWay Pool AI is a poolside brain for service techs: scan or speak test readings, get one card — what's wrong, what to do first, what not to add, when to retest — plus a billing-ready CSV of every visit for the office. It feeds your existing system; it doesn't replace it.</p>
+
+  <div class="card">
+    <h3>How the founding pilot works</h3>
+    <ul>
+      <li><strong>2 weeks free</strong> while we calibrate to your routes and test kits</li>
+      <li>Then <strong>$49 per tech / month</strong>, unlimited scans, cancel anytime</li>
+      <li>Setup done for you — techs sign in with a magic link, no passwords</li>
+      <li>Train a new tech's water chemistry in a day, not a season</li>
+    </ul>
+  </div>
+
+  <div class="thanks" id="thanks">
+    <h2>Request received ✓</h2>
+    <p>We'll reply the same day with your setup steps. Your techs can be live this week.</p>
+  </div>
+
+  <form id="pilotForm" action="https://formsubmit.co/payton@clearwayhomesolution.com" method="POST">
+    <input type="hidden" name="_subject" value="New ClearWay FOUNDING PILOT request">
+    <input type="hidden" name="_captcha" value="false">
+    <input type="hidden" name="_next" value="https://iampayton.github.io/clearway-pool-ai-beta/pilot.html?submitted=1">
+    <input type="text" name="_honey" style="display:none">
+    <label>Company name</label>
+    <input name="company" required>
+    <label>Your name</label>
+    <input name="contact_name" required>
+    <label>Email</label>
+    <input type="email" name="email" required>
+    <label>Phone</label>
+    <input name="phone">
+    <label>Number of techs</label>
+    <input name="tech_count" required>
+    <label>Service area (city/state)</label>
+    <input name="service_area" required>
+    <label>Roughly how many pools per week?</label>
+    <input name="pools_per_week">
+    <label>Test kit(s) your techs carry (brand/model if known)</label>
+    <input name="test_kits">
+    <label>Anything else?</label>
+    <textarea name="notes" rows="3"></textarea>
+    <button class="btn" type="submit">Request founding pilot</button>
+    <p class="fine">We'll reply the same day. No contracts, cancel anytime. ClearWay Pool AI gives suggestions based on scanned or entered test values — techs always confirm readings, and dosing comes from a deterministic engine, not free-form AI.</p>
+  </form>
+
+  <p class="footer">© 2026 ClearWay Pool AI — a ClearWay Home Solution brand · <a href="tos.html">Terms</a> · <a href="privacy.html">Privacy</a> · <a href="https://clearwaypoolai.carrd.co">Homeowner beta</a><br>Follow each product label. Add chemicals separately. Retest before swimming.</p>
+</div>
+<script>
+  if (new URLSearchParams(location.search).get('submitted') === '1') {
+    document.getElementById('thanks').style.display = 'block';
+    document.getElementById('pilotForm').style.display = 'none';
+    document.querySelector('.card').style.display = 'none';
+  }
+</script>
+</body>
+</html>
